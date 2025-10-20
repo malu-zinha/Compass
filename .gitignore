@@ -1,0 +1,102 @@
+# --- Node ---
+# Ignore node modules everywhere
+node_modules/
+**/node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# dotenv environment variables
+.env
+.env.*.local
+.env.local
+
+# --- Build / output ---
+dist/
+build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+/.next/
+/.nuxt/
+/.vercel/
+/.turbo/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# --- VS Code ---
+.vscode/
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon\r
+._*
+.Spotlight-V100
+.Trashes
+.DocumentRevisions-V100
+.fseventsd
+.VolumeIcon.icns
+
+# --- IDEs / Editors ---
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# JetBrains
+*.iml
+
+# --- Extension / packaging ---
+*.crx
+*.zip
+*.pem
+*.key
+*.p12
+
+# extension/build or dist (if you build the extension)
+extension/build/
+extension/dist/
+
+# --- Server specific ---
+server/node_modules/
+server/build/
+server/dist/
+
+# Coverage & test output
+coverage/
+nyc_output/
+
+# OS generated files
+Thumbs.db
+
+# Yarn PnP
+.pnp.cjs
+.pnp.js
+
+# Secrets, keys and local tooling
+.secrets/
+secrets.json
+.envrc
+
+# keep package-lock.json / yarn.lock in repo (don't ignore lockfiles by default)
+
