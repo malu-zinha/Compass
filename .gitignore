@@ -18,6 +18,7 @@ pids
 *.pid.lock
 
 # dotenv environment variables
+.venv/
 .env
 .env.*.local
 .env.local
