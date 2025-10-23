@@ -28,6 +28,7 @@ dist/
 build/
 out/
 coverage/
+*/__pycache__/
 .cache/
 .parcel-cache/
 /.next/
@@ -98,6 +99,7 @@ Thumbs.db
 .secrets/
 secrets.json
 .envrc
+*.db
 
 # keep package-lock.json / yarn.lock in repo (don't ignore lockfiles by default)
 
