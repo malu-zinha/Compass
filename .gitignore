@@ -35,6 +35,7 @@ coverage/
 /.nuxt/
 /.vercel/
 /.turbo/
+back/uploads/
 
 # Temporary files
 tmp/
