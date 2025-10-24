@@ -1,63 +1,22 @@
 import os
-from openai import AsyncOpenAI 
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
-from fastapi import Body
-from dotenv import load_dotenv
 import sqlite3
-from fastapi.responses import JSONResponse
 from datetime import datetime
-
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from openai import AsyncOpenAI
+import requests
 
 load_dotenv()
+DATABASE = './interviews.db'
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI(
     title="API de Resumos de Entrevistas",
     description="Uma API para gerar resumos de transcrições usando o OpenAI GPT.",
-    version="1.0.0"
+    version="0.0.1"
 )
-DATABASE = './interviews.db'
-
-# api_key = os.getenv("OPENAI_API_KEY")
-# if not api_key:
-#     raise ValueError("A variável de ambiente OPENAI_API_KEY não foi definida. Verifique o .env.")
-#
-# client = AsyncOpenAI(api_key=api_key)
-
-with open('prompts/prompt_padrao.txt') as fin:
-    PROMPT_PADRAO = fin.read()
-
-with open('prompts/prompt_analitico.txt') as fin:
-    PROMPT_ANALITICO = fin.read()
-
-class ResumoRequest(BaseModel):
-    transcricao: str
-    tipo_resumo: str = 'padrao'
-
-class ResumoResponse(BaseModel):
-    resumo: str
-
-@app.post("/gerar-resumo", response_model=ResumoResponse)
-async def criar_resumo(request_data: ResumoRequest):
-
-    if request_data.tipo_resumo == 'analitico':
-        prompt_template = PROMPT_ANALITICO
-    else:
-        prompt_template = PROMPT_PADRAO
-
-        prompt_final = prompt_template.format(DADOS_DA_TRANSCRICAO=request_data.transcricao)
-        
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "user", "content": prompt_final}
-            ],
-            temperature=0.2
-        )
-        
-        resumo_gerado = response.choices[0].message.content
-        
-        return ResumoResponse(resumo=resumo_gerado)
 
 def create_table():
     conn = sqlite3.connect(DATABASE)
@@ -65,11 +24,10 @@ def create_table():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS interviews (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            transcription TEXT,
             audio_file TEXT,
-            audio_transcription TEXT,
-            summary TEXT,
-            date TEXT
+            date TEXT,
+            transcription TEXT,
+            summary TEXT
         )
     """)
     conn.commit()
@@ -81,6 +39,104 @@ def get_db_connection():
     return conn
 
 create_table()
+
+# Carregar prompts
+with open('prompts/prompt_padrao.txt') as fin:
+    PROMPT_PADRAO = fin.read()
+
+with open('prompts/prompt_analitico.txt') as fin:
+    PROMPT_ANALITICO = fin.read()
+
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+class InterviewCreateResponse(BaseModel):
+    id: int
+    message: str
+
+class InterviewTranscribeRequest(BaseModel):
+    id: int
+
+class InterviewResumoRequest(BaseModel):
+    id: int
+    tipo_resumo: str = "padrao"
+
+@app.post("/api/interviews", response_model=InterviewCreateResponse)
+async def insert_interview(audio_file: UploadFile = File(...)):
+    date = datetime.now().isoformat()
+    file_location = f"uploads/{audio_file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await audio_file.read())
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO interviews (audio_file, date, transcription, summary)
+            VALUES (?, ?, '', '')
+        """, (file_location, date))
+        conn.commit()
+        interview_id = cursor.lastrowid
+        conn.close()
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Erro ao inserir entrevista no banco de dados")
+
+    return InterviewCreateResponse(
+        id=interview_id, 
+        message="Entrevista registrada com sucesso!"
+    )
+
+@app.post("/transcribe")
+async def transcribe(request: InterviewTranscribeRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (request.id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    file_location = row["audio_file"]
+    # Enviar para Whisper API
+    with open(file_location, "rb") as f:
+        files = {
+            "file": (os.path.basename(file_location), f, "application/octet-stream"),
+            "model": (None, "whisper-1")
+        }
+        headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+        response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files)
+        if response.status_code == 200:
+            transcription = response.json().get("text", "")
+        else:
+            conn.close()
+            raise HTTPException(status_code=500, detail="Erro na transcrição do áudio")
+
+    # Atualizar no banco
+    cursor.execute("UPDATE interviews SET transcription = ? WHERE id = ?", (transcription, request.id))
+    conn.commit()
+    conn.close()
+    return JSONResponse(content={"id": request.id, "transcription": transcription, "message": "Transcrição salva com sucesso"})
+
+@app.post("/gerar-resumo")
+async def criar_resumo(request: InterviewResumoRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT transcription FROM interviews WHERE id = ?", (request.id,))
+    row = cursor.fetchone()
+    if not row or not row["transcription"]:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Transcrição não encontrada")
+    transcricao = row["transcription"]
+    prompt_template = PROMPT_PADRAO if request.tipo_resumo != "analitico" else PROMPT_ANALITICO
+    prompt_final = prompt_template.format(DADOS_DA_TRANSCRICAO=transcricao)
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt_final}],
+        temperature=0.2
+    )
+    resumo_gerado = response.choices[0].message.content
+    # Atualizar resumo no banco
+    cursor.execute("UPDATE interviews SET summary = ? WHERE id = ?", (resumo_gerado, request.id))
+    conn.commit()
+    conn.close()
+    return JSONResponse(content={"id": request.id, "summary": resumo_gerado, "message": "Resumo gerado e salvo com sucesso"})
 
 @app.get("/api/interviews")
 def get_interviews(
@@ -94,12 +150,7 @@ def get_interviews(
         cursor.execute("SELECT COUNT(*) FROM interviews")
         total = cursor.fetchone()[0]
         cursor.execute(
-            """
-            SELECT id, date, summary
-            FROM interviews
-            ORDER BY date DESC
-            LIMIT ? OFFSET ?
-            """,
+            "SELECT id, date, summary FROM interviews ORDER BY date DESC LIMIT ? OFFSET ?", 
             (per_page, offset)
         )
         rows = cursor.fetchall()
@@ -121,29 +172,17 @@ def get_interviews(
         "pages": (total + per_page - 1) // per_page
     })
 
-@app.post("/api/interviews")
-def insert_interview(
-    transcription: str = Body(..., embed=True),
-    audio_file: str = Body(..., embed=True),
-    audio_transcription: str = Body(..., embed=True),
-    summary: str = Body(..., embed=True),
-    date: str = Body(default=datetime.now().isoformat(), embed=True)
-):
+@app.delete("/api/interviews/{id}")
+def delete_interview(id: int):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO interviews (transcription, audio_file, audio_transcription, summary, date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (transcription, audio_file, audio_transcription, summary, date))
+        cursor.execute("DELETE FROM interviews WHERE id = ?", (id,))
         conn.commit()
-        interview_id = cursor.lastrowid
+        deleted = cursor.rowcount
         conn.close()
     except sqlite3.Error:
-        raise HTTPException(status_code=500, detail="Erro ao inserir entrevista no banco de dados")
-
-    return JSONResponse(content={
-        "id": interview_id,
-        "message": "Entrevista inserida com sucesso!"
-    })
-
+        raise HTTPException(status_code=500, detail="Erro ao deletar entrevista no banco de dados")
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    return JSONResponse(content={"message": "Entrevista deletada com sucesso"})
