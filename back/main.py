@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 import requests
@@ -16,6 +17,15 @@ app = FastAPI(
     title="API de Resumos de Entrevistas",
     description="Uma API para gerar resumos de transcrições usando o OpenAI GPT.",
     version="0.0.1"
+)
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 def create_table():
@@ -150,7 +160,7 @@ def get_interviews(
         cursor.execute("SELECT COUNT(*) FROM interviews")
         total = cursor.fetchone()[0]
         cursor.execute(
-            "SELECT id, date, summary FROM interviews ORDER BY date DESC LIMIT ? OFFSET ?", 
+            "SELECT id, date, transcription, summary FROM interviews ORDER BY date DESC LIMIT ? OFFSET ?", 
             (per_page, offset)
         )
         rows = cursor.fetchall()
@@ -160,6 +170,7 @@ def get_interviews(
             interviews.append({
                 "id": row["id"],
                 "date": row["date"],
+                "transcription": row["transcription"],
                 "summary": row["summary"]
             })
     except sqlite3.Error:
