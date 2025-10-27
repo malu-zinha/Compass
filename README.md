@@ -1,7 +1,100 @@
-Compass: Plataforma de auxílio para entrevistas de emprego com 3 features principais:
+# 🧭 COMPASS - Plataforma de Auxílio para Entrevistas
 
-Resumo padronizado das entrevistas de emprego por meio da descrição do áudio ao longo da entrevista, gerando um resumo detalhado com IA que mostra as perguntas, as respostas, os pontos positivos e negativos do candidato e tudo que foi falado na entrevista. Todos os resumos de todas as entrevistas devem estar no mesmo padrão.
+Plataforma inteligente para auxiliar entrevistas de emprego com 3 features principais:
 
-Análise de cada candidato por meio de um sistema onde o entrevistador escreve com suas palavras o “perfil ideal” e o modelo analisa cada entrevista e ranqueia os que mais se encaixam nesse modelo.
+## ✨ Features
 
-Geração de perguntas personalizadas ao longo da entrevista para auxiliar o entrevistador. Antes da entrevista, a plataforma recebe como input as perguntas padrão da entrevista, e ao longo dela o modelo pode tanto dar ideias de perguntas novas baseadas nas respostas do candidato quanto dar ideias de mudanças nas perguntas de antes para se modelar mais à entrevista.
+1. **Resumo Padronizado**: Gera resumos detalhados das entrevistas usando IA, mostrando perguntas, respostas, pontos positivos/negativos do candidato
+2. **Análise de Candidatos**: Sistema que ranqueia candidatos baseado no perfil ideal definido pelo entrevistador
+3. **Perguntas Personalizadas**: Sugere perguntas personalizadas durante a entrevista baseadas nas respostas do candidato
+
+## 🚀 Setup Rápido
+
+### Opção 1: Script Automático
+```bash
+# Clone o repositório
+git clone <seu-repositorio>
+cd Compass
+
+# Execute o script de setup
+./setup.sh
+```
+
+### Opção 2: Setup Manual
+
+1. **Instalar dependências Python:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r back/requirements.txt
+```
+
+2. **Instalar dependências Node.js:**
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+3. **Configurar variáveis de ambiente:**
+```bash
+# Copie o arquivo .env.example para .env
+cp back/.env.example back/.env
+
+# Edite o arquivo .env e configure sua chave OpenAI
+nano back/.env
+```
+
+## 🎯 Como Executar
+
+### Terminal 1 - Backend:
+```bash
+source venv/bin/activate
+cd back
+uvicorn main:app --reload
+```
+
+### Terminal 2 - Frontend:
+```bash
+cd frontend
+npm start
+```
+
+## 🌐 URLs
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Documentação API**: http://localhost:8000/docs
+
+## 🔑 Configuração da API OpenAI
+
+1. Acesse: https://platform.openai.com/api-keys
+2. Crie uma nova chave secreta
+3. Cole no arquivo `back/.env` substituindo `your_openai_api_key_here`
+
+## 📁 Estrutura do Projeto
+
+```
+Compass/
+├── back/                 # Backend (FastAPI)
+│   ├── main.py          # API principal
+│   ├── prompts/         # Prompts para IA
+│   ├── uploads/         # Arquivos de áudio (criado automaticamente)
+│   └── .env            # Variáveis de ambiente
+├── frontend/            # Frontend (React)
+│   └── src/
+└── setup.sh            # Script de configuração automática
+```
+
+## ✅ Funcionalidades Automáticas
+
+- ✅ Pasta `uploads` criada automaticamente
+- ✅ Banco de dados SQLite inicializado automaticamente
+- ✅ CORS configurado para desenvolvimento
+- ✅ Hot reload ativado para desenvolvimento
+
+## 🛠️ Tecnologias
+
+- **Backend**: FastAPI, SQLite, OpenAI API
+- **Frontend**: React, JavaScript
+- **IA**: OpenAI GPT + Whisper

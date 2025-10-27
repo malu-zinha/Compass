@@ -43,12 +43,20 @@ def create_table():
     conn.commit()
     conn.close()
 
+def ensure_uploads_directory():
+    """Cria a pasta uploads se ela não existir"""
+    uploads_dir = "uploads"
+    if not os.path.exists(uploads_dir):
+        os.makedirs(uploads_dir)
+        print(f"✅ Pasta '{uploads_dir}' criada automaticamente")
+
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
 create_table()
+ensure_uploads_directory()
 
 # Carregar prompts
 with open('prompts/prompt_padrao.txt') as fin:
