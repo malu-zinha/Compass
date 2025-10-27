@@ -19,6 +19,9 @@ pids
 
 # dotenv environment variables
 .venv/
+venv/
+back/venv/
+**/venv/
 .env
 .env.*.local
 .env.local
