@@ -1,0 +1,5 @@
+You are given the transcript of an interview without speaker labels.
+There are exactly two people in this conversation.
+Please identify who is speaking in each segment, and label them as either 'Interviewer' or 'Interviewee'.
+Respond ONLY with a JSON array where each element has 'speaker' (either 'Interviewee' or 'Interviewed') and 'text' fields.
+Here is the transcript:\n\n
