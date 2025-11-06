@@ -11,7 +11,8 @@ Exemplo de arquivo JSON de entrada (campos obrigatórios, exceto `notes`):
 		"position": "string",
 		"skills": [
 			"string",
-			"..."
+			"...",
+			"string"
 		],
 		"description": "string"
 	},
@@ -19,22 +20,11 @@ Exemplo de arquivo JSON de entrada (campos obrigatórios, exceto `notes`):
 		{ "speaker": "Interviewer", "text": "string" },
 		{ "speaker": "Interviewee", "text": "string" }
 	],
-	"positives": [
-		"string",
-		"..."
-	],
-	"negatives": [
-		"string",
-		"..."
-	],
-	"experiences": [
-		{
-			"company": "string",
-			"role": "string",
-			"description": "string"
-		}
-	],
-	"notes": "string (opcional)",
+	"candidate": {
+		"name": "Nome do candidato",
+		"email": "email@exemplo.com",
+		"phone": "+55 11 91234-5678"
+	},
 	"metadata": { "interviewer": "Nome", "date": "YYYY-MM-DD", "id_vaga": "string (opcional)" }
 }
 
@@ -56,22 +46,12 @@ Exemplo mínimo de entrada válido (resumido):
 {
 	"position_data": { "position":"Engenheiro de Dados","skills":["Python","SQL"],"description":"..." },
 	"transcript": [ {"speaker":"Interviewer","text":"Fala sobre experiência X"}, {"speaker":"Interviewee","text":"Respondo..."} ],
-	"positives": ["Boa comunicação","Conhecimento em SQL"],
-	"negatives": ["Pouca experiência em produção"],
-	"experiences": [{"company":"Empresa X","role":"Cargo Y","description":"..."}],
-	"notes": "Anotações opcionais do entrevistador",
 	"metadata": {"interviewer":"João","date":"2025-11-05","id_vaga":"12345"}
 }
 
-Observação final: trate `positives` e `negatives` como parte do input obrigatório; `notes` e `metadata` são opcionais. Normalize `speaker` e, quando o transcript for muito longo, aplique chunking antes de enviar ao modelo.
-
-Observação importante: a camada que chama esta API já controla o formato da saída. Não é necessário (nem desejável) insistir no prompt para "retornar apenas JSON" — foque em analisar, extrair e mapear informações do JSON de entrada.
 
 Objetivos e regras principais:
 - Use o conteúdo de `transcript` para localizar evidências textuais que sustentem insights, citações e preenchimento de `match_details` (procure quando o entrevistado cita habilidades ou experiências relacionadas às `skills` de `position_data`).
-- Combine as listas `positives` e `negatives` fornecidas pelo entrevistador com os insights extraídos automaticamente.
-- Trate `notes` como evidências relevantes e incorpore-as quando fizer sentido.
-- Para cada item em `experiences`, gere 1-2 frases explicando a relevância da experiência para a vaga.
 - Preencha todas as chaves do schema de saída (use valores vazios apropriados: "" para strings, [] para listas, 0 para numerais) — não omita chaves.
 
 Schema de saída de referência (preencha todas as chaves mesmo que vazias):
@@ -81,6 +61,11 @@ Schema de saída de referência (preencha todas as chaves mesmo que vazias):
 	"titulo_analise": "string - título curto focado no principal insight",
 	"contexto": { "tipo":"string","entrevistador":"string","entrevistado":"string" },
 	"vaga": { "titulo":"string","nivel":"string","departamento":"string","competencias":["string"],"localizacao":"string","id_vaga":"string" },
+	"skills": ["string"],
+	"experiences": [{"company":"string","role":"string","description":"string"}],
+	"positives": ["string"],
+	"negatives": ["string"],
+	"notes": "string",
 	"objetivo_principal":"string",
 	"insights_principais":[{"insight":"string","por_que":"string"}],
 	"pontos_de_friccao":["string"],
@@ -95,21 +80,102 @@ Schema de saída de referência (preencha todas as chaves mesmo que vazias):
 	},
 }
 
-Boas práticas para preenchimento:
-- "nota_overall" deve ser inteiro entre 0 e 100. Subscores entre 0 e 10 (inteiros). Inclua justificativas breves para os subscores.
-- Em "insights_principais", cada item deve ter um "insight" conciso e um "por_que" que descreva a evidência ou razão (baseado na transcrição/notes).
-- Em "citacoes_de_destaque", inclua 1-3 trechos curtos preservando o texto exato do `transcript` que ilustrem os pontos principais.
-- Em "match_details", avalie requisitos da vaga (em `position_data.skills`) e para cada requisito forneça evidência e status ("match", "partial" ou "missing").
+Boas práticas de preenchimento (saída JSON)
+- Regra geral
+	- Preencha todas as chaves do JSON mesmo que não haja conteúdo (string vazia "", lista vazia [], número 0).
+	- Use tipos consistentes: strings, arrays e objetos conforme o schema.
+	- Evite enviar PII desnecessária ao LLM. Se incluir e-mails/telefones nos campos do candidato, confirme consentimento ou masqueie (ex.: "u***@exemplo.com").
+	- Preserve citações textuais exatamente como aparecem na `transcript` quando pedidas em `citacoes_de_destaque`. Indique origem por índice quando possível.
+
+- Campos textuais curtos
+	- `resumo`: 1–3 frases, direto ao ponto (máx. ~300 caracteres).
+	- `titulo_analise`: título curto (máx. ~60 caracteres) focado no insight principal.
+	- `objetivo_principal`: 1 frase clara descrevendo o propósito da análise.
+
+- Lists / itens
+	- `top_insights`: 1–5 frases ou bullets curtos (cada item ≤ 120 caracteres). Ordene por importância.
+	- `pontos_de_friccao`, `citacoes_de_destaque`, `acoes_recomendadas`: prefira 1–3 itens prioritários (máx. 5).
+	- `positives` e `negatives`: 2–6 itens curtos cada; se vieram do pipeline automático, adicione entre parênteses a origem/extrato quando útil (ex.: "Comunicação clara (auto)").
+
+- `skills`
+	- Liste as skills da vaga normalizadas (ex.: "Python", "SQL"). Use forma única por skill (evite sinônimos).
+	- No output, mantenha a mesma ordem ou destaque as skills com evidência na frente.
+
+- `experiences`
+	- Para cada experiência, inclua { "company": "string", "role": "string", "description": "breve (1-2 frases) relevância para a vaga" }.
+	- Se não houver experiências relevantes, retornar [].
+
+- `notes`
+	- Reproduzir (ou resumir) anotações manuais do entrevistador. Se longas, forneça um parágrafo resumido + link/index para as notas completas fora do payload.
+
+- `insights_principais`
+	- Cada item: { "insight": "curto", "por_que": "evidência/razão" }.
+	- A evidência deve citar trecho(s) do `transcript` ou `notes` e, quando possível, apontar `transcript_index` (ex.: "por_que": "citou experiência X (transcript_index: 12)").
+
+- `match_details`
+	- Para cada skill de `position_data.skills` gerar:
+		{ "requisito": "skill", "evidencia": "trecho exato ou resumo curto", "status": "match|partial|missing", "confidence": 0-1 (opcional) }
+	- `status` resolve assim:
+		- match: evidência clara e específica;
+		- partial: menciona conhecimento mas sem exemplos práticos;
+		- missing: não há menção ou evidência.
+	- Preferir evidência textual curta (≤ 200 chars) ou um par de palavras + índice.
+
+- `citacoes_de_destaque`
+	- 1–3 trechos exatos do `transcript`. Cada citação preferencialmente com `transcript_index` (ex.: { "texto":"...", "transcript_index": 5 }).
+
+- `acoes_recomendadas`
+	- Sugestões práticas e priorizadas (primeiro item = maior prioridade). Ex.: "Aplicar teste prático focado em ETL", "Programar entrevista com o time X".
+
+- `fit_classificacao` e `score`
+	- `fit_classificacao`: usar apenas "ALTO", "MÉDIO" ou "BAIXO".
+	- `score.nota_overall`: inteiro 0–100 (arredonde).
+	- `score.subscores`: inteiros 0–10; preencha todos os subscores.
+	- `score.justificativas`: liste breves justificativas associadas aos subscores (cada item: { "categoria":"string","texto":"string" }).
+
+- Tamanhos e limites
+	- Strings longas: resumo/resumir antes de colocar no campo (evitar > 5000 caracteres por campo enviado ao LLM).
+	- Se o `transcript` for muito extenso, faça chunking e gere evidências por bloco; a saída final deve consolidar os insights dos blocos.
+
+- Formatação e validação
+	- Use JSON válido e bem formado. Não inclua comentários.
+	- Para campos numéricos, use valores numéricos (não strings).
+	- Ao finalizar, valide automaticamente (ex.: um schema JSON/schema validator) para garantir tipos e presença de chaves.
+
+- Transparência / rastreabilidade
+	- Quando uma conclusão depender de `notes` ou de um campo automático, anote a origem (ex.: "(evidência: notes)", "(evidência: diarizer v1)"). Isso facilita auditoria.
+
+- Exceções
+	- Se informação essencial estiver ausente (ex.: `transcript` ou `skills`), preencha os campos relacionados com valores vazios e inclua em `insights_principais` uma nota explicativa: ex.: "transcript ausente — não foi possível avaliar X".
+
+- Exemplo prático curto (match_details):
+	- "match_details": [ { "requisito":"SQL", "evidencia":"\"Usei joins e window functions em projeto X\" (transcript_index: 8)", "status":"match", "confidence":0.9 } ]
 
 Recuperação e valores faltantes:
 - Se um campo estiver ausente no input, preencha o campo correspondente no output com valor vazio apropriado ("" ou [] ou 0).
 
 Exemplo mínimo de saída (válida):
-{"titulo_analise":"Foco em falta de experiência prática","contexto":{"tipo":"Entrevista Técnica","entrevistador":"João","entrevistado":"Candidato A"},"vaga":{"titulo":"Engenheiro de Dados","nivel":"sênior","departamento":"Data","competencias":["Python","SQL"],"localizacao":"Remoto","id_vaga":"12345"},"objetivo_principal":"Avaliar fit técnico e experiência em ETL","insights_principais":[{"insight":"Experiência teórica forte","por_que":"O candidato cita conhecimento conceitual sem exemplos práticos"}],"pontos_de_friccao":["Pouca experiência prática com pipelines em produção"],"citacoes_de_destaque":["Nunca implementei um pipeline em produção, mas estudei as práticas"],"acoes_recomendadas":["Simular teste técnico focado em ETL"],"score":{"nota_overall":60,"subscores":{"tecnico":5,"comunicacao":7,"fit_cultura":6,"motivacao":8,"experiencia":4},"justificativas":[{"categoria":"experiencia","texto":"Forte em teoria, fraco em prática"}]},"metadados":{}}
-
----
-
-Lembrete: o JSON de entrada será concatenado após o marcador "ENTRADA_JSON:". Concentre-se em extrair evidências e mapear o output ao schema acima.
-
+{
+	"resumo": "Candidato com bom conhecimento teórico, precisa de prática",
+	"top_insights": ["Conhecimento teórico forte"],
+	"titulo_analise": "Falta de experiência prática",
+	"contexto": {"tipo":"Entrevista Técnica","entrevistador":"João","entrevistado":"Candidato A"},
+	"vaga": {"titulo":"Engenheiro de Dados","nivel":"sênior","departamento":"Data","competencias":["Python","SQL"],"localizacao":"Remoto","id_vaga":"12345"},
+	"skills": ["Python", "SQL"],
+	"experiences": [{"company":"Empresa X","role":"Analista","description":"Experiência com SQL em projetos internos."}],
+	"positives": ["Boa comunicação","Conhecimento em SQL"],
+	"negatives": ["Pouca experiência em produção"],
+	"notes": "Anotações do entrevistador: candidato demonstra interesse em aprender.",
+	"objetivo_principal": "Avaliar fit técnico e experiência em ETL",
+	"insights_principais": [{"insight":"Experiência teórica forte","por_que":"Candidato cita conceitos, sem exemplos práticos (transcript_index:5)"}],
+	"pontos_de_friccao": ["Pouca experiência prática com pipelines em produção"],
+	"citacoes_de_destaque": [{"texto":"Nunca implementei um pipeline em produção, mas estudei as práticas","transcript_index":12}],
+	"acoes_recomendadas": ["Simular teste técnico focado em ETL"],
+	"match_details": [{"requisito":"SQL","evidencia":"menciona joins e window functions (transcript_index:8)","status":"match"}],
+	"fit_classificacao": "MÉDIO",
+	"score": {"nota_overall":60,"subscores":{"tecnico":5,"comunicacao":7,"fit_cultura":6,"fit":6,"motivacao":8,"experiencia":4},
+	"justificativas":[{"categoria":"experiencia","texto":"Forte em teoria, fraco em prática"}]},
+	"metadados": {"interviewer":"João","date":"2025-11-05"}
+}
 
 ---
