@@ -1,14 +1,17 @@
 import json
 import sqlite3
+import os
+import mimetypes
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from database import get_db_connection
 
 router = APIRouter(
     prefix="/positions/interviews",
     tags=["Interviews"]
 )
+
 
 @router.post("/")
 async def insert_interview_audio(position_id: int, audio: UploadFile = File(...)):
@@ -17,14 +20,20 @@ async def insert_interview_audio(position_id: int, audio: UploadFile = File(...)
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM positions WHERE id = (?)', (position_id,))
-        resp = cursor.fetchone()
-        print(resp[0])
-        if not resp[0]:
+        row = cursor.fetchone()
+
+        if not row["COUNT(*)"]:
             raise HTTPException(status_code=500, detail=f"Não há cargo com position_id = {position_id}")
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Erro ao acessar o banco de dados: {e}")
+
+    os.makedirs("uploads", exist_ok=True)
+
     date = datetime.now().isoformat()
-    audio_file = f"uploads/{audio.filename}"
+    base_filename, ext = os.path.splitext(audio.filename)
+    safe_filename = f"interview_{int(datetime.now().timestamp())}{ext}"
+    audio_file = f"uploads/{safe_filename}"
+    
     with open(audio_file, "wb") as f:
         f.write(await audio.read())
     try:
@@ -39,10 +48,10 @@ async def insert_interview_audio(position_id: int, audio: UploadFile = File(...)
         conn.close()
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Erro ao inserir áudio no banco de dados")
-    
+
     return JSONResponse(content={
         "id": interview_id,
-        "message":"Áudio registrado com sucesso!"
+        "message": "Áudio registrado com sucesso!"
     })
 
 @router.get("/{position_id}")
@@ -124,7 +133,7 @@ def get_interviews_by_position(
             })
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Erro ao acessar o banco de dados: {e}")
-    
+
     return JSONResponse(content={
         "interviews": interviews,
         "total": total,
@@ -132,6 +141,47 @@ def get_interviews_by_position(
         "per_page": per_page,
         "pages": (total + per_page - 1) // per_page
     })
+
+@router.get("/audio/{interview_id}")
+def download_interview_audio(interview_id: int):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (interview_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Entrevista não encontrada.")
+
+        file_path = result["audio_file"]
+
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado no servidor.")
+
+        media_type, _ = mimetypes.guess_type(file_path)
+        if media_type is None:
+            media_type = "application/octet-stream"
+
+        filename = os.path.basename(file_path)
+
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=media_type
+        )
+
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro no banco de dados: {e}")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Erro interno do servidor: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
 
 @router.delete("/{id}")
 def delete_interview(id: int):
@@ -144,8 +194,8 @@ def delete_interview(id: int):
         conn.close()
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Erro ao deletar entrevista no banco de dados")
-    
+
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Entrevista não encontrada")
-    
+
     return JSONResponse(content={"message": "Entrevista deletada com sucesso"})
