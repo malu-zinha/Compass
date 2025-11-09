@@ -17,8 +17,6 @@ export default function QuestionsPage() {
     'Pergunta 6',
   ]);
   const [newQuestionText, setNewQuestionText] = useState('');
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editingText, setEditingText] = useState('');
   const adicionarPergunta = () => {
     const novaPergunta = `Pergunta ${perguntas.length + 1}`;
     setPerguntas((p) => [...p, novaPergunta]);
@@ -51,22 +49,6 @@ export default function QuestionsPage() {
     if (!t) return;
     setPerguntas((p) => [...p, t]);
     setNewQuestionText('');
-  };
-
-  const handleCardClick = (i) => {
-    if (selectionMode) {
-      toggleSelect(i);
-      return;
-    }
-    setEditingIndex(i);
-    setEditingText(perguntas[i]);
-  };
-
-  const saveEdit = (i) => {
-    const t = editingText.trim();
-    setPerguntas((p) => p.map((item, idx) => (idx === i ? (t || item) : item)));
-    setEditingIndex(null);
-    setEditingText('');
   };
 
   const deleteSelected = () => {
@@ -137,16 +119,7 @@ export default function QuestionsPage() {
             <h2 className={styles.title}>Lista de perguntas</h2>
           </div>
 
-          <div className={styles.addInputRow}>
-            <input
-              className={styles.addInput}
-              placeholder="Digite o nome da pergunta"
-              value={newQuestionText}
-              onChange={(e) => setNewQuestionText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddFromInput(); }}
-            />
-            <button className={styles.addInputBtn} onClick={handleAddFromInput}>Adicionar</button>
-          </div>
+          
 
           <section className={styles.board}>
             <ul className={styles.grid}>
@@ -154,20 +127,10 @@ export default function QuestionsPage() {
                 <li
                   key={i}
                   className={`${styles.card} ${selectionMode && selected.has(i) ? styles.selected : ''}`}
-                  onClick={() => handleCardClick(i)}
+                  onClick={() => selectionMode && toggleSelect(i)}
                 >
-                  {editingIndex === i ? (
-                    <input
-                      className={styles.cardInput}
-                      value={editingText}
-                      onChange={(e) => setEditingText(e.target.value)}
-                      onBlur={() => saveEdit(i)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { saveEdit(i); } }}
-                      autoFocus
-                    />
-                  ) : (
-                    <div className={styles.cardTitle}>{q}</div>
-                  )}
+                  <div className={styles.cardTitle}>{q}</div>
+                  <input className={styles.cardInput} placeholder={`Digite o conteúdo da ${q.toLowerCase()}`} />
                   <button
                     className={styles.removeX}
                     aria-label={`Remover ${q}`}
