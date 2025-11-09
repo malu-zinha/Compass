@@ -1,0 +1,115 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2.5rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+}
+
+.menu-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.menu-button:hover {
+  background: #f4f4f5;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.logo-image {
+  height: 4rem;
+  width: auto;
+}
+
+.header-title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.1rem;
+  font-weight: normal;
+  color: #1a1a1a;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.header-btn {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 0.9rem;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.header-btn svg {
+  flex-shrink: 0;
+}
+
+.btn-comparar {
+  background: #EDE9FF;
+  color: #371C68;
+}
+
+.btn-comparar:hover {
+  background: #ddd5ff;
+}
+
+.btn-info {
+  background: #EDE9FF;
+  color: #371C68;
+}
+
+.btn-info:hover {
+  background: #ddd5ff;
+}
+
+.btn-nova-entrevista {
+  background: #EDE9FF;
+  color: #371C68;
+}
+
+.btn-nova-entrevista:hover {
+  background: #ddd5ff;
+}
