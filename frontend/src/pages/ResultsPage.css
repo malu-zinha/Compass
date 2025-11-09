@@ -1,0 +1,278 @@
+.results-page {
+  min-height: 100vh;
+  background: #FFF7F5;
+  display: flex;
+  flex-direction: column;
+}
+
+.results-container {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  gap: 2rem;
+  padding: 2rem;
+  flex: 1;
+}
+
+.section-title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0 0 1.5rem 0;
+  color: #1a1a1a;
+}
+
+/* Grid de Entrevistas */
+.interviews-grid-section {
+  flex: 1;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 80px - 4rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.interviews-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.interview-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.25rem;
+  font-weight: normal;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.section-label.positives {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.2rem 0.5rem;
+  background: #E9F2FF;
+  color: #1a1a1a;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 540;
+}
+
+.section-label.negatives {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.2rem 0.5rem;
+  background: #FFE9E9;
+  color: #1a1a1a;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 540;
+}
+
+.section-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.section-text:first-of-type {
+  margin-top: 1.25rem;
+  padding-left: 0.5rem;
+}
+
+.btn-ver-detalhes {
+  padding: 0.75rem 1.5rem;
+  background: #EDE9FF;
+  color: #371C68;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 0.9rem;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: auto;
+}
+
+.btn-ver-detalhes:hover {
+  background: #ddd5ff;
+}
+
+/* Ranking */
+.ranking-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 80px - 4rem);
+  margin-right: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ranking-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ranking-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.ranking-number {
+  width: 32px;
+  height: 32px;
+  background: #FFE2DE;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.ranking-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ranking-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.ranking-email {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.ranking-match {
+  font-family: 'Inter', sans-serif;
+  font-weight: 540;
+  font-size: 0.75rem;
+  color: #1a1a1a;
+  white-space: nowrap;
+  display: inline-block;
+  width: fit-content;
+  padding: 0.25rem 0.6rem;
+  background: #DCFCE7;
+  border-radius: 5px;
+}
+
+.ranking-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.ranking-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ranking-meta-item svg {
+  flex-shrink: 0;
+}
+
+.btn-ver-detalhes-small {
+  padding: 0.65rem 1.25rem;
+  background: #EDE9FF;
+  color: #371C68;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 0.875rem;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-ver-detalhes-small:hover {
+  background: #ddd5ff;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .interviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .results-container {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-section {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .interviews-grid-section,
+  .ranking-section {
+    max-height: none;
+  }
+}
