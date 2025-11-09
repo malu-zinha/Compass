@@ -1,197 +1,198 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
+import CalendarIcon from '../components/icons/CalendarIcon';
+import ClockIcon from '../components/icons/ClockIcon';
+import './ResultsPage.css';
 
 function ResultsPage() {
+  const navigate = useNavigate();
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    fetchInterviews();
+    // Mock data - substituir com fetch real
+    const mockInterviews = [
+      {
+        id: 1,
+        name: 'Candidato #1',
+        email: 'candidato1@gmail.com',
+        date: '14/10/2025',
+        duration: '40 minutos',
+        match: 83,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 2,
+        name: 'Candidato #2',
+        email: 'candidato#2@gmail.com',
+        date: '15/10/2025',
+        duration: '39 minutos',
+        match: 82,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 3,
+        name: 'Candidato #3',
+        email: 'candidato#3@gmail.com',
+        date: '15/10/2025',
+        duration: '45 minutos',
+        match: 98,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 4,
+        name: 'Candidato #4',
+        email: 'candidato#4@gmail.com',
+        date: '15/10/2025',
+        duration: '45 minutos',
+        match: 98,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 5,
+        name: 'Candidato #5',
+        email: 'candidato#5@gmail.com',
+        date: '16/10/2025',
+        duration: '27 minutos',
+        match: 86,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 6,
+        name: 'Candidato #6',
+        email: 'candidato#6@gmail.com',
+        date: '16/10/2025',
+        duration: '32 minutos',
+        match: 75,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 7,
+        name: 'Candidato #7',
+        email: 'candidato#7@gmail.com',
+        date: '17/10/2025',
+        duration: '42 minutos',
+        match: 80,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      },
+      {
+        id: 8,
+        name: 'Candidato #8',
+        email: 'candidato#8@gmail.com',
+        date: '17/10/2025',
+        duration: '38 minutos',
+        match: 77,
+        positives: ['Pontos positivos do candidato'],
+        negatives: ['Pontos negativos do candidato']
+      }
+    ];
+
+    setInterviews(mockInterviews);
+    setLoading(false);
   }, []);
 
-  const fetchInterviews = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/interviews');
-      
-      if (!response.ok) {
-        throw new Error('Erro ao buscar entrevistas');
-      }
+  const rankedInterviews = [...interviews].sort((a, b) => b.match - a.match);
 
-      const data = await response.json();
-      setInterviews(data.interviews || []);
-    } catch (error) {
-      setError(`Erro ao carregar resultados: ${error.message}`);
-      console.error('Erro:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleExpand = (id) => {
-    setSelectedId(selectedId === id ? null : id);
-  };
-
-  const deleteInterview = async (id) => {
-    if (!window.confirm('Tem certeza que deseja deletar esta entrevista?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/interviews/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao deletar entrevista');
-      }
-
-      // Atualizar lista
-      await fetchInterviews();
-      setSelectedId(null);
-    } catch (error) {
-      alert(`Erro ao deletar: ${error.message}`);
-      console.error('Erro:', error);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
+  const handleViewDetails = (id) => {
+    navigate(`/entrevista/${id}`);
   };
 
   if (loading) {
-    return (
-      <div className="results-page">
-        <div className="loading">
-          ⏳ Carregando resultados...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="results-page">
-        <div className="error">
-          ❌ {error}
-        </div>
-        <button 
-          className="send-button"
-          onClick={fetchInterviews}
-          style={{ marginTop: '1rem' }}
-        >
-          🔄 Tentar Novamente
-        </button>
-      </div>
-    );
-  }
-
-  if (interviews.length === 0) {
-    return (
-      <div className="results-page">
-        <div className="empty-state">
-          <div className="empty-state-icon">📭</div>
-          <h3>Nenhuma entrevista encontrada</h3>
-          <p>Vá para a página de gravação para criar sua primeira entrevista!</p>
-        </div>
-      </div>
-    );
+    return <div className="loading">Carregando...</div>;
   }
 
   return (
     <div className="results-page">
-      <h2>📋 Resultados das Entrevistas</h2>
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Header 
+        title="Análise de candidatos"
+        showComparar={true}
+        onMenuClick={() => setSidebarOpen(true)}
+      />
       
-      <div className="interview-list">
-        {interviews.map((interview) => (
-          <div 
-            key={interview.id}
-            className={`interview-card ${selectedId === interview.id ? 'selected' : ''}`}
-          >
-            <div className="interview-date">
-              📅 {formatDate(interview.date)}
-            </div>
-            
-            <div className="interview-preview">
-              <strong>ID:</strong> {interview.id}
-              {interview.summary && (
-                <span> • ✅ Processado</span>
-              )}
-              {!interview.summary && (
-                <span> • ⏳ Processando...</span>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button 
-                className="expand-button"
-                onClick={() => toggleExpand(interview.id)}
-              >
-                {selectedId === interview.id ? '▲ Ocultar' : '▼ Ver Detalhes'}
-              </button>
-              <button 
-                className="expand-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteInterview(interview.id);
-                }}
-                style={{ background: '#dc2626' }}
-              >
-                🗑️ Deletar
-              </button>
-            </div>
-
-            {selectedId === interview.id && (
-              <div className="interview-details">
+      <div className="results-container">
+        {/* Coluna Esquerda - Entrevistados */}
+        <div className="interviews-grid-section">
+          <h2 className="section-title">Entrevistados</h2>
+          
+          <div className="interviews-grid">
+            {interviews.map((interview) => (
+              <div key={interview.id} className="interview-card">
+                <h3 className="card-title">{interview.name}</h3>
                 
-                {/* Transcrição */}
-                <div className="detail-section">
-                  <h3>📝 Transcrição</h3>
-                  {interview.transcription ? (
-                    <div className="transcription">
-                      {interview.transcription}
-                    </div>
-                  ) : (
-                    <p style={{ color: '#666' }}>Transcrição não disponível</p>
-                  )}
+                <div className="card-section">
+                  <div className="section-label positives">Pontos positivos</div>
+                  {interview.positives.map((point, idx) => (
+                    <div key={idx} className="section-text">[{point}]</div>
+                  ))}
                 </div>
-
-                {/* Resumo */}
-                <div className="detail-section">
-                  <h3>✨ Resumo Padrão</h3>
-                  {interview.summary ? (
-                    <div className="summary">
-                      {interview.summary}
-                    </div>
-                  ) : (
-                    <p style={{ color: '#666' }}>Resumo não disponível</p>
-                  )}
+                
+                <div className="card-section">
+                  <div className="section-label negatives">Pontos negativos</div>
+                  {interview.negatives.map((point, idx) => (
+                    <div key={idx} className="section-text">[{point}]</div>
+                  ))}
                 </div>
-
+                
+                <button 
+                  className="btn-ver-detalhes"
+                  onClick={() => handleViewDetails(interview.id)}
+                >
+                  Ver detalhes
+                </button>
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <button 
-        className="send-button"
-        onClick={fetchInterviews}
-        style={{ marginTop: '2rem' }}
-      >
-        🔄 Atualizar Lista
-      </button>
+        {/* Coluna Direita - Ranking */}
+        <div className="ranking-section">
+          <h2 className="section-title">Ranking</h2>
+          
+          <div className="ranking-list">
+            {rankedInterviews.slice(0, 5).map((interview, index) => (
+              <div key={interview.id} className="ranking-item">
+                <div className="ranking-header">
+                  <div className="ranking-number">{index + 1}</div>
+                  <div className="ranking-info">
+                    <div className="ranking-name">{interview.name}</div>
+                    <div className="ranking-email">{interview.email}</div>
+                  </div>
+                  <div className="ranking-match">{interview.match}% match</div>
+                </div>
+                
+                <div className="ranking-meta">
+                  <span className="ranking-meta-item">
+                    <CalendarIcon size={16} color="#666" />
+                    <span>{interview.date}</span>
+                  </span>
+                  <span className="ranking-meta-item">
+                    <ClockIcon size={16} color="#666" />
+                    <span>{interview.duration}</span>
+                  </span>
+                </div>
+                
+                <button 
+                  className="btn-ver-detalhes-small"
+                  onClick={() => handleViewDetails(interview.id)}
+                >
+                  Ver detalhes
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
