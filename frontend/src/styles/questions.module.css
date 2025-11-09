@@ -86,6 +86,12 @@
 
 .main { max-width: 1100px; margin: 40px auto; padding: 0 20px }
 
+/* add-input row (top of questions list) */
+.addInputRow { display:flex; gap:8px; align-items:center; margin: 12px 0 18px }
+.addInput { flex: 1; padding: 10px 12px; border-radius:8px; border:1px solid #e6edf3; font-size: 0.95rem }
+.addInputBtn { background: #FFE2DE; color: #602309; border: none; padding: 10px 14px; border-radius:8px; font-weight:700; cursor:pointer }
+.addInputBtn:hover { filter: brightness(0.98); transform: translateY(-1px) }
+
 /* small green circular plus for adding a question */
 .plusButton {
   width: 34px;
