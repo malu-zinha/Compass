@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255,255,255,0.92); /* quase toda branca, deixando o fundo apagado */
+  background: #ffffff; /* totalmente branco — não deixa a tela de fundo aparecer */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,24 +27,21 @@
 }
 
 .closeButton {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.06);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  padding: 8px;
   font-size: 1.25rem;
+  color: #6b7280; /* sutil cinza */
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  z-index: 1001; /* acima do overlay/modal */
 }
 
 .closeButton:hover {
-  filter: brightness(0.98);
+  color: #374151; /* escurece levemente no hover */
+  transform: none;
 }
 
 .title {
@@ -106,3 +103,38 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+.errorText {
+  color: #b91c1c; /* red-700 */
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+
+.errorBanner {
+  background: #fee2e2; /* light red */
+  color: #b91c1c;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.notification {
+  background: #ecfdf5; /* light green */
+  color: #065f46; /* green-800 */
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.notification, .errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-content: flex-start; /* align to the left inside the card */
+}
+
+.sticker { display: inline-flex; align-items: center; justify-content: center; }
+.sticker svg { display: block; }
