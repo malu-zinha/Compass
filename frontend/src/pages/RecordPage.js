@@ -1,18 +1,91 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CheckIcon from '../components/icons/CheckIcon';
+import EqualsIcon from '../components/icons/EqualsIcon';
+import ThumbsUpIcon from '../components/icons/ThumbsUpIcon';
+import ThumbsDownIcon from '../components/icons/ThumbsDownIcon';
+import './RecordPage.css';
 
 function RecordPage() {
+  const navigate = useNavigate();
+  
+  // Dados do candidato
+  const [candidateData, setCandidateData] = useState(null);
+  
+  // Gravação
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
-  const [status, setStatus] = useState('');
-  const [processing, setProcessing] = useState(false);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
-  const navigate = useNavigate();
+  const timerIntervalRef = useRef(null);
+  const streamRef = useRef(null);
+  
+  // Transcrição em tempo real
+  const [transcription, setTranscription] = useState([
+    // Mock data for development
+    { speaker: 'Candidato', text: 'Bom dia! Meu nome é [entrevistado], tenho 21 anos e sou formado em Ciência da Computação.' },
+    { speaker: 'Entrevistador', text: 'Olá, fale um pouco sobre suas experiências no mercado de trabalho.' },
+    { speaker: 'Candidato', text: 'Claro, já trabalhei como engenheiro de software na Meta e meu emprego mais recente foi como fullstack na Microsoft' }
+  ]);
+  
+  // Perguntas
+  const [questions, setQuestions] = useState([
+    { id: 1, text: 'Como você se vê em 5 anos?', status: 'completed', isAI: false },
+    { id: 2, text: 'Me conte sobre seus hobbies.', status: 'pending', isAI: false },
+    { id: 3, text: 'Quais suas experiências anteriores no mercado?', status: 'pending', isAI: false },
+    { id: 4, text: 'Fale mais sobre esse seu último emprego.', status: 'pending', isAI: true }
+  ]);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+  
+  // Anotações
+  const [notes, setNotes] = useState('');
+  
+  // Inicialização
+  useEffect(() => {
+    const savedData = localStorage.getItem('interviewData');
+    if (!savedData) {
+      navigate('/nova-entrevista');
+      return;
+    }
+    
+    setCandidateData(JSON.parse(savedData));
+    
+    // Auto-start recording
+    startRecording();
+    
+    return () => {
+      stopRecording();
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, []);
+  
+  // Timer
+  useEffect(() => {
+    if (isRecording) {
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+    
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -26,16 +99,13 @@ function RecordPage() {
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
-        stream.getTracks().forEach(track => track.stop());
-        setStatus('Gravação concluída! Clique em "Enviar" para processar.');
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-      setStatus('Gravando... Clique novamente para parar.');
     } catch (error) {
-      setStatus(`Erro ao acessar microfone: ${error.message}`);
-      console.error('Erro:', error);
+      console.error('Erro ao acessar microfone:', error);
+      alert('Erro ao acessar o microfone. Verifique as permissões.');
     }
   };
 
@@ -43,122 +113,208 @@ function RecordPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     }
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+  const toggleQuestionStatus = (id) => {
+    setQuestions(questions.map(q => 
+      q.id === id 
+        ? { ...q, status: q.status === 'completed' ? 'pending' : 'completed' }
+        : q
+    ));
+  };
+  
+  const handleQuestionReaction = (id, reaction) => {
+    console.log(`Question ${id} ${reaction}`);
+    // Backend integration: send reaction
+  };
+  
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const sendToBackend = async () => {
-    if (!audioBlob) {
-      setStatus('Nenhum áudio para enviar!');
+  const handleEndInterview = async () => {
+    stopRecording();
+    
+    if (!audioBlob && !chunksRef.current.length) {
+      alert('Nenhum áudio gravado!');
       return;
     }
 
-    setProcessing(true);
-    setStatus('Enviando áudio...');
-
+    // Prepare data to send to backend
     const formData = new FormData();
-    formData.append('audio_file', audioBlob, 'recording.webm');
-
+    
+    const finalBlob = audioBlob || new Blob(chunksRef.current, { type: 'audio/webm' });
+    formData.append('audio_file', finalBlob, 'interview.webm');
+    
+    if (candidateData) {
+      formData.append('candidate_name', candidateData.candidateName);
+      formData.append('candidate_email', candidateData.candidateEmail);
+      formData.append('candidate_phone', candidateData.candidatePhone);
+      formData.append('candidate_position', candidateData.candidatePosition);
+    }
+    
+    formData.append('questions', JSON.stringify(questions));
+    formData.append('notes', notes);
+    formData.append('transcription', JSON.stringify(transcription));
+    formData.append('duration', recordingTime);
+    
     try {
-      // 1. Upload do áudio
-      const uploadRes = await fetch('http://localhost:8000/api/interviews', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error('Erro no upload do áudio');
-      }
-
-      const { id } = await uploadRes.json();
-      setStatus(`Áudio enviado! ID: ${id}. Transcrevendo...`);
-
-      // 2. Transcrever
-      const transcribeRes = await fetch('http://localhost:8000/transcribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-
-      if (!transcribeRes.ok) {
-        throw new Error('Erro na transcrição');
-      }
-
-      setStatus('Transcrição concluída! Gerando resumo...');
-
-      // 3. Gerar resumo
-      const summaryRes = await fetch('http://localhost:8000/gerar-resumo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, tipo_resumo: 'padrao' }),
-      });
-
-      if (!summaryRes.ok) {
-        throw new Error('Erro ao gerar resumo');
-      }
-
-      setStatus('✅ Processamento completo! Redirecionando...');
+      // TODO: Backend integration
+      // const response = await fetch('http://localhost:8000/api/interviews/complete', {
+      //   method: 'POST',
+      //   body: formData
+      // });
       
-      // Redirecionar para resultados após 1.5 segundos
+      console.log('Interview data ready to send:', {
+        audioSize: finalBlob.size,
+        candidateData,
+        questions,
+        notes,
+        transcription,
+        duration: recordingTime
+      });
+      
+      // Clean up localStorage
+      localStorage.removeItem('interviewData');
+      
+      // Navigate to results
       setTimeout(() => {
         navigate('/results');
-      }, 1500);
+      }, 500);
 
     } catch (error) {
-      setStatus(`❌ Erro: ${error.message}`);
-      console.error('Erro:', error);
-    } finally {
-      setProcessing(false);
+      console.error('Erro ao enviar entrevista:', error);
+      alert('Erro ao processar entrevista. Tente novamente.');
     }
   };
 
-  const getStatusClass = () => {
-    if (isRecording) return 'recording';
-    if (processing) return 'processing';
-    if (status.includes('✅')) return 'success';
-    if (status.includes('❌')) return 'error';
-    return '';
-  };
+  if (!candidateData) {
+    return <div>Carregando...</div>;
+  }
 
   return (
-    <div className="record-page">
-      <h2>Gravação de Áudio</h2>
-      <p>Clique no botão abaixo para iniciar a gravação</p>
-
-      <button 
-        className={`record-button ${isRecording ? 'recording' : ''}`}
-        onClick={toggleRecording}
-        disabled={processing}
-      >
-        {isRecording ? '⏸' : '🎙️'}
-      </button>
-
-      {status && (
-        <div className={`status ${getStatusClass()}`}>
-          {status}
+    <div className="record-page-container">
+      {/* Transcrição Panel */}
+      <div className="transcription-panel">
+        <div className="transcription-card">
+          <h3>Transcrição</h3>
+          <div className="transcription-content">
+            {transcription.length === 0 ? (
+              <p className="transcription-empty">
+                A transcrição aparecerá aqui em tempo real...
+              </p>
+            ) : (
+              transcription.map((item, index) => (
+                <div key={index} className="transcription-message">
+                  <div className="transcription-speaker">{item.speaker}</div>
+                  <div className={`transcription-bubble ${item.speaker.toLowerCase()}`}>
+                    {item.text}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      )}
-
-      {audioBlob && !processing && (
-        <div>
+      </div>
+      
+      {/* Right Panel */}
+      <div className="right-panel">
+        {/* Questions Section */}
+        <div className="questions-section">
+          <h3>Perguntas</h3>
+          <div className="questions-list">
+            {questions.map((question) => (
+              <div
+                key={question.id}
+                className={`question-item ${selectedQuestionId === question.id ? 'selected' : ''}`}
+                onClick={() => setSelectedQuestionId(question.id)}
+              >
+                <div className="question-header">
+                  <div className="question-number-status">
+                    <span className="question-number">Pergunta #{question.id}</span>
+                    <button
+                      className={`status-icon ${question.status}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleQuestionStatus(question.id);
+                      }}
+                      title={question.status === 'completed' ? 'Marcar como pendente' : 'Marcar como concluída'}
+                    >
+                      <span className="status-icon-symbol">
+                        {question.status === 'completed' ? (
+                          <CheckIcon size={16} color="#1a1a1a" />
+                        ) : (
+                          <EqualsIcon size={16} color="#1a1a1a" />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                  
+                  {question.isAI && (
+                    <div className="question-ai-controls">
+                      <button
+                        className="reaction-btn like"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuestionReaction(question.id, 'like');
+                        }}
+                        title="Aceitar sugestão"
+                      >
+                        <ThumbsUpIcon size={18} color="#1a1a1a" />
+                      </button>
+      <button 
+                        className="reaction-btn dislike"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuestionReaction(question.id, 'dislike');
+                        }}
+                        title="Rejeitar sugestão"
+                      >
+                        <ThumbsDownIcon size={18} color="#1a1a1a" />
+      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <p className="question-text">{question.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Notes Section */}
+        <div className="notes-section">
+          <h3>Anotações</h3>
+          <textarea
+            className="notes-textarea"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Aqui serão anotados detalhes adicionais sobre a entrevista!"
+          />
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="footer-controls">
+        <div className="timer">
+          {formatTime(recordingTime)} / 30:00
+        </div>
           <button 
-            className="send-button"
-            onClick={sendToBackend}
+          className="end-interview-btn"
+          onClick={handleEndInterview}
           >
-            📤 Enviar para Análise
+          Encerrar gravação
           </button>
         </div>
-      )}
     </div>
   );
 }
 
 export default RecordPage;
-
