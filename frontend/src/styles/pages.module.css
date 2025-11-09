@@ -1,0 +1,284 @@
+.loginContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 1rem;
+  background: linear-gradient(180deg, #f8fafc, #fff);
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  padding: 2rem;
+}
+
+.loginCard h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.6rem;
+}
+
+.loginCard input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.loginCard button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #FFDFCD;
+  color: #602309;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.loginCard p { 
+  margin-top: 1rem;
+  text-align: center;
+}
+/* estilos compartilhados (CSS Modules) para RecordPage e ResultsPage */
+
+:root{
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #4a3aff;
+  --danger: #dc2626;
+  --soft: #f3f4f6;
+}
+
+.recordPage, .resultsPage {
+  padding: 2rem;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: var(--bg);
+  min-height: calc(100vh - 64px);
+}
+
+.recordPage h2, .resultsPage h2 {
+  margin-bottom: 0.5rem;
+}
+
+.recordButton {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  border: none;
+  font-size: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg,#ffecd8,#ffd6b3);
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(74,58,255,0.12);
+}
+
+.recordButton_recording {
+  background: #ff6b6b;
+  color: #fff;
+  transform: scale(0.98);
+}
+
+.status {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--soft);
+  color: #111827;
+  display: inline-block;
+}
+.status_recording { background: rgba(255,107,107,0.12); }
+.status_processing { background: rgba(74,58,255,0.08); }
+.status_success { background: rgba(16,185,129,0.08); }
+.status_error { background: rgba(220,38,38,0.08); }
+
+.sendButton {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #FFDFCD;
+  color: #602309;
+  cursor: pointer;
+}
+
+/* Results list */
+.interviewList {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.interviewCard {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(2,6,23,0.04);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.interviewCard_selected {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.08);
+}
+
+.interviewDate { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+.interviewPreview { display:flex; gap:0.5rem; align-items:center; color:#111827; }
+
+.expandButton {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: none;
+  background: #FFDFCD;
+  color: #602309;
+  cursor: pointer;
+}
+
+.interviewDetails { margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid #f3f4f6; }
+.detailSection { margin-bottom: 0.75rem; }
+.transcription, .summary { white-space: pre-wrap; color: #111827; }
+
+.emptyState { text-align:center; padding:3rem 1rem; color:var(--muted); }
+.emptyStateIcon { font-size:2.5rem; margin-bottom:0.5rem; }
+
+.loading, .errorState { text-align:center; padding:2rem 1rem; }
+
+@media (min-width: 768px){
+  .interviewList { grid-template-columns: 1fr 1fr; }
+}
+
+/* --- Login screen styles (centralized) --- */
+:global(body) {
+  background-color: #f4f0ff;
+  font-family: "Inter", sans-serif;
+}
+
+.loginContainer {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loginCard {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  width: 340px;
+  text-align: center;
+}
+
+.loginCard h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+.loginCard input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.loginCard button {
+  width: 100%;
+  background-color: #FFDFCD;
+  color: #602309;
+  border: none;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.loginCard p {
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+.loginCard a {
+  color: #4a3aff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* --- Register form styles (centralized) --- */
+.formBox {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 15px;
+}
+
+.plus {
+  color: #6b4eff;
+}
+
+.line {
+  border: none;
+  border-top: 1px solid #eee;
+  margin-bottom: 25px;
+}
+
+.form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form input:focus {
+  border-color: #6b4eff;
+}
+
+.form button {
+  width: 100%;
+  padding: 12px;
+  background-color: #FFDFCD;
+  color: #602309;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.form button:hover {
+  filter: brightness(0.95);
+}
+
+.loginText {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.loginText a {
+  color: #222;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.loginText a:hover {
+  text-decoration: underline;
+}
