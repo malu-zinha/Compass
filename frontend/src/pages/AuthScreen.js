@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/auth.module.css';
 import { ReactComponent as Icon15 } from '../assets/icons/image 15.svg';
 
@@ -9,6 +10,13 @@ const AuthScreen = () => {
     usuario: '',
     senha: ''
   });
+
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    // navigate back to previous page or to home
+    navigate(-1);
+  };
 
   const handleInputChange = (e) => {
     setFormData({
@@ -30,22 +38,25 @@ const AuthScreen = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
-      {currentScreen === 'login' ? (
-        <LoginScreen 
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-          switchToRegister={() => setCurrentScreen('register')}
-        />
-      ) : (
-        <RegisterScreen 
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-          switchToLogin={() => setCurrentScreen('login')}
-        />
-      )}
+    <div className={styles.overlay} onClick={handleClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <button className={styles.closeButton} aria-label="Fechar" onClick={handleClose}>&times;</button>
+        {currentScreen === 'login' ? (
+          <LoginScreen 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            switchToRegister={() => setCurrentScreen('register')}
+          />
+        ) : (
+          <RegisterScreen 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            switchToLogin={() => setCurrentScreen('login')}
+          />
+        )}
+      </div>
     </div>
   );
 };
