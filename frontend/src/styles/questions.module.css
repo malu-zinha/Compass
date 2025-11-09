@@ -1,0 +1,245 @@
+/* Page wrapper and positioning */
+.wrapper {
+  position: fixed; /* cover the entire viewport so underlying pages don't show */
+  inset: 0;
+  background: #FDF4F3; /* surround the centered card with this color */
+  padding: 0; /* remove extra padding so the whole screen stays white */
+  box-sizing: border-box;
+  overflow: auto; /* allow scrolling inside the overlay if needed */
+  z-index: 1200; /* above app chrome */
+}
+
+:root {
+  --accent-green: #16a34a; /* slightly lighter pleasant green */
+  --accent-green-alpha: rgba(22,163,74,0.12);
+  --accent-green-border: rgba(22,163,74,0.18);
+}
+
+.close {
+  display: none;
+}
+
+.topRight {
+  display: none;
+}
+
+.page {
+  min-height: 100vh;
+  background: transparent; /* allow wrapper color to show around the card */
+  color: #111827;
+}
+
+.closeX {
+  position: relative; /* participate in header flow so we can control spacing */
+  background: transparent;
+  border: none;
+  padding: 8px;
+  font-size: 1.25rem;
+  color: #6b7280; /* subtle gray */
+  cursor: pointer;
+  z-index: 1201;
+}
+
+.closeX:hover { color: #374151 }
+
+.header {
+  height: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* brand | title | actions */
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 6px solid #FDF4F3; /* subtle bottom stripe */
+  background: #ffffff; /* ensure full white */
+  position: relative;
+}
+
+.leftActions { display: none }
+.newInterview {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background: #EDE9FF;
+  color: #371C68;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration:none;
+  font-weight:700;
+  height:36px;
+  font-size: 0.9rem;
+  justify-self: end;
+}
+.newInterview strong { font-weight: 800 }
+.reportSticker { width: 32px; height: 32px; display:inline-flex; align-items:center; justify-content:center; background: transparent; border-radius:6px }
+.reportSticker svg { display:block; width:18px; height:18px }
+.rightBrand { display: block; font-weight: 800; font-size: 1rem; color: #111827; justify-self: start; margin-left: 4px }
+
+/* header center title */
+.headerTitle { grid-column: 2; justify-self: center; text-align: center }
+.headerTitle .title { margin: 0; font-size: 1.125rem }
+
+/* brand and logo consistent with AuthScreen */
+.brandTitle { font-weight: 800; font-size: 1.5rem; display: inline-flex; align-items: center; gap: 8px; font-family: 'Coolvetica', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+.icon { display: inline-block; width: 22px; height: 22px; vertical-align: middle; transform: translate(-1px, -16px); margin-left: -8px; position: relative; z-index: 5 }
+.iconSvg { width: 22px; height: 22px; vertical-align: middle }
+.iconSvg svg, .iconSvg { width: 100%; height: 100%; }
+.iconSvg path { fill: #602309 }
+
+.main { max-width: 1100px; margin: 40px auto; padding: 0 20px }
+
+/* add-input row (top of questions list) */
+.addInputRow { display:flex; gap:8px; align-items:center; margin: 12px 0 18px }
+.addInput { flex: 1; padding: 10px 12px; border-radius:8px; border:1px solid #e6edf3; font-size: 0.95rem }
+.addInputBtn { background: #FFE2DE; color: #602309; border: none; padding: 10px 14px; border-radius:8px; font-weight:700; cursor:pointer }
+.addInputBtn:hover { filter: brightness(0.98); transform: translateY(-1px) }
+
+/* small green circular plus for adding a question */
+.plusButton {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,185,129,0.12); /* light translucent green */
+  color: #065f46; /* darker green for the plus sign for contrast */
+  border-radius: 6px; /* small radius, not fully round */
+  border: 1px solid rgba(16,185,129,0.24);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(16,185,129,0.06);
+}
+.plusButton {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.plusButton:focus { outline: 2px solid rgba(6,95,70,0.12); border-radius: 8px }
+
+/* decorative sticker used inside the add button */
+.plusSticker {
+  width: 36px; /* slightly reduced */
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--accent-green-alpha), rgba(22,163,74,0.06));
+  color: var(--accent-green);
+  border-radius: 8px; /* slightly rounded square */
+  border: 1px solid var(--accent-green-border);
+  box-shadow: 0 8px 20px rgba(22,163,74,0.06);
+}
+.plusSticker svg { display: block; width:20px; height:20px }
+.plusSticker:hover { transform: translateY(-2px); filter: brightness(0.98) }
+.titleRow { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom: 18px }
+.title { font-size: 1.4rem; font-weight:700 }
+.titleTrash { background: transparent; border: none; padding:6px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#6b7280; cursor:pointer }
+.titleTrash svg { display:block }
+.titleTrash:hover { background: rgba(0,0,0,0.04); color:#374151 }
+
+/* header actions (select toggle / delete buttons) */
+.headerActions { display:flex; gap:16px; align-items:center; margin-left: 12px }
+.selectToggle { background: transparent; border: none; font-size: 1.25rem; color: #6b7280; cursor: pointer; padding:6px }
+.deleteSelected { background: #b91c1c; color: white; border: none; padding:6px 10px; border-radius:8px; cursor:pointer }
+.deleteSelected:disabled { opacity: 0.5; cursor: default }
+.cancelSelection { background: transparent; border: 1px solid #e5e7eb; padding:6px 8px; border-radius:8px; cursor:pointer }
+
+.board { background: #fff; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(2,6,23,0.04) }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; padding:0; margin:0 }
+.card { padding: 14px; border-radius: 10px; border: 1px solid #e6e0fa; background: #EDE9FF; position: relative }
+.card.selected { box-shadow: 0 10px 30px rgba(22,163,74,0.07); transform: translateY(-4px); border-color: var(--accent-green); }
+.cardTitle { font-weight: 600; margin-bottom: 8px }
+.cardInput { width:100%; padding:8px; border:1px solid #dcd6f0; border-radius:8px; background: #ffffff }
+
+.footer { margin-top: 20px; display:block }
+
+.addQuestionBtn {
+  background: #FFE2DE;
+  color: #602309;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  display: block;
+}
+.addQuestionBtn:hover { filter: brightness(0.98); transform: translateY(-1px) }
+
+/* minimal 'x' inside each card to remove it - visible by default */
+.removeX {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.04);
+  border: none;
+  width:28px;
+  height:28px;
+  border-radius:6px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#6b7280;
+  cursor:pointer;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.removeX:hover { background: rgba(0,0,0,0.06); color:#374151 }
+
+/* Content card to mirror Auth screen aesthetic */
+.contentCard {
+  max-width: 920px;
+  margin: 24px auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16,24,40,0.08);
+  padding: 20px;
+}
+
+.title { font-size: 1.4rem; font-weight:700; font-family: 'Coolvetica', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111827 }
+
+/* title area actions: add and trash */
+.titleActions { display:flex; gap:8px; align-items:center }
+.titleAdd { background: transparent; border: none; padding: 0; cursor: pointer }
+.titleAdd .plusSticker { width:34px; height:34px }
+
+/* cornerActions pins the + and trash side-by-side in the top-right corner */
+.cornerActions {
+  /* place inline with the title on the right side of the title row */
+  position: static; /* flow with the document inside .titleActions */
+  display: flex;
+  gap: 6px; /* tighten spacing so the buttons sit close together */
+  align-items: center;
+  margin-left: 8px;
+}
+
+.trashArea { display:flex; align-items:center; justify-content:center; gap:8px }
+.trashButton { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; background: rgba(185,28,28,0.12); border: 1px solid rgba(185,28,28,0.18); color:#b91c1c; border-radius:8px; cursor:pointer }
+.trashButton svg { width:18px; height:18px }
+.trashButton:hover { filter: brightness(0.98); transform: translateY(-1px) }
+
+.deleteConfirm { display:flex; gap:8px; align-items:center }
+.deleteText { font-size:0.9rem; color:#7f1d1d }
+.deleteActions { display:flex; gap:6px }
+.confirmDelete { background:#fca5a5; color:#7f1d1d; border:none; padding:6px 8px; border-radius:6px; cursor:pointer }
+.cancelDelete { background: transparent; border:1px solid #e5e7eb; padding:6px 8px; border-radius:6px; cursor:pointer }
+
+.item {
+  background: #EDE9FF;
+  border: 1px solid #e6e0fa;
+  padding: 1rem;
+  border-radius: 8px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.itemText { color: #111827; font-weight: 600 }
+
+/* small helpers kept from previous version */
+.input { width: 100%; padding: 0.65rem 0.75rem; border-radius: 8px; border: 1px solid #e6edf3; font-size: 0.95rem }
+
+.action { display:none }

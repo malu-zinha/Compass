@@ -161,4 +161,3 @@ function RecordPage() {
 }
 
 export default RecordPage;
-
