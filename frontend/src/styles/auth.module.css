@@ -1,13 +1,20 @@
-.authContainer {
-  min-height: 70vh;
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.92); /* quase toda branca, deixando o fundo apagado */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(180deg, #f6f0ff 0%, #fff7f2 100%);
+  z-index: 1000;
 }
 
-/* Font is injected at runtime by src/styles/loadFonts.js */
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
 
 .card {
   width: 100%;
@@ -19,6 +26,27 @@
   text-align: center;
 }
 
+.closeButton {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.closeButton:hover {
+  filter: brightness(0.98);
+}
+
 .title {
   font-size: 1.6rem;
   margin: 0 0 1rem 0;
@@ -28,19 +56,17 @@
   justify-content: center;
   gap: 0.5rem;
   font-family: 'Coolvetica', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  position: relative; /* allow absolute/relative positioning of the icon */
+  position: relative;
 }
-
 .icon {
   display: inline-block;
   width: 18px;
   height: 18px;
   vertical-align: middle;
-  /* moved closer to the S (adjusted per user request) */
   transform: translate(-1px, -16px);
   margin-left: -8px;
   position: relative;
-  z-index: 5; /* ensure icon sits above the text */
+  z-index: 5; 
 }
 .iconSvg { width: 18px; height: 18px; vertical-align: middle }
 .iconSvg svg, .iconSvg { width: 100%; height: 100%; }
