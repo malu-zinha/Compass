@@ -1,0 +1,150 @@
+/* Page wrapper and positioning */
+.wrapper {
+  position: fixed; /* cover the entire viewport so underlying pages don't show */
+  inset: 0;
+  background: #ffffff; /* full white as requested */
+  padding: 0; /* remove extra padding so the whole screen stays white */
+  box-sizing: border-box;
+  overflow: auto; /* allow scrolling inside the overlay if needed */
+  z-index: 1200; /* above app chrome */
+}
+
+:root {
+  --accent-green: #16a34a; /* slightly lighter pleasant green */
+  --accent-green-alpha: rgba(22,163,74,0.12);
+  --accent-green-border: rgba(22,163,74,0.18);
+}
+
+.close {
+  display: none;
+}
+
+.topRight {
+  display: none;
+}
+
+.page {
+  min-height: 100vh;
+  background: #ffffff; /* full white background */
+  color: #111827;
+}
+
+.closeX {
+  position: absolute; /* placed inside header */
+  top: 12px;
+  right: 18px; /* moved to top-right as requested */
+  background: transparent;
+  border: none;
+  padding: 8px;
+  font-size: 1.25rem;
+  color: #6b7280; /* subtle gray */
+  cursor: pointer;
+  z-index: 1201;
+}
+
+.closeX:hover { color: #374151 }
+
+.header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 20px;
+  border-bottom: none; /* keep header clean */
+  background: #ffffff; /* ensure full white */
+  position: relative; /* for absolute positioned closeX */
+}
+
+.leftActions { display:flex; gap:12px; align-items:center; margin-left: 36px }
+.newInterview { display:inline-flex; align-items:center; gap:8px; background: #EDE9FF; color: #371C68; padding: 6px 10px; border-radius: 8px; text-decoration:none; font-weight:700; height:40px }
+.newInterview strong { font-weight: 800 }
+.reportSticker { width: 32px; height: 32px; display:inline-flex; align-items:center; justify-content:center; background: transparent; border-radius:6px }
+.reportSticker svg { display:block; width:18px; height:18px }
+.rightBrand { display: none; }
+
+.main { max-width: 1100px; margin: 40px auto; padding: 0 20px }
+
+/* small green circular plus for adding a question */
+.plusButton {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,185,129,0.12); /* light translucent green */
+  color: #065f46; /* darker green for the plus sign for contrast */
+  border-radius: 6px; /* small radius, not fully round */
+  border: 1px solid rgba(16,185,129,0.24);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(16,185,129,0.06);
+}
+.plusButton {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.plusButton:focus { outline: 2px solid rgba(6,95,70,0.12); border-radius: 8px }
+
+/* decorative sticker used inside the add button */
+.plusSticker {
+  width: 36px; /* slightly reduced */
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--accent-green-alpha), rgba(22,163,74,0.06));
+  color: var(--accent-green);
+  border-radius: 8px; /* slightly rounded square */
+  border: 1px solid var(--accent-green-border);
+  box-shadow: 0 8px 20px rgba(22,163,74,0.06);
+}
+.plusSticker svg { display: block; width:20px; height:20px }
+.plusSticker:hover { transform: translateY(-2px); filter: brightness(0.98) }
+.titleRow { display:flex; justify-content:center; margin-bottom: 18px }
+.title { font-size: 1.4rem; font-weight:700 }
+
+.board { background: #fff; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(2,6,23,0.04) }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; padding:0; margin:0 }
+.card { padding: 14px; border-radius: 10px; border: 1px solid #e6e0fa; background: #EDE9FF; position: relative }
+.cardTitle { font-weight: 600; margin-bottom: 8px }
+.cardInput { width:100%; padding:8px; border:1px solid #dcd6f0; border-radius:8px; background: #ffffff }
+
+.footer { margin-top: 12px; display:flex; justify-content:flex-end }
+
+/* minimal 'x' inside each card to remove it */
+.removeX { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.04); border: none; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; color:#6b7280; cursor:pointer }
+.removeX:hover { background: rgba(0,0,0,0.06); color:#374151 }
+
+/* Content card to mirror Auth screen aesthetic */
+.contentCard {
+  max-width: 920px;
+  margin: 24px auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16,24,40,0.08);
+  padding: 20px;
+}
+
+.title { font-size: 1.4rem; font-weight:700; font-family: 'Coolvetica', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111827 }
+
+.item {
+  background: #EDE9FF;
+  border: 1px solid #e6e0fa;
+  padding: 1rem;
+  border-radius: 8px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.itemText { color: #111827; font-weight: 600 }
+
+/* small helpers kept from previous version */
+.input { width: 100%; padding: 0.65rem 0.75rem; border-radius: 8px; border: 1px solid #e6edf3; font-size: 0.95rem }
+
+.action { display:none }
