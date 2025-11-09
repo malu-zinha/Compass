@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from '../styles/questions.module.css';
+import { ReactComponent as PlusIcon } from '../assets/icons/square-plus.svg';
+import { ReactComponent as TrashIcon } from '../assets/icons/trash.svg';
+import { ReactComponent as FileTextIcon } from '../assets/icons/file-text.svg';
+import { ReactComponent as Icon15 } from '../assets/icons/image 15.svg';
 
 export default function QuestionsPage() {
   const navigate = useNavigate();
@@ -16,7 +20,56 @@ export default function QuestionsPage() {
     const novaPergunta = `Pergunta ${perguntas.length + 1}`;
     setPerguntas((p) => [...p, novaPergunta]);
   };
-  // perguntas list remains static here per user request
+  // selection mode state (allows selecting multiple questions to delete)
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      setSelected(new Set());
+      setSelectionMode(false);
+    } else {
+      setSelectionMode(true);
+    }
+  };
+
+  const toggleSelect = (index) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const deleteSelected = () => {
+    if (selected.size === 0) return;
+    // show confirmation anchored at the trash area
+    setDeleteConfirm(true);
+  };
+
+  const confirmDeleteSelected = () => {
+    setPerguntas((prev) => prev.filter((_, i) => !selected.has(i)));
+    setSelected(new Set());
+    setSelectionMode(false);
+    setDeleteConfirm(false);
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(false);
+  };
+
+  const handleTitleTrashClick = (e) => {
+    e.stopPropagation();
+    // if already in selection mode and something selected -> delete
+    if (selectionMode) {
+      if (selected.size > 0) deleteSelected();
+      else setSelectionMode(false);
+    } else {
+      setSelectionMode(true);
+    }
+  };
 
   const handleClose = () => {
     navigate(-1);
@@ -25,26 +78,31 @@ export default function QuestionsPage() {
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
-        <div className={styles.leftActions}>
+        <div className={styles.rightBrand}>
+          <span className={styles.brandTitle}>Compass <span className={styles.icon} aria-hidden="true"><Icon15 className={styles.iconSvg} aria-hidden="true"/></span></span>
+        </div>
+
+        <div className={styles.headerTitle}>
+          <div className={styles.title}>Perguntas</div>
+        </div>
+
+        <div className={styles.headerActions}>
           <Link to="/" className={styles.newInterview}>
             <span className={styles.reportSticker} aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="#371C68" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 7h6M9 11h6" stroke="#371C68" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <FileTextIcon aria-hidden="true" />
             </span>
             <strong>Nova entrevista</strong>
           </Link>
-          <button onClick={adicionarPergunta} className={styles.plusButton} aria-label="Adicionar pergunta">
-            <span className={styles.plusSticker} aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M12 5v14" stroke="#065f46" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M5 12h14" stroke="#065f46" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-          </button>
+
+          {selectionMode && (
+            <>
+              <button className={styles.deleteSelected} onClick={deleteSelected} disabled={selected.size === 0} aria-label="Excluir selecionadas">Excluir ({selected.size})</button>
+              <button className={styles.cancelSelection} onClick={toggleSelectionMode} aria-label="Cancelar seleção">Cancelar</button>
+            </>
+          )}
+
+          <button className={styles.closeX} onClick={handleClose} aria-label="Fechar">×</button>
         </div>
-        <button className={styles.closeX} onClick={handleClose} aria-label="Fechar">×</button>
       </header>
 
       <main className={styles.main}>
@@ -56,14 +114,30 @@ export default function QuestionsPage() {
           <section className={styles.board}>
             <ul className={styles.grid}>
               {perguntas.map((q, i) => (
-                <li key={i} className={styles.card}>
+                <li
+                  key={i}
+                  className={`${styles.card} ${selectionMode && selected.has(i) ? styles.selected : ''}`}
+                  onClick={() => selectionMode && toggleSelect(i)}
+                >
                   <div className={styles.cardTitle}>{q}</div>
                   <input className={styles.cardInput} placeholder={`Digite o conteúdo da ${q.toLowerCase()}`} />
+                  <button
+                    className={styles.removeX}
+                    aria-label={`Remover ${q}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPerguntas((p) => p.filter((_, idx) => idx !== i));
+                    }}
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
 
-            <div className={styles.footer} />
+            <div className={styles.footer}>
+              <button className={styles.addQuestionBtn} onClick={adicionarPergunta} aria-label="Adiciona pergunta">Adiciona pergunta</button>
+            </div>
           </section>
         </div>
       </main>
