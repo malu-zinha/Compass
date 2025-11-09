@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import RecordPage from './pages/RecordPage';
 import ResultsPage from './pages/ResultsPage';
 import AuthScreen from './pages/AuthScreen';
+import QuestionsPage from './pages/QuestionsPage';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <div className="nav-links">
             <Link to="/">🎙️ Gravar</Link>
             <Link to="/results">📋 Resultados</Link>
+            <Link to="/questions">❓ Perguntas</Link>
             <Link to="/auth">🔒 Entrar / Cadastrar</Link>
           </div>
         </nav>
@@ -21,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<RecordPage />} />
           <Route path="/results" element={<ResultsPage />} />
+          <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/auth" element={<AuthScreen />} />
         </Routes>
       </div>
