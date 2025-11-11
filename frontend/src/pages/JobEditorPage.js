@@ -11,6 +11,7 @@ function JobEditorPage() {
   const [jobVacancies, setJobVacancies] = useState('');
   const [competencies, setCompetencies] = useState([]);
   const [competencyInput, setCompetencyInput] = useState('');
+  const [isAddingCompetency, setIsAddingCompetency] = useState(false);
   const [idealProfile, setIdealProfile] = useState('');
   
   const navigate = useNavigate();
@@ -36,13 +37,31 @@ function JobEditorPage() {
   }, [id, isEditing]);
 
   const handleAddCompetency = (e) => {
-    if (e.key === 'Enter' && competencyInput.trim()) {
+    if (e.key === 'Enter' && competencyInput && competencyInput.trim()) {
       e.preventDefault();
       if (!competencies.includes(competencyInput.trim())) {
         setCompetencies([...competencies, competencyInput.trim()]);
       }
       setCompetencyInput('');
+      setIsAddingCompetency(false);
     }
+    if (e.key === 'Escape') {
+      setCompetencyInput('');
+      setIsAddingCompetency(false);
+    }
+  };
+
+  const handleAddCompetencyClick = () => {
+    setIsAddingCompetency(true);
+    setCompetencyInput('');
+  };
+
+  const handleCompetencyInputBlur = () => {
+    if (competencyInput && competencyInput.trim() && !competencies.includes(competencyInput.trim())) {
+      setCompetencies([...competencies, competencyInput.trim()]);
+    }
+    setCompetencyInput('');
+    setIsAddingCompetency(false);
   };
 
   const handleRemoveCompetency = (index) => {
@@ -86,8 +105,8 @@ function JobEditorPage() {
           <div className="editor-grid">
             <div className="editor-left">
               <div className="form-section">
-                <label className="form-label">Nome</label>
                 <div className="form-input-wrapper">
+                  <label className="form-label">Nome</label>
                   <input
                     type="text"
                     className="form-input"
@@ -99,8 +118,8 @@ function JobEditorPage() {
               </div>
 
               <div className="form-section">
-                <label className="form-label">Descrição da vaga</label>
                 <div className="form-input-wrapper">
+                  <label className="form-label">Descrição da vaga</label>
                   <textarea
                     className="form-textarea"
                     value={jobDescription}
@@ -112,35 +131,49 @@ function JobEditorPage() {
               </div>
 
               <div className="form-section">
-                <label className="form-label">Competências necessárias</label>
                 <div className="competencies-section">
-                  <div className="competencies-tags">
-                    {competencies.map((comp, index) => (
-                      <div key={index} className="competency-tag">
-                        <span>{comp}</span>
-                        <button
-                          className="remove-tag-btn"
-                          onClick={() => handleRemoveCompetency(index)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                  <label className="form-label">Competências necessárias</label>
+                  <div className="competency-input-wrapper">
+                    <div className="competencies-tags">
+                      {competencies.map((comp, index) => (
+                        <div key={index} className="competency-tag">
+                          <span>{comp}</span>
+                          <button
+                            className="remove-tag-btn"
+                            onClick={() => handleRemoveCompetency(index)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {isAddingCompetency && (
+                        <div className="competency-tag editing">
+                          <input
+                            type="text"
+                            className="competency-tag-input"
+                            value={competencyInput}
+                            onChange={(e) => setCompetencyInput(e.target.value)}
+                            onKeyDown={handleAddCompetency}
+                            onBlur={handleCompetencyInputBlur}
+                            autoFocus
+                            placeholder="Digite a competência"
+                          />
+                        </div>
+                      )}
+                      <button
+                        className="add-competency-btn"
+                        onClick={handleAddCompetencyClick}
+                      >
+                        Adicionar competência
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    className="competency-input"
-                    value={competencyInput}
-                    onChange={(e) => setCompetencyInput(e.target.value)}
-                    onKeyDown={handleAddCompetency}
-                    placeholder="Digite e pressione Enter para adicionar"
-                  />
                 </div>
               </div>
 
               <div className="form-section">
-                <label className="form-label">Número de vagas disponíveis</label>
                 <div className="form-input-wrapper">
+                  <label className="form-label">Número de vagas disponíveis</label>
                   <input
                     type="number"
                     className="form-input"

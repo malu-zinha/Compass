@@ -181,12 +181,27 @@ function RecordPage() {
         duration: recordingTime
       });
       
-      // Clean up localStorage
+      // Generate interview ID (in real app, this would come from backend)
+      const interviewId = Date.now().toString();
+      
+      // Save interview data temporarily to access in detail page
+      const interviewDetailData = {
+        id: interviewId,
+        candidate: candidateData,
+        date: new Date().toLocaleDateString('pt-BR'),
+        transcription: transcription,
+        questions: questions,
+        notes: notes,
+        duration: recordingTime
+      };
+      localStorage.setItem(`interview_${interviewId}`, JSON.stringify(interviewDetailData));
+      
+      // Clean up interviewData
       localStorage.removeItem('interviewData');
       
-      // Navigate to results
+      // Navigate to interview detail page
       setTimeout(() => {
-        navigate('/results');
+        navigate(`/entrevista/${interviewId}`);
       }, 500);
 
     } catch (error) {
