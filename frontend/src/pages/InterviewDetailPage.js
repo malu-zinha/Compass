@@ -88,8 +88,9 @@ function InterviewDetailPage() {
         <div className="resume-column">
           <h2 className="section-main-title">Resumo</h2>
           
-          {/* Habilidades */}
-          <div className="accordion-section">
+          <div className="resume-content">
+            {/* Habilidades */}
+            <div className="accordion-section">
             <button 
               className="accordion-header"
               onClick={() => toggleSection('habilidades')}
@@ -231,6 +232,7 @@ function InterviewDetailPage() {
                 <p>{interviewData.notes}</p>
               </div>
             )}
+          </div>
           </div>
         </div>
 

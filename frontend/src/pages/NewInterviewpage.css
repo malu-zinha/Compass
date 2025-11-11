@@ -101,7 +101,7 @@
   font-weight: normal;
   background: #FFDFCD;
   color: #602309;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;

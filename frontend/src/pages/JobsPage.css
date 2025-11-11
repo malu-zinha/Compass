@@ -1,36 +1,60 @@
 .jobs-page {
   min-height: 100vh;
-  background: #f9f9f9;
+  background: #FFF7F5;
+  display: flex;
+  flex-direction: column;
 }
 
 .jobs-content {
-  padding: 2.5rem 3rem;
+  padding: 2rem;
+  flex: 1;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.jobs-section {
+  flex: 1;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 80px - 4rem);
+  display: flex;
+  flex-direction: column;
 }
 
 .jobs-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
+  align-items: flex-end;
+  margin-bottom: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
 }
 
-.jobs-title {
+.section-title {
   font-family: 'Coolvetica', sans-serif;
-  font-size: 1.75rem;
-  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: normal;
   margin: 0;
+  padding-bottom: 0;
+  padding-right: 1.5rem;
+  border-bottom: none;
+  color: #1a1a1a;
+  flex-shrink: 0;
 }
 
 .add-job-btn {
-  padding: 0.9rem 1.5rem;
+  padding: 0.65rem 1.25rem;
   font-family: 'Coolvetica', sans-serif;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: normal;
   background: #FFDFCD;
   color: #602309;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
@@ -47,6 +71,10 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.5rem 0 1.5rem 0;
+  margin-top: 0;
 }
 
 .job-card {
@@ -58,22 +86,25 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
 }
 
 .job-card-title {
   font-family: 'Coolvetica', sans-serif;
   font-size: 1.25rem;
+  font-weight: normal;
   color: #1a1a1a;
   margin: 0;
 }
 
 .job-vacancies-badge {
   display: inline-block;
-  padding: 0.4rem 0.8rem;
-  background: #C4EDFF;
-  color: #1a1a1a;
+  padding: 0.25rem 0.6rem;
+  background: #D2EAFF;
+  color: #092260;
   font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   border-radius: 6px;
   width: fit-content;
 }
@@ -93,7 +124,7 @@
   font-size: 0.95rem;
   background: #EDE9FF;
   color: #371C68;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
@@ -104,9 +135,68 @@
   background: #ddd5ff;
 }
 
+.delete-job-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  background: #FFD8D8;
+  color: #7B0C0C;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.delete-job-btn:hover {
+  background: #ffc5c5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.delete-job-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 1200px) {
   .jobs-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Scrollbar Styling */
+.jobs-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.jobs-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.jobs-grid::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.jobs-grid::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+@media (max-width: 1200px) {
+  .jobs-content {
+    padding: 1.5rem;
   }
 }
 

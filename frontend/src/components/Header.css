@@ -71,7 +71,7 @@
 
 .header-btn {
   padding: 0.65rem 1.25rem;
-  border: none;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 8px;
   font-family: 'Coolvetica', sans-serif;
   font-size: 0.9rem;
