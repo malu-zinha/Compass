@@ -31,7 +31,7 @@ dist/
 build/
 out/
 coverage/
-*/__pycache__/
+__pycache__/
 .cache/
 .parcel-cache/
 /.next/

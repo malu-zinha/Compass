@@ -1,14 +1,8 @@
 import sqlite3
 import os
-from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
-
 DATABASE = "./interviews.db"
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -38,11 +32,19 @@ def create_table():
             notes TEXT,
             date TEXT,
             transcript TEXT,
-            labeled TEXT,
             analysis TEXT,
             score INTEGER,
             position_id INTEGER,
             FOREIGN KEY (position_id) REFERENCES positions(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT,
+            interview_id INTEGER,
+            FOREIGN KEY (interview_id) REFERENCES interviews(id)
         )
     """)
 
