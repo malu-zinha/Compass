@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import { Sidebar, Header } from '../components/layout';
 import styles from '../styles/questions.module.css';
 
 export default function QuestionsPage() {

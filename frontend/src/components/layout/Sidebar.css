@@ -48,6 +48,18 @@
   gap: 1rem;
   padding: 1.5rem;
   border-bottom: 1px solid #f0f0f0;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: left;
+}
+
+.sidebar-user:hover {
+  background: #f9f9f9;
 }
 
 .user-icon {

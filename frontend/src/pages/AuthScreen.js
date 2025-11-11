@@ -15,11 +15,6 @@ const AuthScreen = () => {
 
   const navigate = useNavigate();
 
-  const handleClose = () => {
-    // navigate back to previous page or to home
-    navigate(-1);
-  };
-
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -45,6 +40,10 @@ const AuthScreen = () => {
       // For now accept demo/demo as valid credentials
       if (formData.usuario === 'demo' && formData.senha === 'demo') {
         setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
+        // Navigate to homepage after 1 second
+        setTimeout(() => {
+          navigate('/inicio');
+        }, 1000);
       } else {
         setErrors({ general: 'Usuário ou senha incorretos.' });
       }
@@ -61,8 +60,11 @@ const AuthScreen = () => {
 
       // Simulate successful registration
       setNotification({ type: 'success', message: 'Cadastro realizado com sucesso!' });
-      setCurrentScreen('login');
-      setFormData({ email: '', usuario: '', senha: '' });
+      // Switch to login after 1 second
+      setTimeout(() => {
+        setCurrentScreen('login');
+        setFormData({ email: '', usuario: '', senha: '' });
+      }, 1000);
     }
   };
 
@@ -74,9 +76,15 @@ const AuthScreen = () => {
   }, [notification]);
 
   return (
-    <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        <button className={styles.closeButton} aria-label="Fechar" onClick={handleClose}>&times;</button>
+    <div className={styles.overlay}>
+      <div className={styles.modal} role="dialog" aria-modal="true">
+        <button 
+          className={styles.closeButton} 
+          aria-label="Voltar" 
+          onClick={() => navigate('/')}
+        >
+          &times;
+        </button>
 
         {currentScreen === 'login' ? (
           <LoginScreen 
