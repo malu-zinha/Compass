@@ -39,5 +39,14 @@ def create_table():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT,
+            interview_id INTEGER,
+            FOREIGN KEY (interview_id) REFERENCES interviews(id)
+        )
+    """)
+
     conn.commit()
     conn.close()

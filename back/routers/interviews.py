@@ -3,7 +3,7 @@ import sqlite3
 import os
 import mimetypes
 from datetime import datetime
-from models import InterviewCreateRequest
+from models import InterviewCreateRequest, QuestionCreateRequest
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
 from database import get_db_connection
@@ -42,7 +42,7 @@ def insert_interview(request: InterviewCreateRequest):
         "message": "Candidato registrado com sucesso!"
     })
 
-@router.post("/")
+@router.post("/{id}/audio-file")
 async def insert_interview_audio(id: int, audio: UploadFile = File(...)):
 
     os.makedirs("uploads", exist_ok=True)
@@ -73,6 +73,85 @@ async def insert_interview_audio(id: int, audio: UploadFile = File(...)):
         "id": id,
         "message": "Áudio registrado com sucesso!"
     })
+
+@router.post("/questions")
+def insert_question(request: QuestionCreateRequest):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) FROM interviews WHERE id = ?
+            """,
+            (request.interview_id,)
+        )
+        if cursor.fetchone()[0] == 0:
+            raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+
+        cursor.execute(
+            """
+                INSERT INTO questions (
+                    question,
+                    interview_id
+                )
+                VALUES (?, ?)
+            """,
+            (request.question, request.interview_id)
+        )
+        qid = cursor.lastrowid
+        conn.commit()
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao inserir pergunta no banco de dados: {e}")
+    finally:
+        conn.close()
+
+    return JSONResponse(content={
+        "id": qid,
+        "message": "Pergunta registrada com sucesso"
+    })
+
+@router.get("/{id}/questions")
+def get_questions(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                SELECT id, question, interview_id FROM questions WHERE interview_id = ?
+            """,
+            (id,)
+        )
+        rows = cursor.fetchall()
+        question_list = [{"id": row["id"], "question": row["question"], "interview_id": row["interview_id"]} for row in rows]
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar perguntas: {e}")
+    finally:
+        conn.close()
+    return JSONResponse(content=question_list)
+
+@router.delete("/{question_id}")
+def delete_questions(question_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                DELETE FROM questions WHERE id = ?
+            """,
+            (question_id,)
+        )
+        deleted = cursor.rowcount
+        conn.commit()
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Erro ao deletar pergunta no banco de dados")
+    finally:
+        conn.close()
+
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Pergunta não encontrada")
+
+    return JSONResponse(content={"message": "Pergunta deletada com sucesso"})
+
 
 @router.get("/{position_id}")
 def get_interviews_by_position(
