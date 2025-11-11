@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getPositions } from '../services/api';
 import './NewInterviewpage.css';
 
 function NewInterviewPage() {
@@ -8,22 +9,28 @@ function NewInterviewPage() {
   const [candidateName, setCandidateName] = useState('');
   const [candidateEmail, setCandidateEmail] = useState('');
   const [candidatePhone, setCandidatePhone] = useState('');
-  const [candidatePosition, setCandidatePosition] = useState('');
+  const [candidatePositionId, setCandidatePositionId] = useState('');
   const [availableJobs, setAvailableJobs] = useState([]);
 
   useEffect(() => {
-    // Carregar cargos disponíveis do localStorage
-    const savedJobs = localStorage.getItem('jobs');
-    if (savedJobs) {
-      setAvailableJobs(JSON.parse(savedJobs));
-    }
+    loadPositions();
   }, []);
+
+  const loadPositions = async () => {
+    try {
+      const data = await getPositions();
+      setAvailableJobs(data);
+    } catch (error) {
+      console.error('Erro ao carregar cargos:', error);
+      alert('Erro ao carregar cargos. Verifique se o backend está rodando.');
+    }
+  };
 
   const isFormValid = () => {
     return candidateName.trim() && 
            candidateEmail.trim() && 
            candidatePhone.trim() && 
-           candidatePosition.trim() &&
+           candidatePositionId &&
            validateEmail(candidateEmail);
   };
 
@@ -38,16 +45,19 @@ function NewInterviewPage() {
       return;
     }
 
+    const selectedJob = availableJobs.find(j => j.id === parseInt(candidatePositionId));
+    
     const interviewData = {
       candidateName: candidateName.trim(),
       candidateEmail: candidateEmail.trim(),
       candidatePhone: candidatePhone.trim(),
-      candidatePosition: candidatePosition.trim(),
+      candidatePositionId: parseInt(candidatePositionId),
+      candidatePosition: selectedJob ? selectedJob.name : '',
       timestamp: new Date().toISOString()
     };
 
     localStorage.setItem('interviewData', JSON.stringify(interviewData));
-    navigate('/gravar');
+    navigate('/tipo-entrevista');
   };
 
   const handleKeyPress = (e) => {
@@ -108,13 +118,13 @@ function NewInterviewPage() {
             <label htmlFor="candidate-position">Cargo</label>
             <select
               id="candidate-position"
-              value={candidatePosition}
-              onChange={(e) => setCandidatePosition(e.target.value)}
+              value={candidatePositionId}
+              onChange={(e) => setCandidatePositionId(e.target.value)}
               className="form-select"
             >
               <option value="">Selecione um cargo</option>
               {availableJobs.map((job) => (
-                <option key={job.id} value={job.name}>
+                <option key={job.id} value={job.id}>
                   {job.name}
                 </option>
               ))}
@@ -127,7 +137,7 @@ function NewInterviewPage() {
           onClick={handleStartInterview}
           disabled={!isFormValid()}
         >
-          Iniciar gravação
+          Continuar
         </button>
       </div>
     </div>
