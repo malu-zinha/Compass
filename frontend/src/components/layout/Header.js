@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../logo.svg';
-import MenuIcon from './icons/MenuIcon';
-import CompareIcon from './icons/CompareIcon';
-import InfoIcon from './icons/InfoIcon';
-import PlusIcon from './icons/PlusIcon';
+import logo from '../../logo.svg';
+import MenuIcon from '../icons/MenuIcon';
+import CompareIcon from '../icons/CompareIcon';
+import InfoIcon from '../icons/InfoIcon';
+import PlusIcon from '../icons/PlusIcon';
 import './Header.css';
 
 function Header({ title, showComparar = false, showInfo = false, onInfoClick, onMenuClick, showMenu = true }) {
