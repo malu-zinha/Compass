@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import NewInterviewPage from './pages/NewInterviewpage';
+import InterviewTypePage from './pages/InterviewTypePage';
+import UploadAudioPage from './pages/UploadAudioPage';
 import RecordPage from './pages/RecordPage';
 import ResultsPage from './pages/ResultsPage';
 import InterviewDetailPage from './pages/InterviewDetailPage';
@@ -24,6 +26,8 @@ function App() {
           <Route path="/inicio" element={<HomePage />} />
           <Route path="/entrevistas" element={<ResultsPage />} />
           <Route path="/nova-entrevista" element={<NewInterviewPage />} />
+          <Route path="/tipo-entrevista" element={<InterviewTypePage />} />
+          <Route path="/upload" element={<UploadAudioPage />} />
           <Route path="/gravar" element={<RecordPage />} />
           <Route path="/entrevista/:id" element={<InterviewDetailPage />} />
           <Route path="/cargos" element={<JobsPage />} />

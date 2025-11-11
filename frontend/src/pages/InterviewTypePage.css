@@ -1,0 +1,131 @@
+.interview-type-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  padding: 2rem;
+}
+
+.interview-type-content {
+  max-width: 900px;
+  width: 100%;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  color: #371C68;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  transition: opacity 0.2s;
+}
+
+.back-button:hover {
+  opacity: 0.7;
+}
+
+.interview-type-title {
+  font-size: 2rem;
+  font-weight: normal;
+  color: #371C68;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.interview-type-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.type-cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.type-card {
+  background: #f8f8f8;
+  border: 2px solid rgba(55, 28, 104, 0.1);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 280px;
+}
+
+.type-card:hover {
+  border-color: #371C68;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(55, 28, 104, 0.15);
+}
+
+.type-card-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.type-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #371C68;
+  margin-bottom: 1rem;
+}
+
+.type-card-description {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.candidate-info {
+  background: #f8f8f8;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.candidate-info p {
+  margin: 0.5rem 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.candidate-info strong {
+  color: #371C68;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .type-cards-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .interview-type-title {
+    font-size: 1.5rem;
+  }
+  
+  .type-card {
+    min-height: 220px;
+    padding: 2rem 1.5rem;
+  }
+  
+  .type-card-icon {
+    font-size: 3rem;
+  }
+  
+  .type-card-title {
+    font-size: 1.25rem;
+  }
+}
+

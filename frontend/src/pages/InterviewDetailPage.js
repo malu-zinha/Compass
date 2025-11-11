@@ -9,6 +9,7 @@ import PauseIcon from '../components/icons/PauseIcon';
 import PreviousIcon from '../components/icons/PreviousIcon';
 import NextIcon from '../components/icons/NextIcon';
 import VolumeIcon from '../components/icons/VolumeIcon';
+import { getInterviews } from '../services/api';
 import './InterviewDetailPage.css';
 
 function InterviewDetailPage() {
@@ -24,38 +25,101 @@ function InterviewDetailPage() {
     anotacoes: false
   });
   const [audioProgress, setAudioProgress] = useState(0);
+  const [interviewData, setInterviewData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Mock data - substituir com fetch real
-  const [interviewData] = useState({
-    candidate: {
-      candidateName: 'Maria Luisa Quintela',
-      candidateEmail: 'maluquintela@gmail.com',
-      candidatePhone: '(83) 9 9999-9999'
-    },
-    date: '25/12/2025',
-    skills: ['Python', 'React', 'C++'],
-    history: [
-      {
-        title: 'Engenheiro de software - Meta',
-        description: 'Explicação detalhada sobre a experiência do candidato.'
-      },
-      {
-        title: 'Pesquisador - Tril Lab',
-        description: 'Explicação detalhada sobre a experiência do candidato.'
+  useEffect(() => {
+    loadInterviewData();
+  }, [id]);
+
+  // Polling effect - verifica se precisa recarregar dados
+  useEffect(() => {
+    if (!interviewData) return;
+    
+    // Verificar se transcript existe (mesmo que seja booleano do backend)
+    const hasTranscript = interviewData.rawInterview?.transcript !== false && 
+                         interviewData.rawInterview?.transcript !== '';
+    
+    // Verificar se labeled existe e não está vazio
+    const hasLabeled = interviewData.transcription?.length > 0;
+    
+    // Verificar se análise foi gerada
+    const hasAnalysis = interviewData.positives?.[0] !== 'Análise ainda não disponível';
+    
+    const needsProcessing = !hasLabeled || !hasAnalysis;
+    
+    setIsProcessing(needsProcessing);
+    
+    if (needsProcessing) {
+      const interval = setInterval(() => {
+        console.log('Recarregando dados da entrevista...');
+        loadInterviewData();
+      }, 3000); // Reduzido de 5000 para 3000 (3 segundos)
+      
+      // Timeout máximo de 5 minutos para evitar polling infinito
+      const timeout = setTimeout(() => {
+        console.log('Timeout: parando polling após 5 minutos');
+        clearInterval(interval);
+        setIsProcessing(false);
+      }, 300000); // 5 minutos
+      
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [interviewData]);
+
+  const loadInterviewData = async () => {
+    try {
+      setLoading(true);
+      const interviews = await getInterviews();
+      const interview = interviews.find(i => i.id === parseInt(id));
+      
+      if (!interview) {
+        alert('Entrevista não encontrada');
+        return;
       }
-    ],
-    positives: ['Ponto positivo 1', 'Ponto positivo 2'],
-    negatives: ['Ponto negativo 1'],
-    specific: 'Informações específicas do candidato',
-    notes: 'Anotações sobre o candidato',
-    transcription: [
-      { speaker: 'Nome', text: 'Bom dia! Meu nome é [entrevistado], tenho 21 anos e sou formado em Ciência da Computação.' },
-      { speaker: 'Entrevistador', text: 'Olá, fale um pouco sobre suas experiências no mercado de trabalho.' },
-      { speaker: 'Nome', text: 'Claro, já trabalhei como engenheiro de software na Meta e meu emprego mais recente foi como fullstack na Microsoft' },
-      { speaker: 'Entrevistador', text: 'Perfeito! Agora fale sobre suas habilidades técnicas, você tem experiência com quais linguagens de programa o?' },
-      { speaker: 'User', text: 'Tenho experiência com Python, C, C++ e Java.' }
-    ]
-  });
+
+      // Formatar dados para o formato esperado
+      const analysis = interview.analysis || {};
+      const labeled = interview.labeled || [];
+      
+      setInterviewData({
+        rawInterview: interview, // Guardar dados brutos para verificação
+        candidate: {
+          candidateName: interview.name || 'Candidato sem nome',
+          candidateEmail: interview.email || '',
+          candidatePhone: interview.number || ''
+        },
+        date: new Date(interview.date).toLocaleDateString('pt-BR'),
+        position: interview.position || 'Cargo não especificado',
+        skills: analysis.skills || [],
+        history: analysis.experiences || [],
+        positives: analysis.strengths || ['Análise ainda não disponível'],
+        negatives: analysis.weaknesses || ['Análise ainda não disponível'],
+        specific: analysis.cultural_fit || 'Sem informações',
+        notes: interview.notes || 'Sem anotações',
+        transcription: labeled || [],
+        score: interview.score || 0,
+        summary: analysis.summary || 'Resumo não disponível'
+      });
+    } catch (error) {
+      console.error('Erro ao carregar entrevista:', error);
+      alert('Erro ao carregar dados da entrevista');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div style={{padding: '2rem', textAlign: 'center'}}>Carregando entrevista...</div>;
+  }
+
+  if (!interviewData) {
+    return <div style={{padding: '2rem', textAlign: 'center'}}>Entrevista não encontrada</div>;
+  }
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -105,11 +169,15 @@ function InterviewDetailPage() {
             </button>
             {expandedSections.habilidades && (
               <div className="accordion-content">
-                <ol className="skills-list">
-                  {interviewData.skills.map((skill, idx) => (
-                    <li key={idx}>{skill}</li>
-                  ))}
-                </ol>
+                {isProcessing && (!interviewData.skills || interviewData.skills.length === 0) ? (
+                  <p className="loading-message">⏳ Carregando análise...</p>
+                ) : (
+                  <ol className="skills-list">
+                    {interviewData.skills.map((skill, idx) => (
+                      <li key={idx}>{skill}</li>
+                    ))}
+                  </ol>
+                )}
               </div>
             )}
           </div>
@@ -131,12 +199,16 @@ function InterviewDetailPage() {
             </button>
             {expandedSections.historico && (
               <div className="accordion-content">
-                {interviewData.history.map((item, idx) => (
-                  <div key={idx} className="history-item">
-                    <div className="history-title">{item.title}</div>
-                    <div className="history-description">{item.description}</div>
-                  </div>
-                ))}
+                {isProcessing && (!interviewData.history || interviewData.history.length === 0) ? (
+                  <p className="loading-message">⏳ Carregando análise...</p>
+                ) : (
+                  interviewData.history.map((item, idx) => (
+                    <div key={idx} className="history-item">
+                      <div className="history-title">{item.title}</div>
+                      <div className="history-description">{item.description}</div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -158,9 +230,13 @@ function InterviewDetailPage() {
             </button>
             {expandedSections.positivos && (
               <div className="accordion-content">
-                {interviewData.positives.map((point, idx) => (
-                  <div key={idx} className="point-item">{point}</div>
-                ))}
+                {isProcessing && interviewData.positives?.[0] === 'Análise ainda não disponível' ? (
+                  <p className="loading-message">⏳ Carregando análise...</p>
+                ) : (
+                  interviewData.positives.map((point, idx) => (
+                    <div key={idx} className="point-item">{point}</div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -182,9 +258,13 @@ function InterviewDetailPage() {
             </button>
             {expandedSections.negativos && (
               <div className="accordion-content">
-                {interviewData.negatives.map((point, idx) => (
-                  <div key={idx} className="point-item">{point}</div>
-                ))}
+                {isProcessing && interviewData.negatives?.[0] === 'Análise ainda não disponível' ? (
+                  <p className="loading-message">⏳ Carregando análise...</p>
+                ) : (
+                  interviewData.negatives.map((point, idx) => (
+                    <div key={idx} className="point-item">{point}</div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -240,17 +320,21 @@ function InterviewDetailPage() {
           <h2 className="section-main-title">Transcrição</h2>
           
           <div className="transcription-content">
-            {interviewData.transcription.map((message, idx) => {
-              const isInterviewer = message.speaker.toLowerCase() === 'entrevistador';
-              return (
-                <div key={idx} className={`transcription-message ${isInterviewer ? 'message-right' : 'message-left'}`}>
-                  <div className="message-speaker">{message.speaker}</div>
-                  <div className={`message-bubble ${isInterviewer ? 'interviewer' : 'interviewee'}`}>
-                    {message.text}
+            {!interviewData.transcription || interviewData.transcription.length === 0 ? (
+              <p className="loading-message">⏳ Carregando transcrição...</p>
+            ) : (
+              interviewData.transcription.map((message, idx) => {
+                const isInterviewer = message.speaker.toLowerCase() === 'entrevistador';
+                return (
+                  <div key={idx} className={`transcription-message ${isInterviewer ? 'message-right' : 'message-left'}`}>
+                    <div className="message-speaker">{message.speaker}</div>
+                    <div className={`message-bubble ${isInterviewer ? 'interviewer' : 'interviewee'}`}>
+                      {message.text}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
           {/* Audio Player */}
