@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
+import { getPositions, deletePosition } from '../services/api';
 import './JobsPage.css';
 
 function JobsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Carregar cargos do localStorage
-    const savedJobs = localStorage.getItem('jobs');
-    if (savedJobs) {
-      setJobs(JSON.parse(savedJobs));
-    } else {
-      // Mock data inicial
-      const mockJobs = [
-        {
-          id: '1',
-          name: 'Cientista de Dados',
-          description: 'Um cientista de dados coleta, organiza e analisa grandes volumes de dados para extrair insights e apoiar decisões estratégicas. Ele usa estatística e aprendizado de máquina para transformar dados brutos em informações úteis.',
-          competencies: ['Python', 'Frontend avançado', 'C++'],
-          vacancies: 6
-        }
-      ];
-      setJobs(mockJobs);
-      localStorage.setItem('jobs', JSON.stringify(mockJobs));
-    }
+    loadJobs();
   }, []);
+
+  const loadJobs = async () => {
+    try {
+      setLoading(true);
+      const data = await getPositions();
+      setJobs(data);
+    } catch (error) {
+      console.error('Erro ao carregar cargos:', error);
+      alert('Erro ao carregar cargos. Verifique se o backend está rodando.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditJob = (jobId) => {
     navigate(`/cargos/editar/${jobId}`);
@@ -37,11 +35,15 @@ function JobsPage() {
     navigate('/cargos/novo');
   };
 
-  const handleDeleteJob = (jobId) => {
+  const handleDeleteJob = async (jobId) => {
     if (window.confirm('Tem certeza que deseja excluir este cargo?')) {
-      const updatedJobs = jobs.filter(job => job.id !== jobId);
-      setJobs(updatedJobs);
-      localStorage.setItem('jobs', JSON.stringify(updatedJobs));
+      try {
+        await deletePosition(jobId);
+        setJobs(jobs.filter(job => job.id !== jobId));
+      } catch (error) {
+        console.error('Erro ao deletar cargo:', error);
+        alert('Erro ao deletar cargo');
+      }
     }
   };
 
@@ -62,7 +64,11 @@ function JobsPage() {
           </div>
 
           <div className="jobs-grid">
-            {jobs.map((job) => (
+            {loading ? (
+              <p style={{ padding: '2rem', textAlign: 'center' }}>Carregando cargos...</p>
+            ) : jobs.length === 0 ? (
+              <p style={{ padding: '2rem', textAlign: 'center' }}>Nenhum cargo cadastrado ainda.</p>
+            ) : jobs.map((job) => (
               <div key={job.id} className="job-card">
                 <button 
                   className="delete-job-btn"
