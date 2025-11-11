@@ -3,176 +3,38 @@ import io
 import json
 import os
 import sqlite3
-import openai
+import assemblyai as aai
 from pydub import AudioSegment
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import JSONResponse
-from database import get_db_connection, client
-from models import IterrviewCreateRequest
+from database import get_db_connection
+import asyncio
+import datetime
+from openai import AsyncOpenAI
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ASSEMBLYAI_API_KEY = "82638fa196894930b9c02d106fdd6c7c"
+
+aai.settings.api_key = ASSEMBLYAI_API_KEY
+openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 router = APIRouter(
     prefix="/positions/interviews",
     tags=["Interview Processing"]
 )
 
-@router.patch("/{id}/process/candidate")
-def insert_interview(request: IterrviewCreateRequest):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE interviews
-            SET
-                name = ?,
-                email = ?,
-                number = ?,
-                notes = ?,
-                transcript = '',
-                labeled = '',
-                analysis = '',
-                score = ''
-            WHERE id = ?
-        """, (request.name, request.email, request.number, request.notes, request.id))
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao inserir entrevista no banco de dados: {e}")
 
-    return JSONResponse(content={
-        "id": request.id,
-        "message":"Informações do candidato registradas com sucesso!"
-    })
+with open("prompts/prompt_analitico.txt", "r") as f:
+    prompt_template = f.read()
 
-@router.patch("/{id}/process/transcribe")
-async def transcribe(id: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (id,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
-
-    file_location = row["audio_file"]
-
-    try:
-        file_size = os.path.getsize(file_location)
-    except FileNotFoundError:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado no disco")
-
-    MAX_SIZE_BYTES = 25 * 1024 * 1024
-    transcript = ""
-
-    try:
-        if file_size <= MAX_SIZE_BYTES:
-            print(f"Arquivo tem {file_size / (1024*1024):.2f} MB. Enviando diretamente.")
-            
-            with open(file_location, "rb") as audio_file:
-                transcript_response = await client.audio.transcriptions.create(
-                    model="whisper-1", 
-                    file=audio_file
-                )
-            
-            transcript = transcript_response.text
-
-        else:
-            print(f"Arquivo tem {file_size / (1024*1024):.2f} MB. Iniciando divisão (chunking).")
-            
-            try:
-                audio = AudioSegment.from_file(file_location)
-            except Exception as e:
-                conn.close()
-                raise HTTPException(status_code=500, detail=f"Erro ao carregar áudio com pydub: {e}")
-
-            CHUNK_DURATION_MS = 10 * 60 * 1000
-            num_chunks = math.ceil(len(audio) / CHUNK_DURATION_MS)
-            all_transcripts = []
-            
-            print(f"Dividindo áudio em {num_chunks} pedaços.")
-
-            for i in range(num_chunks):
-                start_ms = i * CHUNK_DURATION_MS
-                end_ms = (i + 1) * CHUNK_DURATION_MS
-                chunk = audio[start_ms:end_ms]
-
-                buffer = io.BytesIO()
-                chunk.export(buffer, format="mp3") 
-                buffer.seek(0)
-                
-                buffer.name = f"chunk_{i+1}.mp3" 
-
-                print(f"Enviando chunk {i+1}/{num_chunks}...")
-                
-                chunk_response = await client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=buffer
-                )
-                all_transcripts.append(chunk_response.text)
-                buffer.close()
-
-            transcript = " ".join(all_transcripts)
-
-    except openai.APIError as e:
-        conn.close()
-        raise HTTPException(
-            status_code=e.status_code,
-            detail=f"Erro da API OpenAI: {e.message}"
-        )
-    except Exception as e:
-        conn.close()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro inesperado no processo de transcrição: {str(e)}"
-        )
-
-    try:
-        cursor.execute("UPDATE interviews SET transcript = ? WHERE id = ?", (transcript, id))
-        conn.commit()
-    except Exception as e:
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Erro ao salvar transcrição no banco: {e}")
-    finally:
-        conn.close()
-
-    print("Transcrição salva com sucesso.")
-    return JSONResponse(content={"id": id, "transcript_preview": transcript[:200] + "...", "message": "Transcrição salva com sucesso"})
-
-@router.patch("/{id}/process/lable-transcript")
-async def diarize(id: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT transcript FROM interviews WHERE id = ?", (id,))
-    row = cursor.fetchone()
-    if not row or not row["transcript"]:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Transcrição não encontrada.")
-    transcript = row["transcript"]
-    with open("prompts/diarize.txt") as f:
-        prompt_template = f.read()
-    prompt = prompt_template + transcript
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0,
-        response_format={"type": "json_object"}
-    )
-    labeled_json = response.choices[0].message.content
-    cursor.execute("UPDATE interviews SET labeled = ? WHERE id = ?", (labeled_json, id))
-    conn.commit()
-    conn.close()
-    return JSONResponse(content={"id": id, "labeled_json": json.loads(labeled_json)})
-
-@router.patch("/{id}/process/generate_analysis")
+@router.patch("/{id}/process/analysis")
 async def generate_analysis(id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
             SELECT
-                interviews.labeled,
+                interviews.transcript,
                 interviews.notes,
                 positions.position AS position,
                 positions.skills AS skills,
@@ -184,7 +46,7 @@ async def generate_analysis(id: int):
         (id,)
     )
     row = cursor.fetchone()
-    if not row or not row["labeled"]:
+    if not row or not row["transcript"]:
         conn.close()
         raise HTTPException(status_code=404, detail="Transcrição não encontrada")
     interview_info = {
@@ -193,19 +55,18 @@ async def generate_analysis(id: int):
             "skills": json.loads(row["skills"]),
             "description": row["description"]
         },
-        "transcript": json.loads(row["labeled"]),
+        "transcript": json.loads(row["transcript"]),
         "notes": row["notes"]
     }
     info_json = json.dumps(interview_info)
 
-    with open("prompts/prompt_analitico.txt") as fin:
-        prompt_template = fin.read()
     prompt_final = prompt_template + info_json
 
-    response = await client.chat.completions.create(
+    response = await openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt_final}],
-        temperature=0
+        response_format={ "type": "json_object" },
+        temperature=0.5
     )
     json_gerado = response.choices[0].message.content
     dictionary = json.loads(json_gerado)
@@ -213,3 +74,173 @@ async def generate_analysis(id: int):
     conn.commit()
     conn.close()
     return JSONResponse(content={"id": id, "analysis": dictionary, "message": "Resumo gerado e salvo com sucesso"})
+
+with open("prompts/prompt_questions.txt", "r") as f:
+    original_prompt_template = f.read()
+
+def get_utterances_last_n_seconds(data, n_seconds):
+    if not data.get("utterances"):
+        return []
+    cutoff_time = max(utt["end"] for utt in data["utterances"]) - n_seconds
+    return [utt for utt in data["utterances"] if utt["end"] >= cutoff_time]
+
+def append_transcript_to_prompt(prompt, utterances):
+    transcript_text = "\n".join(
+        [f"Speaker {utt['speaker']}: {utt['text']}" for utt in utterances]
+    )
+    return prompt + "\n\n" + transcript_text
+
+async def save_transcript_to_db(id: int, transcript_data: dict):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    transcript_json_text = json.dumps(transcript_data)
+    cursor.execute(
+        "UPDATE interviews SET transcript = ? WHERE id = ?", (transcript_json_text, id)
+    )
+    conn.commit()
+    conn.close()
+
+@router.post("/{id}/transcribe_audio_file")
+async def transcribe_audio_file(id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    if not row or not row["audio_file"]:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Audio file not found for this interview")
+
+    audio_path = row["audio_file"]
+
+    if not os.path.exists(audio_path):
+        conn.close()
+        raise HTTPException(status_code=404, detail="Audio file not found on server")
+
+    try:
+        config = aai.TranscriptionConfig(
+            language_code="pt",
+            speaker_labels=True,
+            speakers_expected=2,
+        )
+
+        transcript = aai.Transcriber(config=config).transcribe(audio_path)
+
+        if transcript.status == "error":
+            raise HTTPException(status_code=500, detail=f"Transcription failed: {transcript.error}")
+
+        utt_list = []
+        for utt in transcript.utterances:
+            utt_dict = {
+                "speaker": utt.speaker,
+                "text": utt.text,
+                "start": utt.start,
+                "end": utt.end
+            }
+            utt_list.append(utt_dict)
+
+        transcript_json = json.dumps(utt_list)
+
+        cursor.execute(
+            "UPDATE interviews SET transcript = ? WHERE id = ?", (transcript_json, id)
+        )
+        conn.commit()
+
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
+
+    conn.close()
+    return JSONResponse(content={"id": id, "message": "Audio transcribed and transcript saved successfully", "transcript": utt_list})
+
+@router.websocket("/ws/transcribe")
+async def websocket_transcribe(websocket: WebSocket, id: int = Query(...)):
+    await websocket.accept()
+
+    transcript_data = {"utterances": []}
+
+    date = datetime.now().isoformat()
+    audio_filename = f"interview_{id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.wav"
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    audio_path = os.path.join(upload_dir, audio_filename)
+
+    audio_file = await aiofiles.open(audio_path, 'wb')
+
+    config = aai.TranscriptionConfig(
+            language_code="pt",
+            speaker_labels=True,
+            speakers_expected=2,
+        )
+    streaming_client = aai.StreamingClient()
+
+    try:
+        await streaming_client.start(config=config)
+        stop_event = asyncio.Event()
+
+        async def send_audio():
+            while True:
+                audio_chunk = await websocket.receive_bytes()
+                await audio_file.write(audio_chunk)
+                await streaming_client.send(audio_chunk)
+
+        async def receive_transcripts():
+            async for transcript in streaming_client.listen():
+                if hasattr(transcript, "utterances") and transcript.utterances:
+                    utt_list = []
+                    for utt in transcript.utterances:
+                        utt_dict = {
+                            "speaker": utt.speaker,
+                            "text": utt.text,
+                            "start": utt.start,
+                            "end": utt.end,
+                        }
+                        utt_list.append(utt_dict)
+
+                    transcript_data["utterances"].extend(utt_list)
+                    await websocket.send_json({"transcript_update": utt_list})
+
+        async def periodic_gpt_analysis():
+            while not stop_event.is_set():
+                await asyncio.sleep(40)
+                last_utts = get_utterances_last_n_seconds(transcript_data, 50)
+                if not last_utts:
+                    continue
+                prompt_to_send = append_transcript_to_prompt(original_prompt_template, last_utts)
+                response = await openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "user", "content": prompt_to_send},
+                    ],
+                    response_format={ "type": "json_object" },
+                    max_tokens=200,
+                    temperature=0.5
+                )
+                gpt_message = response.choices[0].message.content.strip()
+                await websocket.send_json({"gpt_response": gpt_message})
+
+        await asyncio.gather(
+            send_audio(),
+            receive_transcripts(),
+            periodic_gpt_analysis()
+        )
+
+    except WebSocketDisconnect:
+        stop_event.set()
+        await save_transcript_to_db(id, transcript_data)
+        await streaming_client.close()
+        await websocket.close()
+    except Exception as e:
+        stop_event.set()
+        await streaming_client.close()
+        await websocket.close()
+        print(f"WebSocket error: {e}")
+    finally:
+        await audio_file.close()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE interviews SET audio_file = ?, date = ? WHERE id = ?", (audio_filename, date, id)
+        )
+        conn.commit()
+        conn.close()

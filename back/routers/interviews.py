@@ -3,6 +3,7 @@ import sqlite3
 import os
 import mimetypes
 from datetime import datetime
+from models import InterviewCreateRequest, QuestionCreateRequest
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
 from database import get_db_connection
@@ -12,26 +13,43 @@ router = APIRouter(
     tags=["Interviews"]
 )
 
-
-@router.post("/")
-async def insert_interview_audio(position_id: int, audio: UploadFile = File(...)):
-    print(audio.filename, position_id)
+@router.post("/candidate")
+def insert_interview(request: InterviewCreateRequest):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT COUNT(*) FROM positions WHERE id = (?)', (position_id,))
-        row = cursor.fetchone()
-
-        if not row["COUNT(*)"]:
-            raise HTTPException(status_code=500, detail=f"Não há cargo com position_id = {position_id}")
+        cursor.execute("""
+            INSERT INTO interviews (
+                name,
+                email,
+                number,
+                notes,
+                transcript,
+                analysis,
+                score,
+                position_id
+            )
+            VALUES (?, ?, ?, '', '', '', '', ?)
+        """, (request.name, request.email, request.number, request.position_id))
+        conn.commit()
+        row_id = cursor.lastrowid
+        conn.close()
     except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao acessar o banco de dados: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao inserir candidato no banco de dados: {e}")
+
+    return JSONResponse(content={
+        "id": row_id,
+        "message": "Candidato registrado com sucesso!"
+    })
+
+@router.post("/{id}/audio-file")
+async def insert_interview_audio(id: int, audio: UploadFile = File(...)):
 
     os.makedirs("uploads", exist_ok=True)
 
     date = datetime.now().isoformat()
     base_filename, ext = os.path.splitext(audio.filename)
-    safe_filename = f"interview_{int(datetime.now().timestamp())}{ext}"
+    safe_filename = f"interview_{id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
     audio_file = f"uploads/{safe_filename}"
     
     with open(audio_file, "wb") as f:
@@ -40,19 +58,100 @@ async def insert_interview_audio(position_id: int, audio: UploadFile = File(...)
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            """INSERT INTO interviews (audio_file, date, position_id) VALUES (?, ?, ?)""",
-            (audio_file, date, position_id)
+            """UPDATE interviews SET
+                audio_file = ?,
+                date = ?
+            WHERE id = ?""",
+            (audio_file, date, id)
         )
         conn.commit()
-        interview_id = cursor.lastrowid
         conn.close()
-    except sqlite3.Error:
-        raise HTTPException(status_code=500, detail="Erro ao inserir áudio no banco de dados")
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao inserir áudio no banco de dados: {e}")
 
     return JSONResponse(content={
-        "id": interview_id,
+        "id": id,
         "message": "Áudio registrado com sucesso!"
     })
+
+@router.post("/questions")
+def insert_question(request: QuestionCreateRequest):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) FROM interviews WHERE id = ?
+            """,
+            (request.interview_id,)
+        )
+        if cursor.fetchone()[0] == 0:
+            raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+
+        cursor.execute(
+            """
+                INSERT INTO questions (
+                    question,
+                    interview_id
+                )
+                VALUES (?, ?)
+            """,
+            (request.question, request.interview_id)
+        )
+        qid = cursor.lastrowid
+        conn.commit()
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao inserir pergunta no banco de dados: {e}")
+    finally:
+        conn.close()
+
+    return JSONResponse(content={
+        "id": qid,
+        "message": "Pergunta registrada com sucesso"
+    })
+
+@router.get("/{id}/questions")
+def get_questions(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                SELECT id, question, interview_id FROM questions WHERE interview_id = ?
+            """,
+            (id,)
+        )
+        rows = cursor.fetchall()
+        question_list = [{"id": row["id"], "question": row["question"], "interview_id": row["interview_id"]} for row in rows]
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar perguntas: {e}")
+    finally:
+        conn.close()
+    return JSONResponse(content=question_list)
+
+@router.delete("/{question_id}")
+def delete_questions(question_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                DELETE FROM questions WHERE id = ?
+            """,
+            (question_id,)
+        )
+        deleted = cursor.rowcount
+        conn.commit()
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Erro ao deletar pergunta no banco de dados")
+    finally:
+        conn.close()
+
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Pergunta não encontrada")
+
+    return JSONResponse(content={"message": "Pergunta deletada com sucesso"})
+
 
 @router.get("/{position_id}")
 def get_interviews_by_position(
@@ -75,8 +174,8 @@ def get_interviews_by_position(
                         interviews.email,
                         interviews.number,
                         interviews.date,
+                        interviews.audio_file,
                         interviews.transcript,
-                        interviews.labeled,
                         interviews.analysis,
                         interviews.notes,
                         interviews.score,
@@ -99,9 +198,9 @@ def get_interviews_by_position(
                         interviews.name,
                         interviews.email,
                         interviews.number,
+                        interviews.audio_file,
                         interviews.date,
                         interviews.transcript,
-                        interviews.labeled,
                         interviews.analysis,
                         interviews.notes,
                         interviews.score,
@@ -123,8 +222,8 @@ def get_interviews_by_position(
                 "email": row["email"],
                 "number": row["number"],
                 "date": row["date"],
-                "transcript": bool(row["transcript"]),
-                "labeled": json.loads(row["labeled"]) if row["labeled"] else "",
+                "audio_file": row["audio_file"],
+                "transcript": json.loads(row["transcript"]) if row["transcript"] else "",
                 "analysis": json.loads(row["analysis"]) if row["analysis"] else "",
                 "notes": row["notes"],
                 "score": row["score"],
@@ -142,32 +241,32 @@ def get_interviews_by_position(
         "pages": (total + per_page - 1) // per_page
     })
 
-@router.get("/audio/{interview_id}")
-def download_interview_audio(interview_id: int):
+@router.get("/audio/{id}")
+def download_interview_audio(id: int):
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (interview_id,))
-        result = cursor.fetchone()
+        cursor.execute("SELECT audio_file FROM interviews WHERE id = ?", (id,))
+        row = cursor.fetchone()
 
-        if not result:
+        if not row:
             raise HTTPException(status_code=404, detail="Entrevista não encontrada.")
 
-        file_path = result["audio_file"]
+        audio_file = row["audio_file"]
 
-        if not file_path or not os.path.exists(file_path):
+        if not audio_file or not os.path.exists(audio_file):
             raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado no servidor.")
 
-        media_type, _ = mimetypes.guess_type(file_path)
+        media_type, _ = mimetypes.guess_type(audio_file)
         if media_type is None:
             media_type = "application/octet-stream"
 
-        filename = os.path.basename(file_path)
+        filename = os.path.basename(audio_file)
 
         return FileResponse(
-            path=file_path,
+            path=audio_file,
             filename=filename,
             media_type=media_type
         )

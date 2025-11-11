@@ -5,10 +5,13 @@ class PositionCreateRequest(BaseModel):
     skills: list[str]
     description: str
 
-# Preservando o nome original da classe
-class IterrviewCreateRequest(BaseModel):
-    id: int
+class InterviewCreateRequest(BaseModel):
     name: str
     email: str
     number: str
     notes: str
+    position_id: int
+
+class QuestionCreateRequest(BaseModel):
+    question: str
+    interview_id: int
