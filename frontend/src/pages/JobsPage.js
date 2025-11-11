@@ -38,6 +38,14 @@ function JobsPage() {
     navigate('/cargos/novo');
   };
 
+  const handleDeleteJob = (jobId) => {
+    if (window.confirm('Tem certeza que deseja excluir este cargo?')) {
+      const updatedJobs = jobs.filter(job => job.id !== jobId);
+      setJobs(updatedJobs);
+      localStorage.setItem('jobs', JSON.stringify(updatedJobs));
+    }
+  };
+
   return (
     <div className="jobs-page">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -46,32 +54,41 @@ function JobsPage() {
         onMenuClick={() => setSidebarOpen(true)}
       />
       <div className="jobs-content">
-        <div className="jobs-header">
-          <h2 className="jobs-title">Cargos</h2>
-          <button className="add-job-btn" onClick={handleAddJob}>
-            + Adicionar cargo
-          </button>
-        </div>
+        <div className="jobs-section">
+          <div className="jobs-header">
+            <h2 className="section-title">Cargos</h2>
+            <button className="add-job-btn" onClick={handleAddJob}>
+              + Adicionar cargo
+            </button>
+          </div>
 
-        <div className="jobs-grid">
-          {jobs.map((job) => (
-            <div key={job.id} className="job-card">
-              <h3 className="job-card-title">{job.name}</h3>
-              
-              <div className="job-vacancies-badge">
-                {job.vacancies} vagas disponíveis
+          <div className="jobs-grid">
+            {jobs.map((job) => (
+              <div key={job.id} className="job-card">
+                <button 
+                  className="delete-job-btn"
+                  onClick={() => handleDeleteJob(job.id)}
+                  aria-label="Excluir cargo"
+                >
+                  ×
+                </button>
+                <h3 className="job-card-title">{job.name}</h3>
+                
+                <div className="job-vacancies-badge">
+                  {job.vacancies} vagas disponíveis
+                </div>
+
+                <p className="job-card-description">{job.description}</p>
+
+                <button 
+                  className="edit-job-btn"
+                  onClick={() => handleEditJob(job.id)}
+                >
+                  Editar cargo
+                </button>
               </div>
-
-              <p className="job-card-description">{job.description}</p>
-
-              <button 
-                className="edit-job-btn"
-                onClick={() => handleEditJob(job.id)}
-              >
-                Editar cargo
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

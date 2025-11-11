@@ -1,6 +1,6 @@
 .job-editor-page {
   min-height: 100vh;
-  background: #f9f9f9;
+  background: #FFF7F5;
 }
 
 .job-editor-content {
@@ -20,6 +20,7 @@
 .editor-title {
   font-family: 'Coolvetica', sans-serif;
   font-size: 1.5rem;
+  font-weight: normal;
   color: #1a1a1a;
   margin: 0 0 2rem 0;
 }
@@ -47,13 +48,16 @@
   font-family: 'Coolvetica', sans-serif;
   font-size: 1rem;
   color: #1a1a1a;
+  margin-bottom: 0.5rem;
 }
 
 .form-input-wrapper {
   background: #EDE9FF;
   border-radius: 8px;
   padding: 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .form-input {
@@ -61,7 +65,7 @@
   padding: 0.75rem;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
   background: white;
   color: #1a1a1a;
@@ -77,7 +81,7 @@
   padding: 0.75rem;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
   background: white;
   color: #1a1a1a;
@@ -94,27 +98,39 @@
   background: #EDE9FF;
   border-radius: 8px;
   padding: 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.competency-input-wrapper {
+  background: white;
+  border: 1px solid rgba(55, 28, 104, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  min-height: 2.5rem;
 }
 
 .competencies-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  align-items: center;
 }
 
 .competency-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  background: #C4EDFF;
-  color: #1a1a1a;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  background: #D2EAFF;
+  color: #092260;
   font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   border-radius: 6px;
-  border: 1px solid #a0d8f0;
+  border: 1px solid rgba(160, 216, 240, 0.3);
 }
 
 .remove-tag-btn {
@@ -134,20 +150,56 @@
   color: #666;
 }
 
-.competency-input {
-  width: 100%;
-  padding: 0.75rem;
+.add-competency-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  background: #f5f5f5;
+  color: #666;
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  border: 1px solid #e0e0e0;
+  font-size: 0.75rem;
   border-radius: 6px;
-  background: white;
-  color: #1a1a1a;
+  border: 1px solid rgba(160, 160, 160, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.competency-input:focus {
+.add-competency-btn:hover {
+  background: #ebebeb;
+}
+
+.competency-tag.editing {
+  background: #D2EAFF;
+  border: 1px solid rgba(160, 216, 240, 0.3);
+  padding: 0.25rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  min-height: fit-content;
+  height: auto;
+}
+
+.competency-tag-input {
+  width: 100%;
+  min-width: 80px;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #092260;
   outline: none;
-  box-shadow: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+  margin: 0;
+  height: 100%;
+}
+
+.competency-tag-input::placeholder {
+  color: #666;
+  opacity: 0.7;
 }
 
 .editor-right {
@@ -159,7 +211,7 @@
   background: #EDE9FF;
   border-radius: 8px;
   padding: 1.5rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -172,7 +224,7 @@
   padding: 0.75rem;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
   background: white;
   color: #1a1a1a;
@@ -193,7 +245,7 @@
   font-weight: normal;
   background: #FFDFCD;
   color: #602309;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(96, 35, 9, 0.1);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
