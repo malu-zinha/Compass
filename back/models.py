@@ -11,3 +11,7 @@ class InterviewCreateRequest(BaseModel):
     number: str
     notes: str
     position_id: int
+
+class QuestionCreateRequest(BaseModel):
+    question: str
+    interview_id: int
