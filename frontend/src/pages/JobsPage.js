@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import { Sidebar, Header } from '../components/layout';
 import './JobsPage.css';
 
 function JobsPage() {
