@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import InfoModal from '../components/InfoModal';
+import { Sidebar, Header } from '../components/layout';
+import { InfoModal } from '../components/common';
 import ChevronDownIcon from '../components/icons/ChevronDownIcon';
 import ChevronRightIcon from '../components/icons/ChevronRightIcon';
 import PlayIcon from '../components/icons/PlayIcon';

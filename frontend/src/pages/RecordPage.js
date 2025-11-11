@@ -26,7 +26,17 @@ function RecordPage() {
     // Mock data for development
     { speaker: 'Candidato', text: 'Bom dia! Meu nome é [entrevistado], tenho 21 anos e sou formado em Ciência da Computação.' },
     { speaker: 'Entrevistador', text: 'Olá, fale um pouco sobre suas experiências no mercado de trabalho.' },
-    { speaker: 'Candidato', text: 'Claro, já trabalhei como engenheiro de software na Meta e meu emprego mais recente foi como fullstack na Microsoft' }
+    { speaker: 'Candidato', text: 'Claro, já trabalhei como engenheiro de software na Meta e meu emprego mais recente foi como fullstack na Microsoft' },
+    { speaker: 'Entrevistador', text: 'Interessante! E quais tecnologias você domina atualmente?' },
+    { speaker: 'Candidato', text: 'Trabalho principalmente com React, Node.js, TypeScript e Python. Também tenho experiência com AWS e Docker para deploy de aplicações.' },
+    { speaker: 'Entrevistador', text: 'Ótimo. Me conte sobre algum projeto desafiador que você participou.' },
+    { speaker: 'Candidato', text: 'Na Microsoft, liderei a migração de um sistema legado para uma arquitetura de microsserviços. Foi um projeto de 6 meses com uma equipe de 8 pessoas.' },
+    { speaker: 'Entrevistador', text: 'E quais foram os principais desafios dessa migração?' },
+    { speaker: 'Candidato', text: 'O maior desafio foi garantir zero downtime durante a transição. Implementamos uma estratégia de feature flags e deploys graduais para mitigar riscos.' },
+    { speaker: 'Entrevistador', text: 'Como você se vê em 5 anos?' },
+    { speaker: 'Candidato', text: 'Me vejo em uma posição de liderança técnica, mentorando outros desenvolvedores e contribuindo para decisões arquiteturais importantes da empresa.' },
+    { speaker: 'Entrevistador', text: 'E quais são seus hobbies fora do trabalho?' },
+    { speaker: 'Candidato', text: 'Gosto de contribuir para projetos open source, jogar videogame e praticar esportes. Também estou aprendendo japonês nas horas vagas.' }
   ]);
   
   // Perguntas
@@ -228,7 +238,6 @@ function RecordPage() {
             ) : (
               transcription.map((item, index) => (
                 <div key={index} className="transcription-message">
-                  <div className="transcription-speaker">{item.speaker}</div>
                   <div className={`transcription-bubble ${item.speaker.toLowerCase()}`}>
                     {item.text}
                   </div>
@@ -280,20 +289,20 @@ function RecordPage() {
                           e.stopPropagation();
                           handleQuestionReaction(question.id, 'like');
                         }}
-                        title="Aceitar sugestão"
+                        aria-label="Aceitar sugestão"
                       >
                         <ThumbsUpIcon size={18} color="#1a1a1a" />
                       </button>
-      <button 
+                      <button 
                         className="reaction-btn dislike"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleQuestionReaction(question.id, 'dislike');
                         }}
-                        title="Rejeitar sugestão"
+                        aria-label="Rejeitar sugestão"
                       >
                         <ThumbsDownIcon size={18} color="#1a1a1a" />
-      </button>
+                      </button>
                     </div>
                   )}
                 </div>

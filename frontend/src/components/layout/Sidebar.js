@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import logo from '../logo.svg';
-import HomeIcon from './icons/HomeIcon';
-import InterviewsIcon from './icons/InterviewsIcon';
-import JobsIcon from './icons/JobsIcon';
-import QuestionsIcon from './icons/QuestionsIcon';
-import SettingsIcon from './icons/SettingsIcon';
-import UserIcon from './icons/UserIcon';
-import LogoutIcon from './icons/LogoutIcon';
+import logo from '../../logo.svg';
+import HomeIcon from '../icons/HomeIcon';
+import InterviewsIcon from '../icons/InterviewsIcon';
+import JobsIcon from '../icons/JobsIcon';
+import QuestionsIcon from '../icons/QuestionsIcon';
+import SettingsIcon from '../icons/SettingsIcon';
+import UserIcon from '../icons/UserIcon';
+import LogoutIcon from '../icons/LogoutIcon';
 import './Sidebar.css';
 
 function Sidebar({ isOpen, onClose }) {
@@ -20,7 +20,7 @@ function Sidebar({ isOpen, onClose }) {
   };
 
   const menuItems = [
-    { path: '/', label: 'Início', icon: HomeIcon },
+    { path: '/inicio', label: 'Início', icon: HomeIcon },
     { path: '/entrevistas', label: 'Entrevistas', icon: InterviewsIcon },
     { path: '/cargos', label: 'Cargos', icon: JobsIcon },
     { path: '/perguntas', label: 'Perguntas', icon: QuestionsIcon },
@@ -37,7 +37,10 @@ function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <div className="sidebar-user">
+        <button 
+          className="sidebar-user"
+          onClick={() => handleLinkClick('/perfil')}
+        >
           <div className="user-icon">
             <UserIcon size={24} color="#1a1a1a" />
           </div>
@@ -45,7 +48,7 @@ function Sidebar({ isOpen, onClose }) {
             <div className="user-name">Nicolas Kleiton</div>
             <div className="user-role">Entrevistador</div>
           </div>
-        </div>
+        </button>
 
         <nav className="sidebar-nav">
           {menuItems.map((item) => {
