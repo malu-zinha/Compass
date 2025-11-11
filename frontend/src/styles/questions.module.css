@@ -1,12 +1,9 @@
 /* Page wrapper and positioning */
 .wrapper {
-  position: fixed; /* cover the entire viewport so underlying pages don't show */
-  inset: 0;
-  background: #FDF4F3; /* surround the centered card with this color */
-  padding: 0; /* remove extra padding so the whole screen stays white */
-  box-sizing: border-box;
-  overflow: auto; /* allow scrolling inside the overlay if needed */
-  z-index: 1200; /* above app chrome */
+  min-height: 100vh;
+  background: #FFF7F5;
+  display: flex;
+  flex-direction: column;
 }
 
 :root {
@@ -84,7 +81,13 @@
 .iconSvg svg, .iconSvg { width: 100%; height: 100%; }
 .iconSvg path { fill: #602309 }
 
-.main { max-width: 1100px; margin: 40px auto; padding: 0 20px }
+.main {
+  padding: 2rem;
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
 
 /* add-input row (top of questions list) */
 .addInputRow { display:flex; gap:8px; align-items:center; margin: 12px 0 18px }
@@ -133,8 +136,15 @@
 }
 .plusSticker svg { display: block; width:20px; height:20px }
 .plusSticker:hover { transform: translateY(-2px); filter: brightness(0.98) }
-.titleRow { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom: 18px }
-.title { font-size: 1.4rem; font-weight:700 }
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
 .titleTrash { background: transparent; border: none; padding:6px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#6b7280; cursor:pointer }
 .titleTrash svg { display:block }
 .titleTrash:hover { background: rgba(0,0,0,0.04); color:#374151 }
@@ -146,60 +156,141 @@
 .deleteSelected:disabled { opacity: 0.5; cursor: default }
 .cancelSelection { background: transparent; border: 1px solid #e5e7eb; padding:6px 8px; border-radius:8px; cursor:pointer }
 
-.board { background: #fff; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(2,6,23,0.04) }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; padding:0; margin:0 }
-.card { padding: 14px; border-radius: 10px; border: 1px solid #e6e0fa; background: #EDE9FF; position: relative }
-.card.selected { box-shadow: 0 10px 30px rgba(22,163,74,0.07); transform: translateY(-4px); border-color: var(--accent-green); }
-.cardTitle { font-weight: 600; margin-bottom: 8px }
-.cardInput { width:100%; padding:8px; border:1px solid #dcd6f0; border-radius:8px; background: #ffffff }
+.board {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.5rem 0 1.5rem 0;
+  margin-top: 0;
+}
 
-.footer { margin-top: 20px; display:block }
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  background: #EDE9FF;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.card.selected {
+  box-shadow: 0 0 0 2px #E4E4E7;
+  border-color: #E4E4E7;
+}
+
+.cardTitle {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1rem;
+  font-weight: normal;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.cardInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(55, 28, 104, 0.2);
+  border-radius: 6px;
+  background: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  outline: none;
+}
+
+.footer {
+  padding: 1.5rem 0 1.5rem 0;
+  flex-shrink: 0;
+}
 
 .addQuestionBtn {
-  background: #FFE2DE;
+  background: #FFDFCD;
   color: #602309;
-  border: none;
-  padding: 12px 16px;
+  border: 1px solid rgba(96, 35, 9, 0.1);
+  padding: 0.65rem 1.25rem;
   border-radius: 10px;
-  font-weight: 700;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 0.9rem;
+  font-weight: normal;
   cursor: pointer;
-  width: 100%;
-  display: block;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
-.addQuestionBtn:hover { filter: brightness(0.98); transform: translateY(-1px) }
+
+.addQuestionBtn:hover {
+  background: #ffd0b8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
 
 /* minimal 'x' inside each card to remove it - visible by default */
 .removeX {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.04);
-  border: none;
-  width:28px;
-  height:28px;
-  border-radius:6px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  color:#6b7280;
-  cursor:pointer;
-  opacity: 1;
-  pointer-events: auto;
-  transform: none;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.2rem;
+  font-weight: normal;
+  background: #FFD8D8;
+  color: #7B0C0C;
+  border: 1px solid rgba(55, 28, 104, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
-.removeX:hover { background: rgba(0,0,0,0.06); color:#374151 }
+
+.removeX:hover {
+  background: #ffc5c5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.removeX:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 /* Content card to mirror Auth screen aesthetic */
 .contentCard {
-  max-width: 920px;
-  margin: 24px auto;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(16,24,40,0.08);
-  padding: 20px;
+  flex: 1;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 80px - 4rem);
+  display: flex;
+  flex-direction: column;
 }
 
-.title { font-size: 1.4rem; font-weight:700; font-family: 'Coolvetica', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111827 }
+.title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0;
+  padding-bottom: 0;
+  padding-right: 1.5rem;
+  border-bottom: none;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
 
 /* title area actions: add and trash */
 .titleActions { display:flex; gap:8px; align-items:center }
@@ -243,3 +334,22 @@
 .input { width: 100%; padding: 0.65rem 0.75rem; border-radius: 8px; border: 1px solid #e6edf3; font-size: 0.95rem }
 
 .action { display:none }
+
+/* Scrollbar Styling */
+.board::-webkit-scrollbar {
+  width: 8px;
+}
+
+.board::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.board::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.board::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
 import styles from '../styles/questions.module.css';
-import { ReactComponent as PlusIcon } from '../assets/icons/square-plus.svg';
-import { ReactComponent as TrashIcon } from '../assets/icons/trash.svg';
-import { ReactComponent as FileTextIcon } from '../assets/icons/file-text.svg';
-import { ReactComponent as Icon15 } from '../assets/icons/image 15.svg';
 
 export default function QuestionsPage() {
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [perguntas, setPerguntas] = useState([
     'Pergunta 1',
     'Pergunta 2',
@@ -79,47 +78,22 @@ export default function QuestionsPage() {
     }
   };
 
-  const handleClose = () => {
-    navigate(-1);
-  };
-
   return (
     <div className={styles.wrapper}>
-      <header className={styles.header}>
-        <div className={styles.rightBrand}>
-          <span className={styles.brandTitle}>Compass <span className={styles.icon} aria-hidden="true"><Icon15 className={styles.iconSvg} aria-hidden="true"/></span></span>
-        </div>
-
-        <div className={styles.headerTitle}>
-          <div className={styles.title}>Perguntas</div>
-        </div>
-
-        <div className={styles.headerActions}>
-          <Link to="/" className={styles.newInterview}>
-            <span className={styles.reportSticker} aria-hidden="true">
-              <FileTextIcon aria-hidden="true" />
-            </span>
-            <strong>Nova entrevista</strong>
-          </Link>
-
-          {selectionMode && (
-            <>
-              <button className={styles.deleteSelected} onClick={deleteSelected} disabled={selected.size === 0} aria-label="Excluir selecionadas">Excluir ({selected.size})</button>
-              <button className={styles.cancelSelection} onClick={toggleSelectionMode} aria-label="Cancelar seleção">Cancelar</button>
-            </>
-          )}
-
-          <button className={styles.closeX} onClick={handleClose} aria-label="Fechar">×</button>
-        </div>
-      </header>
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Header 
+        title="Perguntas"
+        onMenuClick={() => setSidebarOpen(true)}
+      />
 
       <main className={styles.main}>
         <div className={styles.contentCard}>
           <div className={styles.titleRow}>
             <h2 className={styles.title}>Lista de perguntas</h2>
+            <button className={styles.addQuestionBtn} onClick={adicionarPergunta} aria-label="Adiciona pergunta">
+              + Adicionar pergunta
+            </button>
           </div>
-
-          
 
           <section className={styles.board}>
             <ul className={styles.grid}>
@@ -144,10 +118,6 @@ export default function QuestionsPage() {
                 </li>
               ))}
             </ul>
-
-            <div className={styles.footer}>
-              <button className={styles.addQuestionBtn} onClick={adicionarPergunta} aria-label="Adiciona pergunta">Adiciona pergunta</button>
-            </div>
           </section>
         </div>
       </main>
