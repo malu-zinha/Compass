@@ -4,6 +4,8 @@ import CheckIcon from '../components/icons/CheckIcon';
 import EqualsIcon from '../components/icons/EqualsIcon';
 import ThumbsUpIcon from '../components/icons/ThumbsUpIcon';
 import ThumbsDownIcon from '../components/icons/ThumbsDownIcon';
+import { uploadInterview, saveCandidateInfo } from '../services/api';
+import { useRealtimeTranscription } from '../hooks/useRealtimeTranscription';
 import './RecordPage.css';
 
 function RecordPage() {
@@ -21,31 +23,11 @@ function RecordPage() {
   const timerIntervalRef = useRef(null);
   const streamRef = useRef(null);
   
-  // Transcrição em tempo real
-  const [transcription, setTranscription] = useState([
-    // Mock data for development
-    { speaker: 'Candidato', text: 'Bom dia! Meu nome é [entrevistado], tenho 21 anos e sou formado em Ciência da Computação.' },
-    { speaker: 'Entrevistador', text: 'Olá, fale um pouco sobre suas experiências no mercado de trabalho.' },
-    { speaker: 'Candidato', text: 'Claro, já trabalhei como engenheiro de software na Meta e meu emprego mais recente foi como fullstack na Microsoft' },
-    { speaker: 'Entrevistador', text: 'Interessante! E quais tecnologias você domina atualmente?' },
-    { speaker: 'Candidato', text: 'Trabalho principalmente com React, Node.js, TypeScript e Python. Também tenho experiência com AWS e Docker para deploy de aplicações.' },
-    { speaker: 'Entrevistador', text: 'Ótimo. Me conte sobre algum projeto desafiador que você participou.' },
-    { speaker: 'Candidato', text: 'Na Microsoft, liderei a migração de um sistema legado para uma arquitetura de microsserviços. Foi um projeto de 6 meses com uma equipe de 8 pessoas.' },
-    { speaker: 'Entrevistador', text: 'E quais foram os principais desafios dessa migração?' },
-    { speaker: 'Candidato', text: 'O maior desafio foi garantir zero downtime durante a transição. Implementamos uma estratégia de feature flags e deploys graduais para mitigar riscos.' },
-    { speaker: 'Entrevistador', text: 'Como você se vê em 5 anos?' },
-    { speaker: 'Candidato', text: 'Me vejo em uma posição de liderança técnica, mentorando outros desenvolvedores e contribuindo para decisões arquiteturais importantes da empresa.' },
-    { speaker: 'Entrevistador', text: 'E quais são seus hobbies fora do trabalho?' },
-    { speaker: 'Candidato', text: 'Gosto de contribuir para projetos open source, jogar videogame e praticar esportes. Também estou aprendendo japonês nas horas vagas.' }
-  ]);
+  // Transcrição em tempo real via WebSocket
+  const { transcripts: realtimeTranscripts, isConnected, sendAudioChunk } = useRealtimeTranscription(isRecording);
   
-  // Perguntas
-  const [questions, setQuestions] = useState([
-    { id: 1, text: 'Como você se vê em 5 anos?', status: 'completed', isAI: false },
-    { id: 2, text: 'Me conte sobre seus hobbies.', status: 'pending', isAI: false },
-    { id: 3, text: 'Quais suas experiências anteriores no mercado?', status: 'pending', isAI: false },
-    { id: 4, text: 'Fale mais sobre esse seu último emprego.', status: 'pending', isAI: true }
-  ]);
+  // Perguntas (vazio inicialmente - adicione durante a entrevista)
+  const [questions, setQuestions] = useState([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   
   // Anotações
@@ -96,13 +78,17 @@ function RecordPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream);
+      const options = { mimeType: 'audio/webm;codecs=opus' };
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
+          
+          // Enviar chunk para transcrição em tempo real
+          sendAudioChunk(e.data);
         }
       };
 
@@ -111,7 +97,8 @@ function RecordPage() {
         setAudioBlob(blob);
       };
 
-      mediaRecorder.start();
+      // Capturar dados a cada 5 segundos para transcrição em tempo real
+      mediaRecorder.start(5000); // 5000ms = 5 segundos
       setIsRecording(true);
     } catch (error) {
       console.error('Erro ao acessar microfone:', error);
@@ -157,66 +144,38 @@ function RecordPage() {
       return;
     }
 
-    // Prepare data to send to backend
-    const formData = new FormData();
-    
     const finalBlob = audioBlob || new Blob(chunksRef.current, { type: 'audio/webm' });
-    formData.append('audio_file', finalBlob, 'interview.webm');
     
-    if (candidateData) {
-      formData.append('candidate_name', candidateData.candidateName);
-      formData.append('candidate_email', candidateData.candidateEmail);
-      formData.append('candidate_phone', candidateData.candidatePhone);
-      formData.append('candidate_position', candidateData.candidatePosition);
+    if (!candidateData || !candidateData.candidatePositionId) {
+      alert('Dados do candidato incompletos!');
+      return;
     }
-    
-    formData.append('questions', JSON.stringify(questions));
-    formData.append('notes', notes);
-    formData.append('transcription', JSON.stringify(transcription));
-    formData.append('duration', recordingTime);
-    
+
     try {
-      // TODO: Backend integration
-      // const response = await fetch('http://localhost:8000/api/interviews/complete', {
-      //   method: 'POST',
-      //   body: formData
-      // });
+      // Upload do áudio
+      const result = await uploadInterview(finalBlob, candidateData.candidatePositionId);
+      const interviewId = result.id;
+      console.log('Upload concluído! Interview ID:', interviewId);
       
-      console.log('Interview data ready to send:', {
-        audioSize: finalBlob.size,
-        candidateData,
-        questions,
-        notes,
-        transcription,
-        duration: recordingTime
+      // Salvar dados do candidato
+      await saveCandidateInfo(interviewId, {
+        name: candidateData.candidateName,
+        email: candidateData.candidateEmail,
+        phone: candidateData.candidatePhone,
+        notes: notes
       });
+      console.log('Dados do candidato salvos!');
       
-      // Generate interview ID (in real app, this would come from backend)
-      const interviewId = Date.now().toString();
-      
-      // Save interview data temporarily to access in detail page
-      const interviewDetailData = {
-        id: interviewId,
-        candidate: candidateData,
-        date: new Date().toLocaleDateString('pt-BR'),
-        transcription: transcription,
-        questions: questions,
-        notes: notes,
-        duration: recordingTime
-      };
-      localStorage.setItem(`interview_${interviewId}`, JSON.stringify(interviewDetailData));
-      
-      // Clean up interviewData
+      // Clean up
       localStorage.removeItem('interviewData');
       
-      // Navigate to interview detail page
-      setTimeout(() => {
-        navigate(`/entrevista/${interviewId}`);
-      }, 500);
+      // Navegar para a página inicial
+      alert('Entrevista enviada com sucesso!');
+      navigate('/inicio');
 
     } catch (error) {
-      console.error('Erro ao enviar entrevista:', error);
-      alert('Erro ao processar entrevista. Tente novamente.');
+      console.error('Erro ao processar entrevista:', error);
+      alert(`Erro ao enviar entrevista: ${error.message}\n\nVerifique se o backend está rodando em http://localhost:8000`);
     }
   };
 
@@ -229,16 +188,25 @@ function RecordPage() {
       {/* Transcrição Panel */}
       <div className="transcription-panel">
         <div className="transcription-card">
-          <h3>Transcrição</h3>
+          <h3>
+            Transcrição 
+            {isConnected && <span style={{color: '#16a34a', fontSize: '0.8rem', marginLeft: '0.5rem'}}>● AO VIVO</span>}
+            {isRecording && !isConnected && <span style={{color: '#eab308', fontSize: '0.8rem', marginLeft: '0.5rem'}}>⚠ Offline</span>}
+          </h3>
           <div className="transcription-content">
-            {transcription.length === 0 ? (
+            {realtimeTranscripts.length === 0 ? (
               <p className="transcription-empty">
-                A transcrição aparecerá aqui em tempo real...
+                {isRecording 
+                  ? isConnected 
+                    ? '🎤 Gravando... A transcrição aparecerá aqui em tempo real (a cada 5 segundos)'
+                    : '🎤 Gravando... (Transcrição em tempo real indisponível - será processada ao final)'
+                  : 'A transcrição aparecerá aqui em tempo real...'
+                }
               </p>
             ) : (
-              transcription.map((item, index) => (
+              realtimeTranscripts.map((item, index) => (
                 <div key={index} className="transcription-message">
-                  <div className={`transcription-bubble ${item.speaker.toLowerCase()}`}>
+                  <div className="transcription-bubble candidato" style={{opacity: item.isFinal ? 1 : 0.7}}>
                     {item.text}
                   </div>
                 </div>

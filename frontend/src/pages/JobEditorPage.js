@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
+import { createPosition, getPositions } from '../services/api';
 import './JobEditorPage.css';
 
 function JobEditorPage() {
@@ -67,27 +68,29 @@ function JobEditorPage() {
     setCompetencies(competencies.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    const savedJobs = localStorage.getItem('jobs');
-    let jobs = savedJobs ? JSON.parse(savedJobs) : [];
-
-    const jobData = {
-      id: isEditing ? id : Date.now().toString(),
-      name: jobName,
-      description: jobDescription,
-      vacancies: parseInt(jobVacancies) || 0,
-      competencies: competencies,
-      idealProfile: idealProfile
-    };
-
-    if (isEditing) {
-      jobs = jobs.map(j => j.id === id ? jobData : j);
-    } else {
-      jobs.push(jobData);
+  const handleSave = async () => {
+    if (!jobName || !jobDescription || competencies.length === 0) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
     }
 
-    localStorage.setItem('jobs', JSON.stringify(jobs));
-    navigate('/cargos');
+    try {
+      if (isEditing) {
+        alert('Edição ainda não implementada no backend');
+        return;
+      }
+      
+      await createPosition({
+        name: jobName,
+        competencies: competencies,
+        description: jobDescription
+      });
+      alert('Cargo salvo com sucesso!');
+      navigate('/cargos');
+    } catch (error) {
+      console.error('Erro ao salvar cargo:', error);
+      alert('Erro ao salvar cargo. Verifique se o backend está rodando.');
+    }
   };
 
   return (

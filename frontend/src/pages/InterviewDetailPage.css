@@ -1,8 +1,15 @@
 .interview-detail-page {
   min-height: 100vh;
-  background: #FFF7F5;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
+}
+
+.loading-message {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
 }
 
 .detail-container {
