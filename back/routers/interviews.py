@@ -3,7 +3,7 @@ import sqlite3
 import os
 import mimetypes
 from datetime import datetime
-from models import InterviewCreateRequest, QuestionCreateRequest
+from models import InterviewCreateRequest, QuestionCreateRequest, NotesUpdateRequest
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
 from database import get_db_connection
@@ -29,8 +29,8 @@ def insert_interview(request: InterviewCreateRequest):
                 score,
                 position_id
             )
-            VALUES (?, ?, ?, '', '', '', '', ?)
-        """, (request.name, request.email, request.number, request.position_id))
+            VALUES (?, ?, ?, ?, '', '', '', ?)
+        """, (request.name, request.email, request.number, request.notes or '', request.position_id))
         conn.commit()
         row_id = cursor.lastrowid
         conn.close()
@@ -129,7 +129,7 @@ def get_questions(id: int):
         conn.close()
     return JSONResponse(content=question_list)
 
-@router.delete("/{question_id}")
+@router.delete("/questions/{question_id}")
 def delete_questions(question_id: int):
     try:
         conn = get_db_connection()
@@ -256,20 +256,34 @@ def download_interview_audio(id: int):
 
         audio_file = row["audio_file"]
 
-        if not audio_file or not os.path.exists(audio_file):
+        if not audio_file:
             raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado no servidor.")
+
+        # Converter para caminho absoluto se necessário
+        if not os.path.isabs(audio_file):
+            audio_file = os.path.join(os.getcwd(), audio_file)
+
+        if not os.path.exists(audio_file):
+            raise HTTPException(status_code=404, detail=f"Arquivo de áudio não encontrado no servidor: {audio_file}")
 
         media_type, _ = mimetypes.guess_type(audio_file)
         if media_type is None:
-            media_type = "application/octet-stream"
+            media_type = "audio/mpeg"  # Default para MP3
 
         filename = os.path.basename(audio_file)
 
-        return FileResponse(
+        response = FileResponse(
             path=audio_file,
             filename=filename,
             media_type=media_type
         )
+        
+        # Adicionar headers CORS
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        
+        return response
 
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Erro no banco de dados: {e}")
@@ -281,6 +295,26 @@ def download_interview_audio(id: int):
         if conn:
             conn.close()
 
+
+@router.patch("/{id}/notes")
+def update_interview_notes(id: int, notes_data: NotesUpdateRequest):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE interviews SET notes = ? WHERE id = ?",
+            (notes_data.notes, id)
+        )
+        conn.commit()
+        updated = cursor.rowcount
+        conn.close()
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar anotações: {e}")
+    
+    if updated == 0:
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    
+    return JSONResponse(content={"message": "Anotações atualizadas com sucesso"})
 
 @router.delete("/{id}")
 def delete_interview(id: int):

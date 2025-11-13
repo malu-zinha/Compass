@@ -27,11 +27,11 @@ function HomePage() {
             <p className="action-description">Inicie uma nova entrevista com gravação e transcrição automática</p>
           </div>
 
-          <div className="action-card" onClick={() => navigate('/entrevistas')}>
+          <div className="action-card" onClick={() => navigate('/ranking')}>
             <div className="action-icon" style={{ background: '#D2EAFF', color: '#092260' }}>
               <ChartIcon size={32} color="#092260" />
             </div>
-            <h3 className="action-title">Entrevistados</h3>
+            <h3 className="action-title">Ranking</h3>
             <p className="action-description">Veja o ranking e detalhes de todos os candidatos entrevistados</p>
           </div>
 
@@ -49,25 +49,6 @@ function HomePage() {
             </div>
             <h3 className="action-title">Perguntas</h3>
             <p className="action-description">Crie e organize perguntas para suas entrevistas</p>
-          </div>
-        </div>
-
-        <div className="stats-section">
-          <div className="stat-card">
-            <div className="stat-number">0</div>
-            <div className="stat-label">Entrevistas realizadas</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">0</div>
-            <div className="stat-label">Candidatos avaliados</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">0</div>
-            <div className="stat-label">Cargos cadastrados</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">0</div>
-            <div className="stat-label">Perguntas criadas</div>
           </div>
         </div>
       </div>

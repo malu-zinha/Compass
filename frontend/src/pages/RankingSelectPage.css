@@ -1,0 +1,121 @@
+.ranking-select-page {
+  min-height: 100vh;
+  background: #FFF7F5;
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-select-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.ranking-select-header {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 2rem;
+  font-weight: normal;
+  margin: 0 0 0.5rem 0;
+  color: #1a1a1a;
+}
+
+.section-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.positions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.position-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.position-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.position-card.all-candidates {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.position-card.all-candidates:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.position-card-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.position-card-title {
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.position-card.all-candidates .position-card-title {
+  color: white;
+}
+
+.position-card-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.position-card.all-candidates .position-card-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.position-vacancies {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #E9F2FF;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .positions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ranking-select-content {
+    padding: 1rem;
+  }
+}
+

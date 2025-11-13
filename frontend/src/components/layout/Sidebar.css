@@ -101,24 +101,37 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   border: none;
   background: none;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   color: #1a1a1a;
   text-align: left;
+  position: relative;
 }
 
 .sidebar-nav-item:hover {
-  background: #f9f9f9;
+  background: none;
 }
 
 .sidebar-nav-item.active {
+  background: none;
+  color: #1a1a1a;
+}
+
+.sidebar-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 0.35rem;
+  bottom: 0.35rem;
   background: #FFDFCD;
-  color: #602309;
+  border-radius: 8px;
+  z-index: -1;
 }
 
 .nav-icon {

@@ -19,10 +19,10 @@ def create_position(position: PositionCreateRequest):
     try:
         cursor.execute(
             """
-            INSERT INTO positions (position, skills, description)
-            VALUES (?, ?, ?)
+            INSERT INTO positions (position, skills, description, vacancies)
+            VALUES (?, ?, ?, ?)
             """,
-            (position.position, skills_json, position.description)
+            (position.position, skills_json, position.description, position.vacancies or 0)
         )
         conn.commit()
         inserted_id = cursor.lastrowid
@@ -60,11 +60,20 @@ def get_positions(
         conn.close()
         positions = []
         for row in rows:
+            # Verificar se a coluna vacancies existe (para tabelas antigas)
+            vacancies = 0
+            try:
+                if "vacancies" in row.keys():
+                    vacancies = row["vacancies"] or 0
+            except (KeyError, AttributeError):
+                vacancies = 0
+            
             positions.append({
                 "id": row["id"],
                 "position": row["position"],
                 "skills": json.loads(row["skills"]),
-                "description": row["description"]
+                "description": row["description"],
+                "vacancies": vacancies
             })
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Erro ao acessar o banco de dados: {e}")
@@ -77,7 +86,77 @@ def get_positions(
         "pages": (total + per_page - 1) // per_page
     })
 
-@router.delete("/positions{position_id}")
+@router.get("/positions/{position_id}")
+def get_position(position_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM positions WHERE id = ?",
+            (position_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Cargo não encontrado")
+        
+        # Verificar se a coluna vacancies existe
+        vacancies = 0
+        try:
+            if "vacancies" in row.keys():
+                vacancies = row["vacancies"] or 0
+        except (KeyError, AttributeError):
+            vacancies = 0
+        
+        return JSONResponse(content={
+            "id": row["id"],
+            "position": row["position"],
+            "skills": json.loads(row["skills"]),
+            "description": row["description"],
+            "vacancies": vacancies
+        })
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao acessar o banco de dados: {e}")
+
+@router.patch("/positions/{position_id}")
+def update_position(position_id: int, position: PositionCreateRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Verificar se o cargo existe
+    cursor.execute("SELECT id FROM positions WHERE id = ?", (position_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Cargo não encontrado")
+    
+    skills_json = json.dumps(position.skills)
+    
+    try:
+        cursor.execute(
+            """
+            UPDATE positions 
+            SET position = ?, skills = ?, description = ?, vacancies = ?
+            WHERE id = ?
+            """,
+            (position.position, skills_json, position.description, position.vacancies or 0, position_id)
+        )
+        conn.commit()
+        updated = cursor.rowcount
+        conn.close()
+    except sqlite3.Error as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar cargo: {e}")
+    
+    if updated == 0:
+        raise HTTPException(status_code=404, detail="Cargo não encontrado")
+    
+    return JSONResponse(content={
+        "id": position_id,
+        "message": "Cargo atualizado com sucesso!"
+    })
+
+@router.delete("/positions/{position_id}")
 def delete_position(position_id: int):
     try:
         conn = get_db_connection()
