@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import database
-from routers import positions, interviews, interview_processing
+from routers import positions, interviews, interview_processing, global_questions
 
 app = FastAPI(
     title="API de Resumos de Entrevistas",
@@ -24,6 +24,8 @@ app.include_router(positions.router)
 app.include_router(interviews.router)
 
 app.include_router(interview_processing.router)
+
+app.include_router(global_questions.router)
 
 @app.get("/")
 def read_root():

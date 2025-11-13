@@ -8,7 +8,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    nome: 'Nicolas Kleiton',
+    nome: 'Joaquim Germano',
     email: 'seuemail@gmail.com',
     cargo: 'Entrevistador',
     telefone: '(11) 98765-4321',
@@ -47,10 +47,10 @@ export default function ProfilePage() {
           <div className="profile-header">
             <div className="profile-avatar-section">
               <div className="profile-avatar">
-                <span className="avatar-initials">NK</span>
+                <span className="avatar-initials">JG</span>
               </div>
               <button className="change-avatar-btn">
-                📷 Alterar foto
+                Alterar foto
               </button>
             </div>
             <div className="profile-header-info">
@@ -66,7 +66,7 @@ export default function ProfilePage() {
               <h2 className="details-title">Informações Pessoais</h2>
               {!isEditing ? (
                 <button className="edit-btn" onClick={() => setIsEditing(true)}>
-                  ✏️ Editar
+                  Editar
                 </button>
               ) : (
                 <div className="edit-actions">
@@ -171,66 +171,14 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Activity Stats */}
-          <div className="profile-stats">
-            <h2 className="stats-title">Estatísticas</h2>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <div className="stat-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-                  🎤
-                </div>
-                <div className="stat-info">
-                  <div className="stat-number">24</div>
-                  <div className="stat-label">Entrevistas realizadas</div>
-                </div>
-              </div>
-
-              <div className="stat-item">
-                <div className="stat-icon" style={{ background: '#D2EAFF', color: '#092260' }}>
-                  👥
-                </div>
-                <div className="stat-info">
-                  <div className="stat-number">18</div>
-                  <div className="stat-label">Candidatos aprovados</div>
-                </div>
-              </div>
-
-              <div className="stat-item">
-                <div className="stat-icon" style={{ background: '#FFE2DE', color: '#602309' }}>
-                  💼
-                </div>
-                <div className="stat-info">
-                  <div className="stat-number">5</div>
-                  <div className="stat-label">Cargos gerenciados</div>
-                </div>
-              </div>
-
-              <div className="stat-item">
-                <div className="stat-icon" style={{ background: '#E8F5E9', color: '#1B5E20' }}>
-                  ⭐
-                </div>
-                <div className="stat-info">
-                  <div className="stat-number">4.8</div>
-                  <div className="stat-label">Média de avaliação</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Section */}
-          <div className="profile-security">
-            <h2 className="security-title">Segurança</h2>
-            <div className="security-actions">
-              <button className="security-btn">
-                🔒 Alterar senha
-              </button>
-              <button className="security-btn">
-                🔐 Autenticação em dois fatores
-              </button>
-              <button className="security-btn danger">
-                🗑️ Excluir conta
+            <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(0, 0, 0, 0.08)', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                className="security-btn danger"
+                onClick={() => navigate('/')}
+                style={{ fontFamily: 'Inter, sans-serif', padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}
+              >
+                Sair
               </button>
             </div>
           </div>

@@ -1,50 +1,57 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import CheckIcon from '../components/icons/CheckIcon';
-import EqualsIcon from '../components/icons/EqualsIcon';
-import ThumbsUpIcon from '../components/icons/ThumbsUpIcon';
-import ThumbsDownIcon from '../components/icons/ThumbsDownIcon';
-import { uploadInterview, saveCandidateInfo } from '../services/api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { generateAnalysis, updateInterviewNotes, getInterviewById } from '../services/api';
 import { useRealtimeTranscription } from '../hooks/useRealtimeTranscription';
 import './RecordPage.css';
 
 function RecordPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   
-  // Dados do candidato
+  // Dados passados pela página anterior
+  const [interviewId, setInterviewId] = useState(null);
   const [candidateData, setCandidateData] = useState(null);
   
   // Gravação
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [audioBlob, setAudioBlob] = useState(null);
   const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
   const timerIntervalRef = useRef(null);
   const streamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const processorNodeRef = useRef(null);
+  const isRecordingRef = useRef(false);
   
   // Transcrição em tempo real via WebSocket
-  const { transcripts: realtimeTranscripts, isConnected, sendAudioChunk } = useRealtimeTranscription(isRecording);
+  const { transcripts, questions: aiQuestions, isConnected, sendAudioChunk } = useRealtimeTranscription(interviewId);
   
-  // Perguntas (vazio inicialmente - adicione durante a entrevista)
-  const [questions, setQuestions] = useState([]);
+  // Perguntas combinadas (AI + pré-programadas)
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   
   // Anotações
   const [notes, setNotes] = useState('');
   
+  // Estado de processamento
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState('');
+  
   // Inicialização
   useEffect(() => {
-    const savedData = localStorage.getItem('interviewData');
-    if (!savedData) {
-      navigate('/nova-entrevista');
-      return;
+    // Pegar dados do state da navegação
+    if (location.state?.interviewId && location.state?.candidateData) {
+      setInterviewId(location.state.interviewId);
+      setCandidateData(location.state.candidateData);
+      console.log('Interview ID recebido:', location.state.interviewId);
+    } else {
+      // Fallback: tentar localStorage
+      const savedData = localStorage.getItem('interviewData');
+      if (!savedData) {
+        alert('Dados da entrevista não encontrados');
+        navigate('/nova-entrevista');
+        return;
+      }
+      setCandidateData(JSON.parse(savedData));
     }
-    
-    setCandidateData(JSON.parse(savedData));
-    
-    // Auto-start recording
-    startRecording();
     
     return () => {
       stopRecording();
@@ -52,7 +59,14 @@ function RecordPage() {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, []);
+  }, [location, navigate]);
+
+  // Auto-start recording quando tiver interviewId
+  useEffect(() => {
+    if (interviewId && !isRecording) {
+      startRecording();
+    }
+  }, [interviewId]);
   
   // Timer
   useEffect(() => {
@@ -73,33 +87,71 @@ function RecordPage() {
     };
   }, [isRecording]);
 
+  // Função para converter Float32Array para PCM16 (Int16Array)
+  const convertToPCM16 = (float32Array) => {
+    const int16Array = new Int16Array(float32Array.length);
+    for (let i = 0; i < float32Array.length; i++) {
+      // Clamp entre -1 e 1, depois multiplica por 32767
+      const s = Math.max(-1, Math.min(1, float32Array[i]));
+      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return int16Array.buffer;
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          channelCount: 1, // Mono
+          sampleRate: 16000, // 16kHz
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
       streamRef.current = stream;
       
+      // Criar AudioContext para processar áudio
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: 16000
+      });
+      audioContextRef.current = audioContext;
+
+      // Criar source node do stream
+      const source = audioContext.createMediaStreamSource(stream);
+      
+      // Criar ScriptProcessorNode para processar áudio (4096 samples = ~256ms a 16kHz)
+      const bufferSize = 4096;
+      const processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+      processorNodeRef.current = processor;
+
+      processor.onaudioprocess = (e) => {
+        if (!isRecordingRef.current) return;
+        
+        const inputData = e.inputBuffer.getChannelData(0);
+        // Converter para PCM16 e enviar
+        const pcmData = convertToPCM16(inputData);
+        sendAudioChunk(pcmData);
+      };
+
+      // Conectar nodes
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+
+      // Também salvar em WebM para arquivo final
       const options = { mimeType: 'audio/webm;codecs=opus' };
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-          
-          // Enviar chunk para transcrição em tempo real
-          sendAudioChunk(e.data);
-        }
+        // WebM é salvo apenas para arquivo final, não para transcrição em tempo real
+        // A transcrição usa o PCM do ScriptProcessorNode
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-      };
-
-      // Capturar dados a cada 5 segundos para transcrição em tempo real
-      mediaRecorder.start(5000); // 5000ms = 5 segundos
+      // Capturar dados a cada 1 segundo para salvar arquivo
+      mediaRecorder.start(1000);
+      isRecordingRef.current = true;
       setIsRecording(true);
+      console.log('Gravação iniciada');
     } catch (error) {
       console.error('Erro ao acessar microfone:', error);
       alert('Erro ao acessar o microfone. Verifique as permissões.');
@@ -108,27 +160,29 @@ function RecordPage() {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      isRecordingRef.current = false;
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      // Desconectar e fechar AudioContext
+      if (processorNodeRef.current) {
+        processorNodeRef.current.disconnect();
+        processorNodeRef.current = null;
+      }
+      
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
       
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      console.log('Gravação parada');
     }
   };
 
-  const toggleQuestionStatus = (id) => {
-    setQuestions(questions.map(q => 
-      q.id === id 
-        ? { ...q, status: q.status === 'completed' ? 'pending' : 'completed' }
-        : q
-    ));
-  };
-  
-  const handleQuestionReaction = (id, reaction) => {
-    console.log(`Question ${id} ${reaction}`);
-    // Backend integration: send reaction
-  };
+
   
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -136,48 +190,93 @@ function RecordPage() {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  // Função para verificar se a transcrição está pronta (com retry otimizado)
+  const waitForTranscript = async (maxRetries = 5, delayMs = 500) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        setProcessingMessage(`Aguardando transcrição... (${i + 1}/${maxRetries})`);
+        const interview = await getInterviewById(interviewId);
+        // Verificar se transcript existe e não está vazio (pode ser array ou string JSON)
+        if (interview.transcript) {
+          let transcriptData = interview.transcript;
+          // Se for string, tentar fazer parse
+          if (typeof transcriptData === 'string' && transcriptData.trim()) {
+            try {
+              transcriptData = JSON.parse(transcriptData);
+            } catch (e) {
+              // Se não for JSON válido, considerar como vazio
+              transcriptData = null;
+            }
+          }
+          // Verificar se é array e tem elementos
+          if (Array.isArray(transcriptData) && transcriptData.length > 0) {
+            console.log('Transcrição encontrada!');
+            return true;
+          }
+        }
+      } catch (error) {
+        console.log(`Tentativa ${i + 1}/${maxRetries}: Transcrição ainda não disponível...`);
+      }
+      
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+    return false;
+  };
+
   const handleEndInterview = async () => {
     stopRecording();
     
-    if (!audioBlob && !chunksRef.current.length) {
-      alert('Nenhum áudio gravado!');
+    if (!interviewId) {
+      alert('ID da entrevista não encontrado!');
       return;
     }
 
-    const finalBlob = audioBlob || new Blob(chunksRef.current, { type: 'audio/webm' });
-    
-    if (!candidateData || !candidateData.candidatePositionId) {
-      alert('Dados do candidato incompletos!');
-      return;
-    }
+    setIsProcessing(true);
+    setProcessingMessage('Processando entrevista...');
 
     try {
-      // Upload do áudio
-      const result = await uploadInterview(finalBlob, candidateData.candidatePositionId);
-      const interviewId = result.id;
-      console.log('Upload concluído! Interview ID:', interviewId);
+      // Salvar anotações primeiro
+      if (notes.trim()) {
+        setProcessingMessage('Salvando anotações...');
+        await updateInterviewNotes(interviewId, notes);
+      }
       
-      // Salvar dados do candidato
-      await saveCandidateInfo(interviewId, {
-        name: candidateData.candidateName,
-        email: candidateData.candidateEmail,
-        phone: candidateData.candidatePhone,
-        notes: notes
-      });
-      console.log('Dados do candidato salvos!');
+      // Aguardar WebSocket finalizar e transcrição estar pronta (otimizado: 5 tentativas, 500ms)
+      setProcessingMessage('Aguardando transcrição...');
+      const transcriptReady = await waitForTranscript(5, 500);
+      
+      if (!transcriptReady) {
+        console.warn('Transcrição não encontrada após várias tentativas, tentando gerar análise mesmo assim...');
+        setProcessingMessage('Transcrição ainda processando, tentando gerar análise...');
+      }
+      
+      // Gerar análise
+      setProcessingMessage('Gerando análise e resumo... (isso pode levar alguns minutos)');
+      console.log('Iniciando geração de análise...');
+      const startTime = Date.now();
+      await generateAnalysis(interviewId);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`Análise gerada em ${duration} segundos`);
       
       // Clean up
       localStorage.removeItem('interviewData');
       
-      // Navegar para a página inicial
-      alert('Entrevista enviada com sucesso!');
-      navigate('/inicio');
+      // Navegar para a página de detalhes
+      setIsProcessing(false);
+      navigate(`/entrevista/${interviewId}`);
 
     } catch (error) {
       console.error('Erro ao processar entrevista:', error);
-      alert(`Erro ao enviar entrevista: ${error.message}\n\nVerifique se o backend está rodando em http://localhost:8000`);
+      setIsProcessing(false);
+      setProcessingMessage('');
+      alert(`Erro ao processar entrevista: ${error.message}\n\nMas os dados foram salvos. ID: ${interviewId}`);
+      navigate('/inicio');
     }
   };
+
+  const allQuestions = [...aiQuestions];
 
   if (!candidateData) {
     return <div>Carregando...</div>;
@@ -191,27 +290,25 @@ function RecordPage() {
           <h3>
             Transcrição 
             {isConnected && <span style={{color: '#16a34a', fontSize: '0.8rem', marginLeft: '0.5rem'}}>● AO VIVO</span>}
-            {isRecording && !isConnected && <span style={{color: '#eab308', fontSize: '0.8rem', marginLeft: '0.5rem'}}>⚠ Offline</span>}
+            {isRecording && !isConnected && <span style={{color: '#eab308', fontSize: '0.8rem', marginLeft: '0.5rem'}}>⚠ Conectando...</span>}
           </h3>
           <div className="transcription-content">
-            {realtimeTranscripts.length === 0 ? (
-              <p className="transcription-empty">
-                {isRecording 
-                  ? isConnected 
-                    ? '🎤 Gravando... A transcrição aparecerá aqui em tempo real (a cada 5 segundos)'
-                    : '🎤 Gravando... (Transcrição em tempo real indisponível - será processada ao final)'
-                  : 'A transcrição aparecerá aqui em tempo real...'
-                }
-              </p>
-            ) : (
-              realtimeTranscripts.map((item, index) => (
-                <div key={index} className="transcription-message">
-                  <div className="transcription-bubble candidato" style={{opacity: item.isFinal ? 1 : 0.7}}>
-                    {item.text}
+            {transcripts.length > 0 && transcripts.map((item, index) => {
+                const speakerLabel = item.speaker === 'A' || item.speaker === 'a' || item.speaker === 'A' 
+                  ? 'Pessoa 1' 
+                  : 'Pessoa 2';
+                const isPersonOne = speakerLabel === 'Pessoa 1';
+                
+                return (
+                  <div key={index} className={`transcription-message ${isPersonOne ? 'message-left' : 'message-right'}`}>
+                    <div className="message-speaker">{speakerLabel}</div>
+                    <div className={`transcription-bubble ${isPersonOne ? 'candidato' : 'entrevistador'}`}>
+                      {item.text}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                );
+              })
+            }
           </div>
         </div>
       </div>
@@ -221,8 +318,14 @@ function RecordPage() {
         {/* Questions Section */}
         <div className="questions-section">
           <h3>Perguntas</h3>
+          
           <div className="questions-list">
-            {questions.map((question) => (
+            {allQuestions.length === 0 && (
+              <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+                {isConnected ? 'Sugestões de perguntas aparecerão aqui...' : 'Aguardando sugestões de perguntas...'}
+              </p>
+            )}
+            {allQuestions.map((question) => (
               <div
                 key={question.id}
                 className={`question-item ${selectedQuestionId === question.id ? 'selected' : ''}`}
@@ -230,49 +333,10 @@ function RecordPage() {
               >
                 <div className="question-header">
                   <div className="question-number-status">
-                    <span className="question-number">Pergunta #{question.id}</span>
-                    <button
-                      className={`status-icon ${question.status}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleQuestionStatus(question.id);
-                      }}
-                      title={question.status === 'completed' ? 'Marcar como pendente' : 'Marcar como concluída'}
-                    >
-                      <span className="status-icon-symbol">
-                        {question.status === 'completed' ? (
-                          <CheckIcon size={16} color="#1a1a1a" />
-                        ) : (
-                          <EqualsIcon size={16} color="#1a1a1a" />
-                        )}
-                      </span>
-                    </button>
+                    <span className="question-number">
+                      🤖 IA
+                    </span>
                   </div>
-                  
-                  {question.isAI && (
-                    <div className="question-ai-controls">
-                      <button
-                        className="reaction-btn like"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuestionReaction(question.id, 'like');
-                        }}
-                        aria-label="Aceitar sugestão"
-                      >
-                        <ThumbsUpIcon size={18} color="#1a1a1a" />
-                      </button>
-                      <button 
-                        className="reaction-btn dislike"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuestionReaction(question.id, 'dislike');
-                        }}
-                        aria-label="Rejeitar sugestão"
-                      >
-                        <ThumbsDownIcon size={18} color="#1a1a1a" />
-                      </button>
-                    </div>
-                  )}
                 </div>
                 
                 <p className="question-text">{question.text}</p>
@@ -296,15 +360,55 @@ function RecordPage() {
       {/* Footer */}
       <div className="footer-controls">
         <div className="timer">
-          {formatTime(recordingTime)} / 30:00
+          {formatTime(recordingTime)}
         </div>
-          <button 
+        <button 
           className="end-interview-btn"
           onClick={handleEndInterview}
-          >
-          Encerrar gravação
-          </button>
+          disabled={!interviewId || isProcessing}
+        >
+          {isProcessing ? processingMessage || 'Processando...' : 'Encerrar gravação'}
+        </button>
+      </div>
+      
+      {/* Overlay de processamento */}
+      {isProcessing && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            textAlign: 'center',
+            minWidth: '300px'
+          }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{
+                border: '4px solid #f3f3f3',
+                borderTop: '4px solid #3b82f6',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto'
+              }}></div>
+            </div>
+            <p style={{ margin: 0, fontSize: '1rem', color: '#374151' }}>
+              {processingMessage || 'Processando entrevista...'}
+            </p>
+          </div>
         </div>
+      )}
     </div>
   );
 }

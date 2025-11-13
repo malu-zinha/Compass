@@ -10,6 +10,7 @@ import ResultsPage from './pages/ResultsPage';
 import InterviewDetailPage from './pages/InterviewDetailPage';
 import JobsPage from './pages/JobsPage';
 import JobEditorPage from './pages/JobEditorPage';
+import RankingSelectPage from './pages/RankingSelectPage';
 import AuthScreen from './pages/AuthScreen';
 import QuestionsPage from './pages/QuestionsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -24,7 +25,9 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AuthScreen />} />
           <Route path="/inicio" element={<HomePage />} />
+          <Route path="/ranking" element={<RankingSelectPage />} />
           <Route path="/entrevistas" element={<ResultsPage />} />
+          <Route path="/entrevistas/:positionId" element={<ResultsPage />} />
           <Route path="/nova-entrevista" element={<NewInterviewPage />} />
           <Route path="/tipo-entrevista" element={<InterviewTypePage />} />
           <Route path="/upload" element={<UploadAudioPage />} />

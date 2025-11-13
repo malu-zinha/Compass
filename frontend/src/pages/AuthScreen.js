@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../styles/auth.module.css';
-import { ReactComponent as Icon15 } from '../assets/icons/image 15.svg';
+import logo from '../logo.svg';
 
 const AuthScreen = () => {
-  const [currentScreen, setCurrentScreen] = useState('login');
+  const [searchParams] = useSearchParams();
+  const initialScreen = searchParams.get('mode') === 'register' ? 'register' : 'login';
+  const [currentScreen, setCurrentScreen] = useState(initialScreen);
   const [formData, setFormData] = useState({
+    nome: '',
     email: '',
     usuario: '',
     senha: ''
@@ -37,8 +40,8 @@ const AuthScreen = () => {
       }
 
       // Simulate auth check (replace with real API call)
-      // For now accept demo/demo as valid credentials
-      if (formData.usuario === 'demo' && formData.senha === 'demo') {
+      // For now accept joaquimgermano/12345 as valid credentials
+      if (formData.usuario === 'joaquimgermano' && formData.senha === '12345') {
         setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
         // Navigate to homepage after 1 second
         setTimeout(() => {
@@ -49,6 +52,7 @@ const AuthScreen = () => {
       }
     } else {
       const newErrors = {};
+      if (!formData.nome || formData.nome.trim() === '') newErrors.nome = 'Por favor insira o nome.';
       if (!formData.email || formData.email.trim() === '') newErrors.email = 'Por favor insira o e-mail.';
       else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'E-mail inválido.';
       if (!formData.usuario || formData.usuario.trim() === '') newErrors.usuario = 'Por favor insira o usuário.';
@@ -63,10 +67,19 @@ const AuthScreen = () => {
       // Switch to login after 1 second
       setTimeout(() => {
         setCurrentScreen('login');
-        setFormData({ email: '', usuario: '', senha: '' });
+        setFormData({ nome: '', email: '', usuario: '', senha: '' });
       }, 1000);
     }
   };
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'register') {
+      setCurrentScreen('register');
+    } else {
+      setCurrentScreen('login');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (notification) {
@@ -125,9 +138,9 @@ const LoginScreen = ({ formData, handleInputChange, handleSubmit, switchToRegist
           {errors.general}
         </div>
       )}
-      <h1 className={styles.title}>Compass <span className={styles.icon} aria-hidden="true">
-        <Icon15 className={styles.iconSvg} aria-hidden="true" />
-      </span></h1>
+      <div className={styles.logoContainer}>
+        <img src={logo} alt="Compass" className={styles.logo} />
+      </div>
       <form className={styles.form} onSubmit={handleSubmit}>
         <input
           className={styles.input}
@@ -175,10 +188,20 @@ const RegisterScreen = ({ formData, handleInputChange, handleSubmit, switchToLog
           {errors.general}
         </div>
       )}
-      <h1 className={styles.title}>Compass <span className={styles.icon} aria-hidden="true">
-        <Icon15 className={styles.iconSvg} aria-hidden="true" />
-      </span></h1>
+      <div className={styles.logoContainer}>
+        <img src={logo} alt="Compass" className={styles.logo} />
+      </div>
       <form className={styles.form} onSubmit={handleSubmit}>
+        <input
+          className={styles.input}
+          type="text"
+          name="nome"
+          placeholder="Nome"
+          value={formData.nome}
+          onChange={handleInputChange}
+        />
+        {errors.nome && <div className={styles.errorText}>{errors.nome}</div>}
+
         <input
           className={styles.input}
           type="email"
