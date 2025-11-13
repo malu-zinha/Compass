@@ -1,38 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
 import CalendarIcon from '../components/icons/CalendarIcon';
 import ClockIcon from '../components/icons/ClockIcon';
-import { getInterviews } from '../services/api';
+import { getInterviews, getPositions } from '../services/api';
 import './ResultsPage.css';
 
 function ResultsPage() {
   const navigate = useNavigate();
+  const { positionId } = useParams();
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState(null);
 
   useEffect(() => {
     loadInterviews();
-  }, []);
+    if (positionId && positionId !== '0') {
+      loadPositionName();
+    }
+  }, [positionId]);
+
+  const loadPositionName = async () => {
+    try {
+      const positions = await getPositions();
+      const position = positions.find(p => p.id === parseInt(positionId));
+      setSelectedPosition(position);
+    } catch (error) {
+      console.error('Erro ao carregar cargo:', error);
+      // Não bloqueia a renderização se o backend não estiver rodando
+      setSelectedPosition(null);
+    }
+  };
 
   const loadInterviews = async () => {
     try {
       setLoading(true);
-      const data = await getInterviews();
+      const positionIdNum = positionId ? parseInt(positionId) : 0;
+      const data = await getInterviews(positionIdNum);
       
       // Formatar dados do backend para o formato esperado
       const formattedInterviews = data.map(interview => {
-        const analysis = interview.analysis;
+        // Parse analysis se for string
+        let analysis = {};
+        if (interview.analysis && typeof interview.analysis === 'string') {
+          try {
+            analysis = JSON.parse(interview.analysis);
+          } catch (e) {
+            console.error('Erro ao parsear análise:', e);
+          }
+        } else if (typeof interview.analysis === 'object') {
+          analysis = interview.analysis;
+        }
+        
+        // Converter score de 0-1000 para porcentagem 0-100%
+        const scorePercentage = interview.score ? Math.round((interview.score / 1000) * 100) : 0;
+        
         return {
           id: interview.id,
           name: interview.name || 'Candidato sem nome',
           email: interview.email || '',
-          date: new Date(interview.date).toLocaleDateString('pt-BR'),
+          date: interview.date ? new Date(interview.date).toLocaleDateString('pt-BR') : 'Data não disponível',
           duration: 'N/A', // Backend não retorna duração
-          match: interview.score || 0,
-          positives: analysis?.strengths || ['Aguardando análise'],
-          negatives: analysis?.weaknesses || ['Aguardando análise'],
+          match: scorePercentage, // Agora é porcentagem (0-100%)
+          positives: analysis?.positives || ['Aguardando análise'], // CORRIGIDO: era strengths
+          negatives: analysis?.negatives || ['Aguardando análise'], // CORRIGIDO: era weaknesses
           position: interview.position
         };
       });
@@ -40,7 +72,7 @@ function ResultsPage() {
       setInterviews(formattedInterviews);
     } catch (error) {
       console.error('Erro ao carregar entrevistas:', error);
-      alert('Erro ao carregar entrevistas. Verifique se o backend está rodando.');
+      // Não mostra alert, apenas define lista vazia para permitir edição do layout
       setInterviews([]);
     } finally {
       setLoading(false);
@@ -61,10 +93,44 @@ function ResultsPage() {
     <div className="results-page">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Header 
-        title="Análise de candidatos"
+        title={selectedPosition ? `Ranking - ${selectedPosition.name}` : "Análise de candidatos"}
         showComparar={true}
         onMenuClick={() => setSidebarOpen(true)}
       />
+      
+      {selectedPosition && (
+        <div style={{ 
+          padding: '1rem 2rem', 
+          background: '#E9F2FF', 
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <strong>{selectedPosition.name}</strong>
+            {selectedPosition.vacancies > 0 && (
+              <span style={{ marginLeft: '1rem', color: '#666' }}>
+                {selectedPosition.vacancies} vaga{selectedPosition.vacancies !== 1 ? 's' : ''} disponível{selectedPosition.vacancies !== 1 ? 'eis' : ''}
+              </span>
+            )}
+          </div>
+          <button 
+            onClick={() => navigate('/ranking')}
+            style={{
+              padding: '0.5rem 1rem',
+              background: 'white',
+              border: '1px solid #3b82f6',
+              borderRadius: '6px',
+              color: '#3b82f6',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            Trocar cargo
+          </button>
+        </div>
+      )}
       
       <div className="results-container">
         {/* Coluna Esquerda - Entrevistados */}

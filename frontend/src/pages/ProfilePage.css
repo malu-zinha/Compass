@@ -231,87 +231,13 @@
   box-shadow: 0 0 0 3px rgba(55, 28, 104, 0.1);
 }
 
-/* Profile Stats */
-.profile-stats {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.stats-title {
-  font-family: 'Coolvetica', sans-serif;
-  font-size: 1.5rem;
-  font-weight: normal;
-  color: #1a1a1a;
-  margin: 0 0 1.5rem 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-number {
-  font-family: 'Coolvetica', sans-serif;
-  font-size: 1.75rem;
-  font-weight: normal;
-  color: #1a1a1a;
-  margin: 0 0 0.25rem 0;
-}
-
-.stat-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
-  color: #666;
-}
-
-/* Security Section */
+/* Logout Section */
 .profile-security {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.security-title {
-  font-family: 'Coolvetica', sans-serif;
-  font-size: 1.5rem;
-  font-weight: normal;
-  color: #1a1a1a;
-  margin: 0 0 1.5rem 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .security-actions {
@@ -330,15 +256,16 @@
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: left;
+  text-align: center;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
 .security-btn:hover {
   background: #ddd3ff;
-  transform: translateX(4px);
+  transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -350,6 +277,8 @@
 
 .security-btn.danger:hover {
   background: #ffc5c5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(123, 12, 12, 0.2);
 }
 
 /* Responsive */
@@ -358,19 +287,12 @@
     grid-template-columns: 1fr;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 768px) {
   .profile-header {
     flex-direction: column;
     text-align: center;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
   }
 
   .profile-content {

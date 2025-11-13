@@ -18,9 +18,16 @@ def create_table():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             position TEXT NOT NULL,
             skills TEXT NOT NULL,
-            description TEXT NOT NULL
+            description TEXT NOT NULL,
+            vacancies INTEGER DEFAULT 0
         )
     """)
+    
+    # Adicionar coluna vacancies se não existir (para tabelas antigas)
+    try:
+        cursor.execute("ALTER TABLE positions ADD COLUMN vacancies INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass  # Coluna já existe
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS interviews (
@@ -45,6 +52,16 @@ def create_table():
             question TEXT,
             interview_id INTEGER,
             FOREIGN KEY (interview_id) REFERENCES interviews(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS global_questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT NOT NULL,
+            position_id INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (position_id) REFERENCES positions(id)
         )
     """)
 
