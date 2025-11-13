@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
-import { createPosition, getPositions } from '../services/api';
+import { createPosition, getPosition, updatePosition } from '../services/api';
 import './JobEditorPage.css';
 
 function JobEditorPage() {
@@ -19,22 +19,24 @@ function JobEditorPage() {
   const isEditing = !!id;
 
   useEffect(() => {
-    if (isEditing) {
-      // Carregar dados do cargo para edição
-      const savedJobs = localStorage.getItem('jobs');
-      if (savedJobs) {
-        const jobs = JSON.parse(savedJobs);
-        const job = jobs.find(j => j.id === id);
-        if (job) {
-          setJobName(job.name);
-          setJobDescription(job.description);
-          setJobVacancies(job.vacancies.toString());
-          setCompetencies(job.competencies || []);
-          setIdealProfile(job.idealProfile || '');
-        }
-      }
+    if (isEditing && id) {
+      loadPosition();
     }
   }, [id, isEditing]);
+
+  const loadPosition = async () => {
+    try {
+      const position = await getPosition(id);
+      setJobName(position.name);
+      setJobDescription(position.description);
+      setJobVacancies(position.vacancies.toString());
+      setCompetencies(position.competencies || []);
+    } catch (error) {
+      console.error('Erro ao carregar cargo:', error);
+      alert('Erro ao carregar cargo. Verifique se o backend está rodando.');
+      navigate('/cargos');
+    }
+  };
 
   const handleAddCompetency = (e) => {
     if (e.key === 'Enter' && competencyInput && competencyInput.trim()) {
@@ -76,16 +78,22 @@ function JobEditorPage() {
 
     try {
       if (isEditing) {
-        alert('Edição ainda não implementada no backend');
-        return;
+        await updatePosition(id, {
+          name: jobName,
+          competencies: competencies,
+          description: jobDescription,
+          vacancies: parseInt(jobVacancies) || 0
+        });
+        alert('Cargo atualizado com sucesso!');
+      } else {
+        await createPosition({
+          name: jobName,
+          competencies: competencies,
+          description: jobDescription,
+          vacancies: parseInt(jobVacancies) || 0
+        });
+        alert('Cargo salvo com sucesso!');
       }
-      
-      await createPosition({
-        name: jobName,
-        competencies: competencies,
-        description: jobDescription
-      });
-      alert('Cargo salvo com sucesso!');
       navigate('/cargos');
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
@@ -97,12 +105,12 @@ function JobEditorPage() {
     <div className="job-editor-page">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Header 
-        title="Editar cargo"
+        title={isEditing ? "Editar cargo" : "Novo cargo"}
         onMenuClick={() => setSidebarOpen(true)}
       />
       <div className="job-editor-content">
         <div className="editor-container">
-          <h2 className="editor-title">Cargo 1</h2>
+          <h2 className="editor-title">{isEditing ? "Editar cargo" : "Novo cargo"}</h2>
 
           <div className="editor-grid">
             <div className="editor-left">

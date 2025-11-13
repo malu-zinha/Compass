@@ -28,6 +28,7 @@
 }
 
 .upload-title {
+  font-family: 'Coolvetica', sans-serif;
   font-size: 2rem;
   font-weight: normal;
   color: #371C68;
@@ -36,6 +37,7 @@
 }
 
 .upload-subtitle {
+  font-family: 'Inter', sans-serif;
   font-size: 1rem;
   color: #666;
   margin-bottom: 2rem;
@@ -81,6 +83,7 @@
 }
 
 .upload-text {
+  font-family: 'Inter', sans-serif;
   font-size: 1.25rem;
   color: #371C68;
   margin-bottom: 0.5rem;
@@ -88,17 +91,20 @@
 }
 
 .upload-subtext {
+  font-family: 'Inter', sans-serif;
   font-size: 1rem;
   color: #666;
   margin-bottom: 0.5rem;
 }
 
 .upload-formats {
+  font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
   color: #999;
 }
 
 .upload-filename {
+  font-family: 'Inter', sans-serif;
   font-size: 1.25rem;
   color: #371C68;
   font-weight: 600;
@@ -107,6 +113,7 @@
 }
 
 .upload-filesize {
+  font-family: 'Inter', sans-serif;
   font-size: 1rem;
   color: #666;
   margin-bottom: 1rem;
@@ -133,6 +140,7 @@
 }
 
 .notes-section label {
+  font-family: 'Inter', sans-serif;
   display: block;
   font-size: 1rem;
   color: #371C68;
@@ -146,7 +154,7 @@
   border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 8px;
   font-size: 1rem;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
   resize: vertical;
   background: #f8f8f8;
   transition: border-color 0.2s;
@@ -164,6 +172,7 @@
   border: 1px solid rgba(96, 35, 9, 0.1);
   padding: 1rem 2rem;
   border-radius: 8px;
+  font-family: 'Coolvetica', sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -182,6 +191,7 @@
 }
 
 .upload-info {
+  font-family: 'Inter', sans-serif;
   text-align: center;
   color: #666;
   font-size: 0.95rem;

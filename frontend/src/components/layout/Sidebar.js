@@ -45,7 +45,7 @@ function Sidebar({ isOpen, onClose }) {
             <UserIcon size={24} color="#1a1a1a" />
           </div>
           <div className="user-info">
-            <div className="user-name">Nicolas Kleiton</div>
+            <div className="user-name">Joaquim Germano</div>
             <div className="user-role">Entrevistador</div>
           </div>
         </button>
@@ -60,7 +60,7 @@ function Sidebar({ isOpen, onClose }) {
                 onClick={() => handleLinkClick(item.path)}
               >
                 <span className="nav-icon">
-                  <IconComponent size={20} color={location.pathname === item.path ? '#371C68' : '#1a1a1a'} />
+                  <IconComponent size={20} color="#1a1a1a" />
                 </span>
                 <span className="nav-label">{item.label}</span>
               </button>

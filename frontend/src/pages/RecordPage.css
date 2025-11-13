@@ -53,6 +53,7 @@
 }
 
 .transcription-empty {
+  font-family: 'Inter', sans-serif;
   color: #999;
   text-align: center;
   padding: 2rem;
@@ -66,6 +67,7 @@
 }
 
 .transcription-bubble {
+  font-family: 'Inter', sans-serif;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.95rem;
@@ -164,6 +166,7 @@
 }
 
 .question-number {
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
   color: #1a1a1a;
@@ -257,6 +260,7 @@
 }
 
 .question-text {
+  font-family: 'Inter', sans-serif;
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
@@ -265,14 +269,12 @@
 
 /* Notes Section */
 .notes-section {
-  height: 200px;
   background: white;
   border: 1px solid #e0e0e0;
-  padding: 1.5rem 1.5rem 0 1.5rem;
+  padding: 1.5rem;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   resize: vertical;
   min-height: 200px;
@@ -285,7 +287,7 @@
   font-weight: normal;
   margin: 0;
   padding-bottom: 0.75rem;
-  padding-right: 1.5rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   color: #1a1a1a;
   flex-shrink: 0;
@@ -301,9 +303,11 @@
   font-size: 0.95rem;
   resize: none;
   min-height: 120px;
+  max-height: 400px;
   color: #333;
-  margin-top: 1.5rem;
-  overflow: hidden;
+  margin-top: 0;
+  overflow-y: auto;
+  background: #fafafa;
 }
 
 .notes-textarea:focus {
@@ -363,27 +367,27 @@
 /* Scrollbar Styling */
 .transcription-content::-webkit-scrollbar,
 .questions-list::-webkit-scrollbar,
-.notes-section::-webkit-scrollbar {
+.notes-textarea::-webkit-scrollbar {
   width: 8px;
 }
 
 .transcription-content::-webkit-scrollbar-track,
 .questions-list::-webkit-scrollbar-track,
-.notes-section::-webkit-scrollbar-track {
+.notes-textarea::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
 .transcription-content::-webkit-scrollbar-thumb,
 .questions-list::-webkit-scrollbar-thumb,
-.notes-section::-webkit-scrollbar-thumb {
+.notes-textarea::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 4px;
 }
 
 .transcription-content::-webkit-scrollbar-thumb:hover,
 .questions-list::-webkit-scrollbar-thumb:hover,
-.notes-section::-webkit-scrollbar-thumb:hover {
+.notes-textarea::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
@@ -429,5 +433,10 @@
     padding: 0.6rem 1.5rem;
     font-size: 1rem;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 

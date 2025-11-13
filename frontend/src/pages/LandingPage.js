@@ -1,22 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
-import { ReactComponent as Icon15 } from '../assets/icons/image 15.svg';
+import logo from '../logo.svg';
+import { ChartIcon, ClockIcon, BriefcaseIcon, InfoIcon, JobsIcon, FileTextIcon, MicrophoneIcon, QuestionsIcon } from '../components/icons';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="landing-page">
       {/* Header */}
       <header className="landing-header">
         <div className="landing-brand">
-          <h1 className="brand-title">
-            Compass
-            <span className="brand-icon">
-              <Icon15 className="icon-svg" />
-            </span>
-          </h1>
+          <img src={logo} alt="Compass" className="brand-logo" />
         </div>
         <nav className="landing-nav">
           <button onClick={() => navigate('/login')} className="nav-btn-login">
@@ -36,50 +43,56 @@ export default function LandingPage() {
           </h2>
           <p className="hero-subtitle">
             O Compass analisa, transcreve e avalia entrevistas automaticamente,
-            ajudando você a encontrar os melhores candidatos com tecnologia de ponta.
+            apontando sempre para os melhores candidatos
           </p>
           <div className="hero-actions">
             <button onClick={() => navigate('/login')} className="btn-primary">
               Começar agora
             </button>
-            <button className="btn-secondary">
+            <button className="btn-secondary" onClick={scrollToFeatures}>
               Saiba mais
             </button>
           </div>
         </div>
         <div className="hero-visual">
           <div className="visual-card visual-card-1">
-            <div className="card-icon">🎤</div>
-            <div className="card-text">Gravação em tempo real</div>
+            <div className="card-icon">
+              <FileTextIcon size={32} color="#371C68" />
+            </div>
+            <div className="card-text">Resumo estruturado</div>
           </div>
           <div className="visual-card visual-card-2">
-            <div className="card-icon">📝</div>
-            <div className="card-text">Transcrição automática</div>
+            <div className="card-icon">
+              <ChartIcon size={32} color="#371C68" />
+            </div>
+            <div className="card-text">Análise inteligente</div>
           </div>
           <div className="visual-card visual-card-3">
-            <div className="card-icon">📊</div>
-            <div className="card-text">Análise inteligente</div>
+            <div className="card-icon">
+              <QuestionsIcon size={32} color="#371C68" />
+            </div>
+            <div className="card-text">Sugestão de perguntas</div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features-section">
+      <section id="features-section" className="features-section">
         <h3 className="section-title">Recursos principais</h3>
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              🎯
+              <ChartIcon size={32} color="#371C68" />
             </div>
             <h4 className="feature-title">Análise Inteligente</h4>
             <p className="feature-description">
-              Avaliação automática de competências e fit cultural baseada em critérios personalizados.
+              Avaliação automática de competências baseada em critérios personalizados.
             </p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon" style={{ background: '#FFE2DE', color: '#602309' }}>
-              ⚡
+            <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
+              <ClockIcon size={32} color="#371C68" />
             </div>
             <h4 className="feature-title">Tempo Real</h4>
             <p className="feature-description">
@@ -88,28 +101,28 @@ export default function LandingPage() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon" style={{ background: '#D2EAFF', color: '#092260' }}>
-              📈
+            <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
+              <ChartIcon size={32} color="#371C68" />
             </div>
-            <h4 className="feature-title">Ranking Automático</h4>
+            <h4 className="feature-title">Ranking de candidatos</h4>
             <p className="feature-description">
               Compare candidatos objetivamente com pontuações e insights detalhados.
             </p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon" style={{ background: '#E8F5E9', color: '#1B5E20' }}>
-              🔒
+            <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
+              <FileTextIcon size={32} color="#371C68" />
             </div>
-            <h4 className="feature-title">Segurança</h4>
+            <h4 className="feature-title">Resumo estruturado</h4>
             <p className="feature-description">
-              Seus dados protegidos com criptografia e armazenamento seguro na nuvem.
+              Resumos organizados e estruturados das entrevistas com informações-chave destacadas.
             </p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon" style={{ background: '#FFF3E0', color: '#E65100' }}>
-              💼
+            <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
+              <BriefcaseIcon size={32} color="#371C68" />
             </div>
             <h4 className="feature-title">Gestão de Cargos</h4>
             <p className="feature-description">
@@ -118,8 +131,8 @@ export default function LandingPage() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon" style={{ background: '#F3E5F5', color: '#6A1B9A' }}>
-              🎓
+            <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
+              <FileTextIcon size={32} color="#371C68" />
             </div>
             <h4 className="feature-title">Banco de Perguntas</h4>
             <p className="feature-description">
@@ -166,49 +179,11 @@ export default function LandingPage() {
           <p className="cta-subtitle">
             Junte-se a dezenas de empresas que já estão contratando melhor com o Compass.
           </p>
-          <button onClick={() => navigate('/login')} className="cta-button">
+          <button onClick={() => navigate('/login?mode=register')} className="cta-button">
             Criar conta gratuita
           </button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <h4 className="footer-title">
-              Compass
-              <span className="footer-icon">
-                <Icon15 className="icon-svg-small" />
-              </span>
-            </h4>
-            <p className="footer-tagline">Contratação inteligente, decisões melhores.</p>
-          </div>
-          <div className="footer-links">
-            <div className="footer-column">
-              <h5>Produto</h5>
-              <a href="#features">Recursos</a>
-              <a href="#pricing">Preços</a>
-              <a href="#demo">Demo</a>
-            </div>
-            <div className="footer-column">
-              <h5>Empresa</h5>
-              <a href="#about">Sobre</a>
-              <a href="#blog">Blog</a>
-              <a href="#contact">Contato</a>
-            </div>
-            <div className="footer-column">
-              <h5>Suporte</h5>
-              <a href="#help">Ajuda</a>
-              <a href="#docs">Documentação</a>
-              <a href="#status">Status</a>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2024 Compass. Todos os direitos reservados.</p>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -1,19 +1,23 @@
-import math
-import io
 import json
 import os
 import sqlite3
 import assemblyai as aai
-from pydub import AudioSegment
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import JSONResponse
 from database import get_db_connection
 import asyncio
-import datetime
+from datetime import datetime
 from openai import AsyncOpenAI
+import aiofiles
+from dotenv import load_dotenv
+import websockets
+import base64
+import struct
+
+load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-ASSEMBLYAI_API_KEY = "82638fa196894930b9c02d106fdd6c7c"
+ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
 
 aai.settings.api_key = ASSEMBLYAI_API_KEY
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
@@ -29,6 +33,7 @@ with open("prompts/prompt_analitico.txt", "r") as f:
 
 @router.patch("/{id}/process/analysis")
 async def generate_analysis(id: int):
+    print(f"[DEBUG] Endpoint /process/analysis chamado para interview ID: {id}")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -46,8 +51,13 @@ async def generate_analysis(id: int):
         (id,)
     )
     row = cursor.fetchone()
-    if not row or not row["transcript"]:
+    if not row:
         conn.close()
+        print(f"[ERROR] Interview {id} não encontrado no banco")
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    if not row["transcript"]:
+        conn.close()
+        print(f"[ERROR] Transcript não encontrado para interview {id}")
         raise HTTPException(status_code=404, detail="Transcrição não encontrada")
     interview_info = {
         "position_data": {
@@ -61,13 +71,29 @@ async def generate_analysis(id: int):
     info_json = json.dumps(interview_info)
 
     prompt_final = prompt_template + info_json
-
-    response = await openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt_final}],
-        response_format={ "type": "json_object" },
-        temperature=0.5
-    )
+    
+    print(f"[DEBUG] Iniciando geração de análise para interview {id}")
+    print(f"[DEBUG] Tamanho do prompt: {len(prompt_final)} caracteres")
+    
+    try:
+        response = await asyncio.wait_for(
+            openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt_final}],
+                response_format={ "type": "json_object" },
+                temperature=0.5
+            ),
+            timeout=120.0  # Timeout de 2 minutos
+        )
+        print(f"[DEBUG] Análise gerada com sucesso para interview {id}")
+    except asyncio.TimeoutError:
+        conn.close()
+        print(f"[ERROR] Timeout ao gerar análise para interview {id}")
+        raise HTTPException(status_code=504, detail="Timeout ao gerar análise. Tente novamente.")
+    except Exception as e:
+        conn.close()
+        print(f"[ERROR] Erro ao gerar análise para interview {id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar análise: {str(e)}")
     json_gerado = response.choices[0].message.content
     dictionary = json.loads(json_gerado)
     cursor.execute("UPDATE interviews SET analysis = ?, score = ? WHERE id = ?", (json_gerado, dictionary["score"]["overall"], id))
@@ -100,6 +126,46 @@ async def save_transcript_to_db(id: int, transcript_data: dict):
     conn.commit()
     conn.close()
 
+def convert_pcm_to_wav(pcm_path: str, wav_path: str, sample_rate: int = 16000, channels: int = 1, sample_width: int = 2):
+    """Converte arquivo PCM para WAV adicionando o header"""
+    if not os.path.exists(pcm_path) or os.path.getsize(pcm_path) == 0:
+        return False
+    
+    try:
+        with open(pcm_path, 'rb') as pcm_file:
+            pcm_data = pcm_file.read()
+        
+        # Calcular tamanhos
+        data_size = len(pcm_data)
+        file_size = 36 + data_size
+        
+        # Criar header WAV
+        with open(wav_path, 'wb') as wav_file:
+            # RIFF header
+            wav_file.write(b'RIFF')
+            wav_file.write(struct.pack('<I', file_size))
+            wav_file.write(b'WAVE')
+            
+            # fmt chunk
+            wav_file.write(b'fmt ')
+            wav_file.write(struct.pack('<I', 16))  # fmt chunk size
+            wav_file.write(struct.pack('<H', 1))   # audio format (1 = PCM)
+            wav_file.write(struct.pack('<H', channels))
+            wav_file.write(struct.pack('<I', sample_rate))
+            wav_file.write(struct.pack('<I', sample_rate * channels * sample_width))  # byte rate
+            wav_file.write(struct.pack('<H', channels * sample_width))  # block align
+            wav_file.write(struct.pack('<H', sample_width * 8))  # bits per sample
+            
+            # data chunk
+            wav_file.write(b'data')
+            wav_file.write(struct.pack('<I', data_size))
+            wav_file.write(pcm_data)
+        
+        return True
+    except Exception as e:
+        print(f"Error converting PCM to WAV: {e}")
+        return False
+
 @router.post("/{id}/transcribe_audio_file")
 async def transcribe_audio_file(id: int):
     conn = get_db_connection()
@@ -112,19 +178,23 @@ async def transcribe_audio_file(id: int):
         raise HTTPException(status_code=404, detail="Audio file not found for this interview")
 
     audio_path = row["audio_file"]
+    print(f"[DEBUG] Audio path: {audio_path}")
 
     if not os.path.exists(audio_path):
         conn.close()
         raise HTTPException(status_code=404, detail="Audio file not found on server")
 
     try:
+        print(f"[DEBUG] Starting transcription for interview {id}")
         config = aai.TranscriptionConfig(
             language_code="pt",
             speaker_labels=True,
             speakers_expected=2,
         )
 
+        print("[DEBUG] Sending to AssemblyAI...")
         transcript = aai.Transcriber(config=config).transcribe(audio_path)
+        print(f"[DEBUG] Transcription status: {transcript.status}")
 
         if transcript.status == "error":
             raise HTTPException(status_code=500, detail=f"Transcription failed: {transcript.error}")
@@ -146,9 +216,16 @@ async def transcribe_audio_file(id: int):
         )
         conn.commit()
 
+    except HTTPException:
+        conn.close()
+        raise
     except Exception as e:
         conn.close()
-        raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
+        print(f"[ERROR] Exception type: {type(e).__name__}")
+        print(f"[ERROR] Exception message: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
     conn.close()
     return JSONResponse(content={"id": id, "message": "Audio transcribed and transcript saved successfully", "transcript": utt_list})
@@ -160,7 +237,7 @@ async def websocket_transcribe(websocket: WebSocket, id: int = Query(...)):
     transcript_data = {"utterances": []}
 
     date = datetime.now().isoformat()
-    audio_filename = f"interview_{id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.wav"
+    audio_filename = f"interview_{id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.wav"
     upload_dir = "uploads"
     os.makedirs(upload_dir, exist_ok=True)
     audio_path = os.path.join(upload_dir, audio_filename)
@@ -172,33 +249,83 @@ async def websocket_transcribe(websocket: WebSocket, id: int = Query(...)):
             speaker_labels=True,
             speakers_expected=2,
         )
-    streaming_client = aai.StreamingClient()
+    
+    # Substituir StreamingClient por conexão WebSocket direta do AssemblyAI
+    streaming_client = None
+    try:
+        # Conectar ao AssemblyAI Universal Streaming API v3
+        # Parâmetros na URL, sem mensagem de configuração inicial
+        assemblyai_url = f"wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&encoding=pcm_s16le&speech_model=universal-streaming-multilingual"
+        # A biblioteca websockets usa additional_headers ao invés de extra_headers
+        streaming_client = await websockets.connect(
+            assemblyai_url, 
+            additional_headers={"Authorization": ASSEMBLYAI_API_KEY}
+        )
+        
+        # O v3 não requer mensagem de configuração inicial se os parâmetros estão na URL
+    except Exception as e:
+        print(f"[WARNING] Could not connect to AssemblyAI Realtime: {e}")
+        # Fechar conexão se foi criada mas falhou
+        if streaming_client:
+            try:
+                await streaming_client.close()
+            except:
+                pass
+        streaming_client = None
 
     try:
-        await streaming_client.start(config=config)
         stop_event = asyncio.Event()
 
         async def send_audio():
             while True:
                 audio_chunk = await websocket.receive_bytes()
                 await audio_file.write(audio_chunk)
-                await streaming_client.send(audio_chunk)
+                if streaming_client:
+                    # Enviar áudio binário diretamente para AssemblyAI v3 (sem JSON)
+                    # O v3 aceita áudio PCM raw diretamente via WebSocket
+                    await streaming_client.send(audio_chunk)
 
         async def receive_transcripts():
-            async for transcript in streaming_client.listen():
-                if hasattr(transcript, "utterances") and transcript.utterances:
-                    utt_list = []
-                    for utt in transcript.utterances:
-                        utt_dict = {
-                            "speaker": utt.speaker,
-                            "text": utt.text,
-                            "start": utt.start,
-                            "end": utt.end,
-                        }
-                        utt_list.append(utt_dict)
-
-                    transcript_data["utterances"].extend(utt_list)
-                    await websocket.send_json({"transcript_update": utt_list})
+            if not streaming_client:
+                return
+            async for message in streaming_client:
+                try:
+                    data = json.loads(message)
+                    msg_type = data.get("type")
+                    
+                    # Processar mensagens do Universal Streaming v3
+                    if msg_type == "Begin":
+                        # Sessão iniciada
+                        print(f"Session started: {data.get('id')}")
+                    elif msg_type == "Turn":
+                        # Transcrição recebida
+                        text = data.get("transcript", "")
+                        if text:
+                            # Universal Streaming v3 usa "speaker" no Turn
+                            speaker = data.get("speaker") or "A"
+                            # Timestamps no formato Turn
+                            start = (data.get("start") or 0) / 1000
+                            end = (data.get("end") or 0) / 1000
+                            
+                            utt_dict = {
+                                "speaker": speaker,
+                                "text": text,
+                                "start": start,
+                                "end": end,
+                            }
+                            
+                            # Se for final (end_of_turn)
+                            if data.get("end_of_turn"):
+                                transcript_data["utterances"].append(utt_dict)
+                            
+                            await websocket.send_json({"transcript_update": [utt_dict]})
+                    elif msg_type == "Termination":
+                        # Sessão terminada
+                        print(f"Session terminated: {data.get('audio_duration_seconds')}s")
+                except json.JSONDecodeError:
+                    continue
+                except Exception as e:
+                    print(f"Error processing transcription: {e}")
 
         async def periodic_gpt_analysis():
             while not stop_event.is_set():
@@ -228,19 +355,74 @@ async def websocket_transcribe(websocket: WebSocket, id: int = Query(...)):
     except WebSocketDisconnect:
         stop_event.set()
         await save_transcript_to_db(id, transcript_data)
-        await streaming_client.close()
-        await websocket.close()
+        if streaming_client:
+            try:
+                # Enviar mensagem de Terminate antes de fechar
+                await streaming_client.send(json.dumps({"type": "Terminate"}))
+            except:
+                pass
+            try:
+                await streaming_client.close()
+            except:
+                pass
     except Exception as e:
         stop_event.set()
-        await streaming_client.close()
-        await websocket.close()
+        if streaming_client:
+            try:
+                # Enviar mensagem de Terminate antes de fechar
+                await streaming_client.send(json.dumps({"type": "Terminate"}))
+            except:
+                pass
+            try:
+                await streaming_client.close()
+            except:
+                pass
         print(f"WebSocket error: {e}")
     finally:
+        # Garantir que a conexão seja fechada no finally também
+        if streaming_client:
+            try:
+                await streaming_client.close()
+            except:
+                pass
         await audio_file.close()
+        
+        # Converter PCM para WAV para compatibilidade com player de áudio
+        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+            wav_path = audio_path.replace('.wav', '_final.wav')
+            if convert_pcm_to_wav(audio_path, wav_path):
+                # Substituir arquivo PCM por WAV
+                try:
+                    os.replace(wav_path, audio_path)
+                except Exception as e:
+                    print(f"Error replacing PCM with WAV: {e}")
+        
+        # Se não teve transcrição em tempo real, fazer transcrição completa
+        if len(transcript_data["utterances"]) == 0 and os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+            try:
+                transcriber = aai.Transcriber(config=config)
+                transcript = transcriber.transcribe(audio_path)
+                if transcript.status == "completed" and transcript.utterances:
+                    utt_list = []
+                    for utt in transcript.utterances:
+                        utt_dict = {
+                            "speaker": utt.speaker,
+                            "text": utt.text,
+                            "start": utt.start,
+                            "end": utt.end,
+                        }
+                        utt_list.append(utt_dict)
+                    transcript_data["utterances"] = utt_list
+                    await save_transcript_to_db(id, transcript_data)
+            except Exception as e:
+                print(f"Error transcribing final audio: {e}")
+        elif len(transcript_data["utterances"]) > 0:
+            await save_transcript_to_db(id, transcript_data)
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE interviews SET audio_file = ?, date = ? WHERE id = ?", (audio_filename, date, id)
+            "UPDATE interviews SET audio_file = ?, date = ? WHERE id = ?", (audio_path, date, id)
         )
         conn.commit()
         conn.close()
