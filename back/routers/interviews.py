@@ -245,6 +245,7 @@ def get_interviews_by_position(
 def download_interview_audio(id: int):
     conn = None
     try:
+        print(f"\n[DEBUG] 🎵 Requisição de áudio para interview ID: {id}")
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -252,25 +253,38 @@ def download_interview_audio(id: int):
         row = cursor.fetchone()
 
         if not row:
+            print(f"[ERROR] ❌ Entrevista {id} não encontrada no banco")
             raise HTTPException(status_code=404, detail="Entrevista não encontrada.")
 
         audio_file = row["audio_file"]
+        print(f"[DEBUG] 📁 Caminho no banco: {audio_file}")
 
         if not audio_file:
+            print(f"[ERROR] ❌ Campo audio_file está vazio no banco")
             raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado no servidor.")
 
         # Converter para caminho absoluto se necessário
         if not os.path.isabs(audio_file):
             audio_file = os.path.join(os.getcwd(), audio_file)
+        
+        print(f"[DEBUG] 📍 Caminho absoluto: {audio_file}")
+        print(f"[DEBUG] 📂 Working directory: {os.getcwd()}")
 
         if not os.path.exists(audio_file):
+            print(f"[ERROR] ❌ Arquivo não existe no disco!")
             raise HTTPException(status_code=404, detail=f"Arquivo de áudio não encontrado no servidor: {audio_file}")
+
+        file_size = os.path.getsize(audio_file) / 1024  # KB
+        print(f"[DEBUG] 📦 Tamanho do arquivo: {file_size:.2f} KB")
 
         media_type, _ = mimetypes.guess_type(audio_file)
         if media_type is None:
             media_type = "audio/mpeg"  # Default para MP3
+        
+        print(f"[DEBUG] 🎧 Media type: {media_type}")
 
         filename = os.path.basename(audio_file)
+        print(f"[DEBUG] ✅ Servindo arquivo: {filename}")
 
         response = FileResponse(
             path=audio_file,

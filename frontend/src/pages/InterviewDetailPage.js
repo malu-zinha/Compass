@@ -77,19 +77,28 @@ function InterviewDetailPage() {
     // Verificar se transcrição existe
     const hasTranscript = interviewData.transcription && interviewData.transcription.length > 0;
     
+    // Debug detalhado
+    console.log('📊 Status de processamento:', {
+      hasAnalysis,
+      hasTranscript,
+      transcriptionLength: interviewData.transcription?.length,
+      analysisKeys: interviewData.analysis ? Object.keys(interviewData.analysis) : []
+    });
+    
     const needsProcessing = !hasAnalysis || !hasTranscript;
     
     setIsProcessing(needsProcessing);
     
     if (needsProcessing) {
+      console.log('⚠️  Dados incompletos, iniciando polling...');
       const interval = setInterval(() => {
-        console.log('Recarregando dados da entrevista...');
+        console.log('🔄 Recarregando dados da entrevista...');
         loadInterviewData();
       }, 3000);
       
       // Timeout máximo de 5 minutos para evitar polling infinito
       const timeout = setTimeout(() => {
-        console.log('Timeout: parando polling após 5 minutos');
+        console.log('⏱️  Timeout: parando polling após 5 minutos');
         clearInterval(interval);
         setIsProcessing(false);
       }, 300000);
@@ -98,6 +107,8 @@ function InterviewDetailPage() {
         clearInterval(interval);
         clearTimeout(timeout);
       };
+    } else {
+      console.log('✅ Dados completos! Parando polling.');
     }
   }, [interviewData]);
 
@@ -186,12 +197,17 @@ function InterviewDetailPage() {
       let transcript = [];
       if (interview.transcript && typeof interview.transcript === 'string') {
         try {
-          transcript = JSON.parse(interview.transcript);
+          const parsed = JSON.parse(interview.transcript);
+          // Backend salva como {"utterances": [...]}
+          transcript = parsed.utterances || parsed || [];
         } catch (e) {
           console.error('Erro ao parsear transcrição:', e);
         }
       } else if (Array.isArray(interview.transcript)) {
         transcript = interview.transcript;
+      } else if (interview.transcript?.utterances) {
+        // Se já é objeto com utterances
+        transcript = interview.transcript.utterances;
       }
 
       console.log('=== DEBUG: Dados recebidos do backend ===');
@@ -204,10 +220,11 @@ function InterviewDetailPage() {
       console.log('Analysis.negatives:', analysis.negatives);
       console.log('Analysis.summary:', analysis.summary);
       console.log('Parsed transcript:', transcript);
+      console.log('Transcript length:', transcript.length);
 
       // Map speakers usando identity da análise
       const identity = analysis.identity || {};
-      const transcriptionWithLabels = transcript.map(item => {
+      const transcriptionWithLabels = (transcript || []).map(item => {
         const speaker = item.speaker?.toUpperCase();
         let label = 'Pessoa 1';
         
@@ -243,7 +260,7 @@ function InterviewDetailPage() {
         history: analysis.experiences || [],
         positives: analysis.positives || [], // CORRIGIDO: era analysis.strengths
         negatives: analysis.negatives || [], // CORRIGIDO: era analysis.weaknesses
-        specific: analysis.summary ? analysis.summary.substring(0, 200) + '...' : 'Sem informações específicas', // Usar summary já que não tem cultural_fit
+        specific: analysis.summary || 'Sem informações específicas', // Texto completo sem cortar
         notes: interview.notes || '',
         transcription: transcriptionWithLabels,
         score: interview.score || 0,
