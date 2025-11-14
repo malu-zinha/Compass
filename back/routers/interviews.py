@@ -179,6 +179,7 @@ def get_interviews_by_position(
                         interviews.analysis,
                         interviews.notes,
                         interviews.score,
+                        interviews.duration,
                         positions.id AS position_id,
                         positions.position AS position
                     FROM interviews
@@ -204,6 +205,7 @@ def get_interviews_by_position(
                         interviews.analysis,
                         interviews.notes,
                         interviews.score,
+                        interviews.duration,
                         positions.id AS position_id,
                         positions.position AS position
                     FROM interviews
@@ -216,6 +218,64 @@ def get_interviews_by_position(
         conn.close()
         interviews = []
         for row in rows:
+            # Parse seguro do transcript
+            transcript = ""
+            if row["transcript"]:
+                try:
+                    transcript = json.loads(row["transcript"])
+                    # Verificar se tem diarização (speakers A/B)
+                    if isinstance(transcript, dict) and transcript.get("utterances"):
+                        utterances = transcript["utterances"]
+                        has_diarization = any(
+                            utt.get("speaker") and 
+                            (str(utt.get("speaker")).upper() in ['A', 'B'])
+                            for utt in utterances
+                        )
+                        print(f"[DEBUG] 📋 Interview {row['id']}: transcript tem {len(utterances)} utterances, diarização: {has_diarization}")
+                    elif isinstance(transcript, list):
+                        has_diarization = any(
+                            utt.get("speaker") and 
+                            (str(utt.get("speaker")).upper() in ['A', 'B'])
+                            for utt in transcript
+                        )
+                        print(f"[DEBUG] 📋 Interview {row['id']}: transcript tem {len(transcript)} utterances, diarização: {has_diarization}")
+                except (json.JSONDecodeError, TypeError):
+                    print(f"[WARNING] Erro ao parsear transcript da entrevista {row['id']}, usando string vazia")
+                    transcript = ""
+            
+            # Parse seguro do analysis
+            analysis = ""
+            if row["analysis"]:
+                try:
+                    analysis = json.loads(row["analysis"])
+                except (json.JSONDecodeError, TypeError):
+                    print(f"[WARNING] Erro ao parsear analysis da entrevista {row['id']}, usando string vazia")
+                    analysis = ""
+            
+            # 🚨 LOG CRÍTICO: verificar diarização antes de enviar para o frontend
+            if transcript:
+                if isinstance(transcript, dict) and transcript.get("utterances"):
+                    utterances = transcript["utterances"]
+                    sample_speakers = [u.get("speaker") for u in utterances[:5]]
+                    all_speakers = list(set([u.get("speaker") for u in utterances]))
+                    has_diarization_check = any(s in ['A', 'B'] for s in all_speakers if s)
+                    print(f"[DEBUG] 🌐 Enviando para frontend - Interview {row['id']}:")
+                    print(f"         - Tipo: dict com utterances")
+                    print(f"         - Total utterances: {len(utterances)}")
+                    print(f"         - Primeiros 5 speakers: {sample_speakers}")
+                    print(f"         - Todos speakers únicos: {all_speakers}")
+                    print(f"         - TEM DIARIZAÇÃO: {'✅ SIM' if has_diarization_check else '❌ NÃO'}")
+                elif isinstance(transcript, list):
+                    sample_speakers = [u.get("speaker") for u in transcript[:5]]
+                    all_speakers = list(set([u.get("speaker") for u in transcript]))
+                    has_diarization_check = any(s in ['A', 'B'] for s in all_speakers if s)
+                    print(f"[DEBUG] 🌐 Enviando para frontend - Interview {row['id']}:")
+                    print(f"         - Tipo: list")
+                    print(f"         - Total utterances: {len(transcript)}")
+                    print(f"         - Primeiros 5 speakers: {sample_speakers}")
+                    print(f"         - Todos speakers únicos: {all_speakers}")
+                    print(f"         - TEM DIARIZAÇÃO: {'✅ SIM' if has_diarization_check else '❌ NÃO'}")
+            
             interviews.append({
                 "id": row["id"],
                 "name": row["name"],
@@ -223,10 +283,11 @@ def get_interviews_by_position(
                 "number": row["number"],
                 "date": row["date"],
                 "audio_file": row["audio_file"],
-                "transcript": json.loads(row["transcript"]) if row["transcript"] else "",
-                "analysis": json.loads(row["analysis"]) if row["analysis"] else "",
+                "transcript": transcript,
+                "analysis": analysis,
                 "notes": row["notes"],
                 "score": row["score"],
+                "duration": row["duration"] if row["duration"] else None,
                 "position_id": row["position_id"],
                 "position": row["position"]
             })
@@ -296,6 +357,12 @@ def download_interview_audio(id: int):
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "*"
+        
+        # Headers para player de áudio funcionar corretamente
+        response.headers["Accept-Ranges"] = "bytes"
+        response.headers["Cache-Control"] = "no-cache"
+        
+        print(f"[DEBUG] 📤 Headers enviados: Accept-Ranges=bytes, Media-Type={media_type}")
         
         return response
 

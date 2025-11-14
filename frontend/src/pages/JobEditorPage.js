@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
 import { createPosition, getPosition, updatePosition } from '../services/api';
@@ -13,6 +13,7 @@ function JobEditorPage() {
   const [competencyInput, setCompetencyInput] = useState('');
   const [isAddingCompetency, setIsAddingCompetency] = useState(false);
   const [idealProfile, setIdealProfile] = useState('');
+  const inputRef = useRef(null);
   
   const navigate = useNavigate();
   const { id } = useParams();
@@ -23,6 +24,34 @@ function JobEditorPage() {
       loadPosition();
     }
   }, [id, isEditing]);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      const text = competencyInput || 'Digite a competência';
+      const measureElement = document.createElement('span');
+      measureElement.style.visibility = 'hidden';
+      measureElement.style.position = 'absolute';
+      measureElement.style.whiteSpace = 'pre-wrap';
+      measureElement.style.fontFamily = 'Inter, sans-serif';
+      measureElement.style.fontSize = '0.75rem';
+      measureElement.style.fontWeight = '600';
+      measureElement.style.padding = '0';
+      measureElement.textContent = text;
+      document.body.appendChild(measureElement);
+      
+      const width = measureElement.offsetWidth;
+      const maxWidth = 280;
+      const minWidth = 180;
+      const padding = 40;
+      const newWidth = Math.min(Math.max(width + padding, minWidth), maxWidth);
+      
+      inputRef.current.style.width = `${newWidth}px`;
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+      
+      document.body.removeChild(measureElement);
+    }
+  }, [competencyInput, isAddingCompetency]);
 
   const loadPosition = async () => {
     try {
@@ -39,7 +68,7 @@ function JobEditorPage() {
   };
 
   const handleAddCompetency = (e) => {
-    if (e.key === 'Enter' && competencyInput && competencyInput.trim()) {
+    if (e.key === 'Enter' && !e.shiftKey && competencyInput && competencyInput.trim()) {
       e.preventDefault();
       if (!competencies.includes(competencyInput.trim())) {
         setCompetencies([...competencies, competencyInput.trim()]);
@@ -158,8 +187,8 @@ function JobEditorPage() {
                       ))}
                       {isAddingCompetency && (
                         <div className="competency-tag editing">
-                          <input
-                            type="text"
+                          <textarea
+                            ref={inputRef}
                             className="competency-tag-input"
                             value={competencyInput}
                             onChange={(e) => setCompetencyInput(e.target.value)}
@@ -167,6 +196,7 @@ function JobEditorPage() {
                             onBlur={handleCompetencyInputBlur}
                             autoFocus
                             placeholder="Digite a competência"
+                            rows={1}
                           />
                         </div>
                       )}
@@ -188,7 +218,18 @@ function JobEditorPage() {
                     type="number"
                     className="form-input"
                     value={jobVacancies}
-                    onChange={(e) => setJobVacancies(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || (parseInt(value) >= 0 && !isNaN(value))) {
+                        setJobVacancies(value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
+                        e.preventDefault();
+                      }
+                    }}
+                    min="0"
                     placeholder="0"
                   />
                 </div>

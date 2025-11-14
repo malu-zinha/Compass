@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: #ffffff; /* totalmente branco — não deixa a tela de fundo aparecer */
+  background: #F4F1FF; /* Mesmo fundo da página de nova entrevista */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,9 +19,9 @@
 .card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(16,24,40,0.08);
+  background: white;
+  border-radius: 24px; /* Mesmo border-radius da página de nova entrevista */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* Mesma sombra da página de nova entrevista */
   padding: 2rem;
   text-align: center;
 }

@@ -14,7 +14,6 @@ import RankingSelectPage from './pages/RankingSelectPage';
 import AuthScreen from './pages/AuthScreen';
 import QuestionsPage from './pages/QuestionsPage';
 import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
 function App() {
@@ -38,7 +37,6 @@ function App() {
           <Route path="/cargos/editar/:id" element={<JobEditorPage />} />
           <Route path="/perguntas" element={<QuestionsPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
-          <Route path="/configuracoes" element={<SettingsPage />} />
         </Routes>
       </div>
     </Router>

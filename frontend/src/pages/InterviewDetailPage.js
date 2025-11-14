@@ -20,6 +20,7 @@ function InterviewDetailPage() {
     positivos: false,
     negativos: false,
     especificas: false,
+    pontuacao: false,
     anotacoes: false
   });
   
@@ -33,8 +34,13 @@ function InterviewDetailPage() {
   const [interviewData, setInterviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [audioError, setAudioError] = useState(null);
 
   useEffect(() => {
+    // Resetar estado quando o ID mudar
+    setInterviewData(null);
+    setLoading(true);
+    setIsProcessing(false);
     loadInterviewData();
   }, [id]);
 
@@ -64,33 +70,45 @@ function InterviewDetailPage() {
     
     const hasAnalysis = hasRawAnalysis || hasParsedAnalysis;
     
-    // Debug log
-    if (!hasAnalysis) {
-      console.log('DEBUG: Análise não encontrada', {
-        hasRawAnalysis,
-        hasParsedAnalysis,
-        rawAnalysis: rawAnalysis ? (typeof rawAnalysis === 'string' ? rawAnalysis.substring(0, 50) : 'object') : null,
-        parsedAnalysisKeys: parsedAnalysis ? Object.keys(parsedAnalysis) : null
-      });
-    }
-    
-    // Verificar se transcrição existe
+    // Verificar se transcrição existe E tem diarização adequada
     const hasTranscript = interviewData.transcription && interviewData.transcription.length > 0;
+    
+    // Verificar se a transcrição tem diarização (speakers identificados A/B)
+    const hasDiarization = hasTranscript && interviewData.transcription.some(item => 
+      item.speaker && (item.speaker.toUpperCase() === 'A' || item.speaker.toUpperCase() === 'B')
+    );
     
     // Debug detalhado
     console.log('📊 Status de processamento:', {
       hasAnalysis,
       hasTranscript,
+      hasDiarization,
+      hasAudio: interviewData.hasAudio,
       transcriptionLength: interviewData.transcription?.length,
+      speakers: interviewData.transcription?.map(t => t.speaker).slice(0, 5) || [],
       analysisKeys: interviewData.analysis ? Object.keys(interviewData.analysis) : []
     });
     
-    const needsProcessing = !hasAnalysis || !hasTranscript;
+    // 🔑 REGRA PRINCIPAL: Se já tem diarização E análise, PARAR polling definitivamente
+    if (hasDiarization && hasAnalysis) {
+      console.log('✅ JÁ TEM DIARIZAÇÃO E ANÁLISE - PARANDO polling definitivamente!');
+      console.log('✅ Não recarregar mais, mesmo se o áudio carregar depois');
+      setIsProcessing(false);
+      return; // Sair do useEffect sem criar interval
+    }
+    
+    // Se tem áudio mas não tem diarização, precisa continuar polling
+    const needsDiarization = interviewData.hasAudio && hasTranscript && !hasDiarization;
+    const needsProcessing = !hasAnalysis || !hasTranscript || needsDiarization;
     
     setIsProcessing(needsProcessing);
     
     if (needsProcessing) {
       console.log('⚠️  Dados incompletos, iniciando polling...');
+      console.log(`   - Tem análise: ${hasAnalysis ? '✅' : '❌'}`);
+      console.log(`   - Tem transcrição: ${hasTranscript ? '✅' : '❌'}`);
+      console.log(`   - Tem diarização: ${hasDiarization ? '✅' : '❌'}`);
+      
       const interval = setInterval(() => {
         console.log('🔄 Recarregando dados da entrevista...');
         loadInterviewData();
@@ -110,12 +128,37 @@ function InterviewDetailPage() {
     } else {
       console.log('✅ Dados completos! Parando polling.');
     }
-  }, [interviewData]);
+  }, [interviewData?.transcription?.length, interviewData?.analysis]);
 
   // Audio player effects - só roda quando tem áudio e o elemento está montado
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !interviewData?.hasAudio) return;
+
+    // Calcular duração do transcript (mesmo método da ResultsPage)
+    const calculateDurationFromTranscript = () => {
+      const transcript = interviewData.transcription;
+      if (!transcript || transcript.length === 0) return null;
+      
+      try {
+        // Pegar o maior timestamp 'end' de todas as utterances
+        const maxEnd = Math.max(...transcript.map(u => u.end || 0));
+        // AssemblyAI retorna em milissegundos, converter para segundos
+        return maxEnd > 1 ? maxEnd / 1000 : maxEnd;
+      } catch (e) {
+        console.error('[AUDIO] Erro ao calcular duração do transcript:', e);
+        return null;
+      }
+    };
+    
+    // Se temos duração do banco de dados OU do transcript, usar ela imediatamente
+    const transcriptDuration = calculateDurationFromTranscript();
+    const fallbackDuration = interviewData.audioDuration || transcriptDuration;
+    
+    if (fallbackDuration && !duration) {
+      console.log('[AUDIO] 🎯 Usando duração do transcript/banco:', fallbackDuration);
+      setDuration(fallbackDuration);
+    }
 
     const updateTime = () => {
       if (audio && !isNaN(audio.currentTime)) {
@@ -124,8 +167,21 @@ function InterviewDetailPage() {
     };
     
     const updateDuration = () => {
-      if (audio && !isNaN(audio.duration)) {
+      console.log('[AUDIO] Tentando atualizar duração:', audio.duration);
+      if (audio && audio.duration && isFinite(audio.duration) && !isNaN(audio.duration) && audio.duration > 0) {
+        console.log('[AUDIO] ✅ Duração do arquivo de áudio:', audio.duration);
         setDuration(audio.duration);
+      } else {
+        // Calcular do transcript se áudio não tem duração
+        const transcriptDurationFallback = calculateDurationFromTranscript();
+        const fallbackDurationUpdate = interviewData.audioDuration || transcriptDurationFallback;
+        
+        if (!duration && fallbackDurationUpdate) {
+          console.log('[AUDIO] 📊 Usando duração calculada (fallback):', fallbackDurationUpdate);
+          setDuration(fallbackDurationUpdate);
+        } else {
+          console.log('[AUDIO] ⚠️ Duração não disponível em nenhuma fonte');
+        }
       }
     };
     
@@ -137,40 +193,117 @@ function InterviewDetailPage() {
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleError = (e) => {
-      console.error('Audio error:', e);
+      console.error('[AUDIO] ❌ Erro no áudio:', e);
+      console.error('[AUDIO] Detalhes:', audio.error);
       setIsPlaying(false);
+    };
+    
+    const handleDurationChange = () => {
+      console.log('[AUDIO] Evento durationchange disparado');
+      updateDuration();
     };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('loadeddata', updateDuration);
+    audio.addEventListener('canplay', updateDuration);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('error', handleError);
 
-    // Tentar carregar metadata
+    console.log('[AUDIO] 🎵 Iniciando carregamento do áudio...');
+    console.log('[AUDIO] URL:', audio.src);
+    
+    // Forçar carregamento
     audio.load();
+    
+    // Tentar buscar duração após um delay (fallback)
+    const durationCheckInterval = setInterval(() => {
+      if (audio.duration && isFinite(audio.duration) && !duration) {
+        console.log('[AUDIO] ✅ Duração detectada no polling:', audio.duration);
+        setDuration(audio.duration);
+        clearInterval(durationCheckInterval);
+      }
+    }, 500);
+    
+    // Limpar interval após 10 segundos
+    const timeoutId = setTimeout(() => {
+      clearInterval(durationCheckInterval);
+    }, 10000);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('loadeddata', updateDuration);
+      audio.removeEventListener('canplay', updateDuration);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('error', handleError);
+      clearInterval(durationCheckInterval);
+      clearTimeout(timeoutId);
     };
-  }, [interviewData?.hasAudio]);
+  }, [interviewData?.hasAudio, duration]);
 
   const loadInterviewData = async () => {
     try {
       setLoading(true);
-      const interviews = await getInterviews();
+      console.log(`[DEBUG] 🔍 Carregando entrevista ID: ${id}`);
+      
+      // Buscar TODAS as entrevistas (positionId = 0 retorna todas)
+      console.log(`[DEBUG] 🔄 Chamando getInterviews(0)...`);
+      let interviews = [];
+      try {
+        interviews = await getInterviews(0);
+        console.log(`[DEBUG] 📋 Total de entrevistas encontradas: ${interviews.length}`);
+        if (!Array.isArray(interviews)) {
+          console.error(`[ERROR] ❌ getInterviews não retornou um array! Tipo:`, typeof interviews);
+          throw new Error('Resposta inválida do servidor');
+        }
+      } catch (err) {
+        console.error(`[ERROR] ❌ Erro ao buscar entrevistas:`, err);
+        // Tentar buscar sem positionId (pode ser que o endpoint seja diferente)
+        try {
+          console.log(`[DEBUG] 🔄 Tentando buscar sem positionId...`);
+          interviews = await getInterviews();
+          console.log(`[DEBUG] 📋 Total de entrevistas encontradas (fallback): ${interviews.length}`);
+          if (!Array.isArray(interviews)) {
+            console.error(`[ERROR] ❌ getInterviews (fallback) não retornou um array!`);
+            throw new Error('Resposta inválida do servidor');
+          }
+        } catch (err2) {
+          console.error(`[ERROR] ❌ Erro no fallback também:`, err2);
+          throw new Error(`Não foi possível carregar as entrevistas: ${err.message || err2.message}`);
+        }
+      }
+      
+      if (!interviews || interviews.length === 0) {
+        console.warn(`[WARNING] ⚠️ Nenhuma entrevista encontrada no servidor`);
+        alert('Nenhuma entrevista encontrada. Verifique se o backend está rodando.');
+        setLoading(false);
+        return;
+      }
+      
       const interview = interviews.find(i => i.id === parseInt(id));
       
       if (!interview) {
-        alert('Entrevista não encontrada');
+        console.error(`[ERROR] ❌ Entrevista ${id} não encontrada!`);
+        console.log(`[DEBUG] IDs disponíveis:`, interviews.map(i => i.id));
+        alert(`Entrevista ${id} não encontrada. IDs disponíveis: ${interviews.map(i => i.id).join(', ')}`);
+        setLoading(false);
         return;
       }
+      
+      console.log(`[DEBUG] ✅ Entrevista encontrada:`, {
+        id: interview.id,
+        name: interview.name,
+        hasAudio: !!interview.audio_file,
+        hasTranscript: !!interview.transcript,
+        hasAnalysis: !!interview.analysis
+      });
 
       console.log('Interview raw data:', interview);
 
@@ -185,7 +318,12 @@ function InterviewDetailPage() {
               analysis = {};
             }
           } catch (e) {
-            console.error('Erro ao parsear análise:', e, 'Raw analysis:', interview.analysis.substring(0, 100));
+            console.error('Erro ao parsear análise:', e);
+            // Tentar fazer substring apenas se for string
+            const analysisPreview = typeof interview.analysis === 'string' 
+              ? interview.analysis.substring(0, 100) 
+              : typeof interview.analysis;
+            console.error('Raw analysis preview:', analysisPreview);
             analysis = {};
           }
         } else if (typeof interview.analysis === 'object' && interview.analysis !== null) {
@@ -195,24 +333,41 @@ function InterviewDetailPage() {
 
       // Parse transcript (é string JSON no backend)
       let transcript = [];
+      console.log('🔬 RAW TRANSCRIPT DO BACKEND (antes de parsear):', interview.transcript);
+      console.log('🔬 Tipo:', typeof interview.transcript);
+      
       if (interview.transcript && typeof interview.transcript === 'string') {
         try {
           const parsed = JSON.parse(interview.transcript);
+          console.log('🔬 PARSED:', parsed);
           // Backend salva como {"utterances": [...]}
           transcript = parsed.utterances || parsed || [];
+          console.log('🔬 TRANSCRIPT EXTRAÍDO:', transcript);
+          console.log('🔬 Primeiros 3 utterances:', transcript.slice(0, 3));
         } catch (e) {
           console.error('Erro ao parsear transcrição:', e);
         }
       } else if (Array.isArray(interview.transcript)) {
         transcript = interview.transcript;
+        console.log('🔬 TRANSCRIPT já é array:', transcript);
       } else if (interview.transcript?.utterances) {
         // Se já é objeto com utterances
         transcript = interview.transcript.utterances;
+        console.log('🔬 TRANSCRIPT extraído de objeto:', transcript);
       }
 
       console.log('=== DEBUG: Dados recebidos do backend ===');
       console.log('Interview completo:', interview);
+      console.log('Audio file:', interview.audio_file);
       console.log('Analysis (raw):', interview.analysis);
+      // Verificar tipo do transcript antes de fazer substring
+      const transcriptPreview = interview.transcript 
+        ? (typeof interview.transcript === 'string' 
+          ? interview.transcript.substring(0, 100) + '...' 
+          : typeof interview.transcript)
+        : 'null';
+      console.log('Transcript (raw):', transcriptPreview);
+      console.log('Transcript type:', typeof interview.transcript);
       console.log('Notes (raw):', interview.notes);
       console.log('Parsed analysis:', analysis);
       console.log('Analysis keys:', Object.keys(analysis));
@@ -221,7 +376,46 @@ function InterviewDetailPage() {
       console.log('Analysis.summary:', analysis.summary);
       console.log('Parsed transcript:', transcript);
       console.log('Transcript length:', transcript.length);
+      
+      // Verificar se a transcrição do backend tem diarização
+      const backendHasDiarization = transcript.some(item => 
+        item.speaker && (item.speaker.toUpperCase() === 'A' || item.speaker.toUpperCase() === 'B')
+      );
+      
+      console.log('🔍 Verificação de diarização:', {
+        transcriptLength: transcript.length,
+        backendHasDiarization,
+        hasAudio: !!interview.audio_file,
+        speakers: transcript.map(t => t.speaker).slice(0, 5), // Primeiros 5 para debug
+        allSpeakers: [...new Set(transcript.map(t => t.speaker))] // Todos os speakers únicos
+      });
 
+      // 🔑 REGRA CRÍTICA: Verificar se já temos uma transcrição com diarização no state atual
+      const currentHasDiarization = interviewData?.transcription?.some(item => 
+        item.speaker && (item.speaker.toUpperCase() === 'A' || item.speaker.toUpperCase() === 'B')
+      );
+      
+      // 🛡️ PROTEÇÃO: Se já temos diarização no state, NUNCA substituir por transcrição sem diarização
+      if (currentHasDiarization && !backendHasDiarization && transcript.length > 0) {
+        console.log('🛡️  PROTEÇÃO ATIVADA: Backend retornou transcrição SEM diarização');
+        console.log('✅ Mantendo transcrição com diarização existente no state');
+        console.log('📊 State atual:', interviewData.transcription.length, 'utterances COM diarização');
+        console.log('📊 Backend:', transcript.length, 'utterances SEM diarização (ignorando)');
+        // USAR a transcrição do state atual que já tem diarização
+        transcript = interviewData.transcription.map(item => ({
+          speaker: item.speaker,
+          text: item.text,
+          start: item.start,
+          end: item.end
+        }));
+      } else if (backendHasDiarization) {
+        console.log('✅ Backend retornou transcrição COM diarização - ATUALIZANDO state!');
+        console.log('📊 Speakers encontrados:', [...new Set(transcript.map(t => t.speaker))]);
+      } else if (!backendHasDiarization && interview.audio_file && transcript.length > 0) {
+        console.log('⏳ Backend retornou transcrição sem diarização, mas tem áudio');
+        console.log('📊 Transcrição em background ainda está processando - aguardando...');
+      }
+      
       // Map speakers usando identity da análise
       const identity = analysis.identity || {};
       const transcriptionWithLabels = (transcript || []).map(item => {
@@ -267,17 +461,39 @@ function InterviewDetailPage() {
         summary: analysis.summary || '',
         analysis: analysis,
         audioFile: interview.audio_file,
-        hasAudio: !!interview.audio_file
+        hasAudio: !!interview.audio_file,
+        audioDuration: interview.duration || null  // Duração do banco de dados
       });
       
       console.log('=== DEBUG: Dados setados no state ===');
+      console.log('✅ hasAudio:', !!interview.audio_file);
+      console.log('✅ audioFile:', interview.audio_file);
+      console.log('✅ transcription length:', transcriptionWithLabels.length);
+      console.log('✅ transcription has diarization:', transcriptionWithLabels.some(t => 
+        t.speaker && (t.speaker.toUpperCase() === 'A' || t.speaker.toUpperCase() === 'B')
+      ));
+      console.log('✅ hasAnalysis:', Object.keys(analysis).length > 0);
       console.log('Positives:', analysis.positives || []);
       console.log('Negatives:', analysis.negatives || []);
       console.log('Notes:', interview.notes || '');
+      
+      // Log importante: se tem áudio mas não tem diarização, o polling deve continuar
+      const finalHasDiarization = transcriptionWithLabels.some(t => 
+        t.speaker && (t.speaker.toUpperCase() === 'A' || t.speaker.toUpperCase() === 'B')
+      );
+      if (!!interview.audio_file && !finalHasDiarization && transcriptionWithLabels.length > 0) {
+        console.log('⚠️  ATENÇÃO: Tem áudio mas transcrição SEM diarização - polling deve continuar!');
+      }
     } catch (error) {
-      console.error('Erro ao carregar entrevista:', error);
-      alert('Erro ao carregar dados da entrevista');
+      console.error('❌ ERRO ao carregar entrevista:', error);
+      console.error('❌ Stack trace:', error.stack);
+      console.error('❌ Interview ID:', id);
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+      alert(`Erro ao carregar dados da entrevista: ${error.message}\n\nVerifique o console para mais detalhes.`);
     } finally {
+      // SEMPRE desligar o loading, mesmo se houver erro
+      console.log('[DEBUG] ✅ Finalizando loadInterviewData - desligando loading');
       setLoading(false);
     }
   };
@@ -300,11 +516,27 @@ function InterviewDetailPage() {
       if (isPlaying) {
         audio.pause();
       } else {
+        // Verificar se há erro antes de tentar tocar
+        if (audio.error) {
+          const errorMessages = {
+            1: 'Download do áudio foi cancelado',
+            2: 'Erro de rede ao carregar áudio. Verifique se o backend está rodando.',
+            3: 'Erro ao decodificar o arquivo de áudio. O arquivo pode estar corrompido.',
+            4: 'Formato de áudio não suportado pelo navegador'
+          };
+          const message = errorMessages[audio.error.code] || 'Erro desconhecido ao carregar áudio';
+          alert(`${message}\n\nURL: ${getAudioUrl(id)}\nVerifique o console para mais detalhes.`);
+          return;
+        }
         await audio.play();
       }
     } catch (error) {
       console.error('Error playing audio:', error);
-      alert('Erro ao reproduzir áudio. Verifique se o arquivo existe.');
+      console.error('Audio URL:', getAudioUrl(id));
+      console.error('Interview ID:', id);
+      console.error('Has audio file:', interviewData?.hasAudio);
+      console.error('Audio file path:', interviewData?.audioFile);
+      alert(`Erro ao reproduzir áudio: ${error.message}\n\nVerifique se:\n1. O backend está rodando em http://localhost:8000\n2. O arquivo de áudio existe no servidor\n3. O console para mais detalhes`);
     }
   };
 
@@ -322,7 +554,7 @@ function InterviewDetailPage() {
   };
 
   const formatTime = (seconds) => {
-    if (!seconds || isNaN(seconds)) return '00:00';
+    if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '00:00';
     
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -384,12 +616,14 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.habilidades && (
                 <div className="accordion-content">
-                  {!isProcessing && interviewData.skills && interviewData.skills.length > 0 && (
+                  {!isProcessing && interviewData.skills && interviewData.skills.length > 0 ? (
                     <ol className="skills-list">
                       {interviewData.skills.map((skill, idx) => (
                         <li key={idx}>{skill}</li>
                       ))}
                     </ol>
+                  ) : (
+                    <p>Nenhuma informação coletada</p>
                   )}
                 </div>
               )}
@@ -412,13 +646,24 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.historico && (
                 <div className="accordion-content">
-                  {!isProcessing && interviewData.history && interviewData.history.length > 0 && (
-                    interviewData.history.map((item, idx) => (
-                      <div key={idx} className="history-item">
-                        <div className="history-title">{item.company} - {item.role}</div>
-                        <div className="history-description">{item.description}</div>
-                      </div>
-                    ))
+                  {!isProcessing && interviewData.history && interviewData.history.length > 0 ? (
+                    (() => {
+                      const validHistoryItems = interviewData.history.filter(item => item.company && item.role);
+                      return validHistoryItems.length > 0 ? (
+                        validHistoryItems.map((item, idx) => (
+                          <div key={idx} className="history-item">
+                            <div className="history-title">{item.role} - {item.company}</div>
+                            {item.description && (
+                              <div className="history-description">{item.description}</div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p>Nenhuma informação coletada</p>
+                      );
+                    })()
+                  ) : (
+                    <p>Nenhuma informação coletada</p>
                   )}
                 </div>
               )}
@@ -441,10 +686,14 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.positivos && (
                 <div className="accordion-content">
-                  {!isProcessing && interviewData.positives && interviewData.positives.length > 0 && (
-                    interviewData.positives.map((point, idx) => (
-                      <div key={idx} className="point-item">{point}</div>
-                    ))
+                  {!isProcessing && interviewData.positives && interviewData.positives.length > 0 ? (
+                    <ol className="skills-list">
+                      {interviewData.positives.map((point, idx) => (
+                        <li key={idx}>{point}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>Nenhuma informação coletada</p>
                   )}
                 </div>
               )}
@@ -467,10 +716,14 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.negativos && (
                 <div className="accordion-content">
-                  {!isProcessing && interviewData.negatives && interviewData.negatives.length > 0 && (
-                    interviewData.negatives.map((point, idx) => (
-                      <div key={idx} className="point-item">{point}</div>
-                    ))
+                  {!isProcessing && interviewData.negatives && interviewData.negatives.length > 0 ? (
+                    <ol className="skills-list">
+                      {interviewData.negatives.map((point, idx) => (
+                        <li key={idx}>{point}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>Nenhuma informação coletada</p>
                   )}
                 </div>
               )}
@@ -482,7 +735,7 @@ function InterviewDetailPage() {
                 className="accordion-header"
                 onClick={() => toggleSection('especificas')}
               >
-                <span>Informações específicas</span>
+                <span>Análise</span>
                 <span className="accordion-icon">
                   {expandedSections.especificas ? (
                     <ChevronDownIcon size={16} color="#1a1a1a" />
@@ -494,6 +747,65 @@ function InterviewDetailPage() {
               {expandedSections.especificas && (
                 <div className="accordion-content">
                   <p>{interviewData.specific}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Pontuação */}
+            <div className="accordion-section">
+              <button 
+                className="accordion-header"
+                onClick={() => toggleSection('pontuacao')}
+              >
+                <span>Pontuação</span>
+                <span className="accordion-icon">
+                  {expandedSections.pontuacao ? (
+                    <ChevronDownIcon size={16} color="#1a1a1a" />
+                  ) : (
+                    <ChevronRightIcon size={16} color="#1a1a1a" />
+                  )}
+                </span>
+              </button>
+              {expandedSections.pontuacao && (
+                <div className="accordion-content">
+                  {!isProcessing && interviewData.analysis?.score ? (
+                    <div className="scores-container">
+                      <div className="score-item overall-score">
+                        <span className="score-label">Pontuação Geral</span>
+                        <span className="score-value">
+                          {Math.round((interviewData.analysis.score.overall / 1000) * 100)}%
+                        </span>
+                      </div>
+                      <div className="subscores">
+                        <div className="score-item">
+                          <span className="score-label">Técnico</span>
+                          <span className="score-value">
+                            {Math.round((interviewData.analysis.score.subscores.technical / 1000) * 100)}%
+                          </span>
+                        </div>
+                        <div className="score-item">
+                          <span className="score-label">Comunicação</span>
+                          <span className="score-value">
+                            {Math.round((interviewData.analysis.score.subscores.communication / 1000) * 100)}%
+                          </span>
+                        </div>
+                        <div className="score-item">
+                          <span className="score-label">Cultura de Trabalho</span>
+                          <span className="score-value">
+                            {Math.round((interviewData.analysis.score.subscores.work_culture / 1000) * 100)}%
+                          </span>
+                        </div>
+                        <div className="score-item">
+                          <span className="score-label">Experiência</span>
+                          <span className="score-value">
+                            {Math.round((interviewData.analysis.score.subscores.experience / 1000) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>Nenhuma informação coletada</p>
+                  )}
                 </div>
               )}
             </div>
@@ -515,7 +827,7 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.anotacoes && (
                 <div className="accordion-content">
-                  <p>{interviewData.notes || 'Sem anotações'}</p>
+                  <p>"{interviewData.notes || 'Sem anotações'}"</p>
                 </div>
               )}
             </div>
@@ -532,6 +844,16 @@ function InterviewDetailPage() {
             {!interviewData.transcription || interviewData.transcription.length === 0 ? (
               <div className="loading-overlay">
                 <div className="spinner"></div>
+                {isProcessing && (
+                  <p style={{ 
+                    marginTop: '1rem', 
+                    color: '#666', 
+                    fontSize: '0.9rem',
+                    textAlign: 'center'
+                  }}>
+                    Carregando transcrição e gerando resumo
+                  </p>
+                )}
               </div>
             ) : (
               interviewData.transcription.map((message, idx) => {
@@ -557,32 +879,60 @@ function InterviewDetailPage() {
                 preload="metadata"
                 crossOrigin="anonymous"
                 onError={(e) => {
-                  console.error('Audio load error:', e);
-                  console.error('Audio element:', audioRef.current);
-                  console.error('Audio URL:', getAudioUrl(id));
-                  console.error('Audio error details:', audioRef.current?.error);
+                  console.error('[AUDIO] ❌ Load error:', e);
+                  console.error('[AUDIO] URL:', getAudioUrl(id));
+                  console.error('[AUDIO] Error details:', audioRef.current?.error);
                   if (audioRef.current?.error) {
-                    console.error('Error code:', audioRef.current.error.code);
-                    console.error('Error message:', audioRef.current.error.message);
+                    console.error('[AUDIO] Error code:', audioRef.current.error.code);
+                    console.error('[AUDIO] Error message:', audioRef.current.error.message);
+                    
+                    const errorMessages = {
+                      1: 'Download do áudio foi cancelado',
+                      2: 'Erro de rede. Verifique se o backend está rodando em http://localhost:8000',
+                      3: 'Erro ao decodificar o áudio. O arquivo pode estar corrompido.',
+                      4: 'Formato de áudio não suportado'
+                    };
+                    setAudioError(errorMessages[audioRef.current.error.code] || 'Erro desconhecido');
                   }
                 }}
                 onLoadedMetadata={() => {
-                  console.log('Audio metadata loaded');
+                  console.log('[AUDIO] 📊 Metadata loaded');
+                  setAudioError(null);
                   const audio = audioRef.current;
-                  if (audio) {
-                    console.log('Audio duration:', audio.duration);
+                  if (audio && audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+                    console.log('[AUDIO] ✅ Duration from metadata:', audio.duration);
                     setDuration(audio.duration);
+                  } else {
+                    console.log('[AUDIO] ⚠️ Duration not available in metadata:', audio.duration);
                   }
                 }}
                 onCanPlay={() => {
-                  console.log('Audio can play');
+                  console.log('[AUDIO] 🎵 Can play');
+                  const audio = audioRef.current;
+                  if (audio && audio.duration && isFinite(audio.duration) && audio.duration > 0 && !duration) {
+                    console.log('[AUDIO] ✅ Duration from canplay:', audio.duration);
+                    setDuration(audio.duration);
+                  }
                 }}
                 onLoadStart={() => {
-                  console.log('Audio load started');
+                  console.log('[AUDIO] 🔄 Load started');
+                }}
+                onProgress={() => {
+                  // Tentar pegar duração durante o progresso do download
+                  const audio = audioRef.current;
+                  if (audio && audio.duration && isFinite(audio.duration) && audio.duration > 0 && !duration) {
+                    console.log('[AUDIO] ✅ Duration from progress:', audio.duration);
+                    setDuration(audio.duration);
+                  }
                 }}
               />
               
               <div className="audio-player">
+                {audioError && (
+                  <div className="audio-error-message">
+                    ⚠️ {audioError}
+                  </div>
+                )}
                 <div 
                   className="audio-progress-bar"
                   onClick={handleProgressClick}
@@ -594,7 +944,7 @@ function InterviewDetailPage() {
                 </div>
                 <div className="player-controls">
                   <span className="player-time">
-                    {formatTime(currentTime)} / {formatTime(duration)}
+                    {formatTime(currentTime)} / {duration && isFinite(duration) && duration > 0 ? formatTime(duration) : '∞'}
                   </span>
                   <div className="player-buttons">
                     <button 

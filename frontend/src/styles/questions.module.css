@@ -1,7 +1,7 @@
 /* Page wrapper and positioning */
 .wrapper {
   min-height: 100vh;
-  background: #FFF7F5;
+  background: #F5F3FF;
   display: flex;
   flex-direction: column;
 }
@@ -55,7 +55,7 @@
   display:inline-flex;
   align-items:center;
   gap:8px;
-  background: #EDE9FF;
+  background: #FFDFCD;
   color: #371C68;
   padding: 6px 10px;
   border-radius: 8px;
