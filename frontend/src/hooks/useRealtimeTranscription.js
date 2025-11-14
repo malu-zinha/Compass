@@ -8,8 +8,11 @@ export const useRealtimeTranscription = (interviewId) => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (!interviewId) {
       console.log('No interview ID provided, skipping WebSocket connection');
       return;
@@ -19,12 +22,17 @@ export const useRealtimeTranscription = (interviewId) => {
     connectWebSocket();
 
     return () => {
+      isMountedRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
       if (wsRef.current) {
+        console.log('Fechando WebSocket no cleanup...');
         wsRef.current.close();
+        wsRef.current = null;
       }
+      setIsConnected(false);
     };
   }, [interviewId]);
 
@@ -45,7 +53,57 @@ export const useRealtimeTranscription = (interviewId) => {
 
           // Handle transcript updates
           if (data.transcript_update) {
-            setTranscripts(prev => [...prev, ...data.transcript_update]);
+            console.log('Recebendo transcript_update:', data.transcript_update);
+            setTranscripts(prev => {
+              const updated = [...prev];
+              
+              data.transcript_update.forEach(newUtt => {
+                if (newUtt.id) {
+                  const existingIndex = updated.findIndex(utt => utt.id === newUtt.id);
+                  
+                  if (existingIndex >= 0) {
+                    // Atualizar frase existente - concatenar apenas as novas palavras
+                    const existingUtt = updated[existingIndex];
+                    updated[existingIndex] = {
+                      ...newUtt,
+                      text: newUtt.new_words 
+                        ? existingUtt.text + newUtt.new_words  // Concatenar novas palavras
+                        : newUtt.text  // Usar texto completo se não tiver new_words
+                    };
+                  } else {
+                    // Adicionar nova frase (primeira palavra)
+                    updated.push({
+                      ...newUtt,
+                      text: newUtt.new_words || newUtt.text
+                    });
+                  }
+                } else {
+                  // Se não tem ID, adicionar
+                  updated.push(newUtt);
+                }
+              });
+              
+              return updated;
+            });
+          }
+          
+          // Handle transcript finalization (após 4 segundos de silêncio)
+          if (data.transcript_finalize) {
+            console.log('Finalizando transcrição:', data.transcript_finalize);
+            setTranscripts(prev => {
+              const updated = [...prev];
+              const existingIndex = updated.findIndex(utt => utt.id === data.transcript_finalize.id);
+              
+              if (existingIndex >= 0) {
+                // Marcar como final
+                updated[existingIndex] = {
+                  ...updated[existingIndex],
+                  is_final: true
+                };
+              }
+              
+              return updated;
+            });
           }
 
           // Handle GPT question suggestions
@@ -84,11 +142,14 @@ export const useRealtimeTranscription = (interviewId) => {
         console.log('WebSocket disconnected');
         setIsConnected(false);
         
-        // Auto-reconnect after 3 seconds if interview is still active
-        if (interviewId) {
+        // Auto-reconnect after 3 seconds if interview is still active and component is mounted
+        if (interviewId && isMountedRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect...');
-            connectWebSocket();
+            // Verificar novamente se ainda está montado antes de reconectar
+            if (isMountedRef.current && interviewId) {
+              console.log('Attempting to reconnect...');
+              connectWebSocket();
+            }
           }, 3000);
         }
       };
