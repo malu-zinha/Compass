@@ -42,9 +42,17 @@ def create_table():
             analysis TEXT,
             score INTEGER,
             position_id INTEGER,
+            duration REAL,
             FOREIGN KEY (position_id) REFERENCES positions(id)
         )
     """)
+    
+    # Adicionar coluna duration se não existir (para tabelas antigas)
+    try:
+        cursor.execute("ALTER TABLE interviews ADD COLUMN duration REAL")
+        print("[MIGRATION] ✅ Coluna 'duration' adicionada à tabela interviews")
+    except sqlite3.OperationalError:
+        pass  # Coluna já existe
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS questions (

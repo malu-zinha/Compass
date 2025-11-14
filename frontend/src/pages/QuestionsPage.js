@@ -146,10 +146,10 @@ export default function QuestionsPage() {
         <main className={styles.main}>
           <div className={styles.contentCard}>
             <div className={styles.titleRow}>
-              <h2 className={styles.title}>Selecione o tipo de perguntas</h2>
+              <h2 className={styles.title}>Selecione o tipo de pergunta</h2>
             </div>
 
-            <section style={{ padding: '3rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <section style={{ padding: '3rem 2rem', display: 'flex', flexDirection: 'row', gap: '1.5rem', justifyContent: 'center' }}>
               <button
                 onClick={() => setQuestionType('general')}
                 style={{
@@ -157,12 +157,19 @@ export default function QuestionsPage() {
                   background: '#EDE9FF',
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.1)',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   fontFamily: 'Coolvetica, sans-serif',
                   fontSize: '1.25rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  textAlign: 'left'
+                  textAlign: 'center',
+                  flex: '1',
+                  maxWidth: '600px',
+                  height: '250px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
                 onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
                 onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
@@ -180,12 +187,19 @@ export default function QuestionsPage() {
                   background: '#EDE9FF',
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.1)',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   fontFamily: 'Coolvetica, sans-serif',
                   fontSize: '1.25rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  textAlign: 'left'
+                  textAlign: 'center',
+                  flex: '1',
+                  maxWidth: '600px',
+                  height: '250px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
                 onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
                 onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}

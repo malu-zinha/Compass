@@ -65,9 +65,13 @@ function JobsPage() {
 
           <div className="jobs-grid">
             {loading ? (
-              <p style={{ padding: '2rem', textAlign: 'center' }}>Carregando cargos...</p>
+              <div className="empty-message">
+                <p>Carregando cargos...</p>
+              </div>
             ) : jobs.length === 0 ? (
-              <p style={{ padding: '2rem', textAlign: 'center' }}>Nenhum cargo cadastrado ainda.</p>
+              <div className="empty-message">
+                <p>Nenhum cargo cadastrado ainda</p>
+              </div>
             ) : jobs.map((job) => (
               <div key={job.id} className="job-card">
                 <button 
@@ -80,7 +84,7 @@ function JobsPage() {
                 <h3 className="job-card-title">{job.name}</h3>
                 
                 <div className="job-vacancies-badge">
-                  {job.vacancies} vagas disponíveis
+                  {job.vacancies} {job.vacancies === 1 ? 'vaga disponível' : 'vagas disponíveis'}
                 </div>
 
                 <p className="job-card-description">{job.description}</p>

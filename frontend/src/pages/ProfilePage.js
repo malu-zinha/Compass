@@ -8,8 +8,8 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    nome: 'Joaquim Germano',
-    email: 'seuemail@gmail.com',
+    nome: 'João Silva',
+    email: 'joao.silva@compass.com',
     cargo: 'Entrevistador',
     telefone: '(11) 98765-4321',
     empresa: 'Compass Tech',
@@ -47,7 +47,7 @@ export default function ProfilePage() {
           <div className="profile-header">
             <div className="profile-avatar-section">
               <div className="profile-avatar">
-                <span className="avatar-initials">JG</span>
+                <span className="avatar-initials">JS</span>
               </div>
               <button className="change-avatar-btn">
                 Alterar foto

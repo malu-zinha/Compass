@@ -1,6 +1,6 @@
 .profile-page {
   min-height: 100vh;
-  background: #FFF7F5;
+  background: #F5F3FF;
   display: flex;
   flex-direction: column;
 }
@@ -128,7 +128,7 @@
 
 .edit-btn {
   padding: 0.65rem 1.25rem;
-  background: #EDE9FF;
+  background: #FFDFCD;
   color: #371C68;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 8px;
@@ -248,7 +248,7 @@
 
 .security-btn {
   padding: 1rem 1.5rem;
-  background: #EDE9FF;
+  background: #FFDFCD;
   color: #371C68;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 8px;

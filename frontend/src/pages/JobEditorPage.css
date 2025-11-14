@@ -1,6 +1,6 @@
 .job-editor-page {
   min-height: 100vh;
-  background: #FFF7F5;
+  background: #F5F3FF;
 }
 
 .job-editor-content {
@@ -52,7 +52,7 @@
 }
 
 .form-input-wrapper {
-  background: #EDE9FF;
+  background: #FFDFCD;
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -95,7 +95,7 @@
 }
 
 .competencies-section {
-  background: #EDE9FF;
+  background: #FFDFCD;
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -123,7 +123,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.375rem 0.6rem;
   background: #D2EAFF;
   color: #092260;
   font-family: 'Inter', sans-serif;
@@ -131,6 +131,19 @@
   font-weight: 600;
   border-radius: 6px;
   border: 1px solid rgba(160, 216, 240, 0.3);
+  max-width: 280px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  flex-wrap: wrap;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.competency-tag span {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .remove-tag-btn {
@@ -153,7 +166,7 @@
 .add-competency-btn {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.6rem;
+  padding: 0.375rem 0.6rem;
   background: #f5f5f5;
   color: #666;
   font-family: 'Inter', sans-serif;
@@ -162,6 +175,8 @@
   border: 1px solid rgba(160, 160, 160, 0.3);
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .add-competency-btn:hover {
@@ -171,17 +186,21 @@
 .competency-tag.editing {
   background: #D2EAFF;
   border: 1px solid rgba(160, 216, 240, 0.3);
-  padding: 0.25rem 0.6rem;
+  padding: 0.375rem 0.4rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   border-radius: 6px;
-  min-height: fit-content;
-  height: auto;
+  max-width: 300px;
+  position: relative;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .competency-tag-input {
-  width: 100%;
-  min-width: 80px;
+  width: auto;
+  min-width: 180px;
+  max-width: 280px;
   padding: 0;
   font-family: 'Inter', sans-serif;
   font-size: 0.75rem;
@@ -191,10 +210,15 @@
   background: transparent;
   color: #092260;
   outline: none;
-  line-height: 1.5;
+  line-height: 1.2;
   box-sizing: border-box;
   margin: 0;
-  height: 100%;
+  resize: none;
+  overflow: hidden;
+  text-align: center;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 .competency-tag-input::placeholder {
@@ -208,7 +232,7 @@
 }
 
 .ideal-profile-section {
-  background: #EDE9FF;
+  background: #FFDFCD;
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -243,9 +267,9 @@
   font-family: 'Coolvetica', sans-serif;
   font-size: 1rem;
   font-weight: normal;
-  background: #FFDFCD;
-  color: #602309;
-  border: 1px solid rgba(96, 35, 9, 0.1);
+  background: #EDE9FF;
+  color: #371C68;
+  border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
@@ -254,7 +278,7 @@
 }
 
 .save-job-btn:hover {
-  background: #ffd0b8;
+  background: #ddd5ff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }

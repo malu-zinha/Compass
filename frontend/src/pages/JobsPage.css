@@ -1,6 +1,6 @@
 .jobs-page {
   min-height: 100vh;
-  background: #FFF7F5;
+  background: #F5F3FF;
   display: flex;
   flex-direction: column;
 }
@@ -40,9 +40,9 @@
   font-size: 1.5rem;
   font-weight: normal;
   margin: 0;
-  padding-bottom: 0;
+  padding: 0;
   padding-right: 1.5rem;
-  border-bottom: none;
+  border-bottom: none !important;
   color: #1a1a1a;
   flex-shrink: 0;
 }
@@ -75,6 +75,23 @@
   flex: 1;
   padding: 1.5rem 0 1.5rem 0;
   margin-top: 0;
+}
+
+.empty-message {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  color: #999;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.empty-message p {
+  margin: 0;
+  color: #999;
 }
 
 .job-card {
