@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
 import CalendarIcon from '../components/icons/CalendarIcon';
 import ClockIcon from '../components/icons/ClockIcon';
-import { getInterviews, getPositions } from '../services/api';
+import { getInterviews, getPositions, getAudioUrl } from '../services/api';
 import './ResultsPage.css';
 
 function ResultsPage() {
@@ -13,13 +13,89 @@ function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [audioDurations, setAudioDurations] = useState({});
+  const audioRefs = useRef({});
 
   useEffect(() => {
     loadInterviews();
     if (positionId && positionId !== '0') {
       loadPositionName();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId]);
+
+  // Carregar durações dos áudios quando interviews mudarem
+  useEffect(() => {
+    interviews.forEach(interview => {
+      if (interview.hasAudio && !audioDurations[interview.id] && !audioRefs.current[interview.id]) {
+        const audio = new Audio();
+        audio.preload = 'metadata';
+        audio.src = getAudioUrl(interview.id);
+        
+        const handleLoadedMetadata = () => {
+          if (audio.duration && isFinite(audio.duration)) {
+            setAudioDurations(prev => ({
+              ...prev,
+              [interview.id]: audio.duration
+            }));
+          }
+        };
+        
+        const handleError = () => {
+          console.error(`Erro ao carregar áudio da entrevista ${interview.id}`);
+        };
+        
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.addEventListener('error', handleError);
+        
+        audioRefs.current[interview.id] = audio;
+      }
+    });
+    
+    // Cleanup: remover listeners quando componente desmontar
+    return () => {
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        if (audio) {
+          audio.removeEventListener('loadedmetadata', () => {});
+          audio.removeEventListener('error', () => {});
+        }
+      });
+    };
+  }, [interviews]);
+
+  // Atualizar durações quando audioDurations mudar
+  useEffect(() => {
+    if (Object.keys(audioDurations).length > 0) {
+      setInterviews(prevInterviews => {
+        return prevInterviews.map(interview => {
+          const audioDuration = audioDurations[interview.id];
+          if (audioDuration) {
+            const formatDuration = (seconds) => {
+              if (!seconds || isNaN(seconds)) return 'N/A';
+              
+              const hours = Math.floor(seconds / 3600);
+              const mins = Math.floor((seconds % 3600) / 60);
+              const secs = Math.floor(seconds % 60);
+              
+              if (hours > 0) {
+                return `${hours}h ${mins}m`;
+              } else if (mins > 0) {
+                return `${mins}m ${secs}s`;
+              } else {
+                return `${secs}s`;
+              }
+            };
+            
+            return {
+              ...interview,
+              duration: formatDuration(audioDuration)
+            };
+          }
+          return interview;
+        });
+      });
+    }
+  }, [audioDurations]);
 
   const loadPositionName = async () => {
     try {
@@ -37,7 +113,63 @@ function ResultsPage() {
     try {
       setLoading(true);
       const positionIdNum = positionId ? parseInt(positionId) : 0;
+      console.log(`[DEBUG] Carregando entrevistas para positionId: ${positionIdNum}`);
       const data = await getInterviews(positionIdNum);
+      console.log(`[DEBUG] Entrevistas carregadas: ${data?.length || 0}`);
+      
+      // Função para calcular duração do áudio a partir do transcript
+      const calculateDuration = (transcript) => {
+        if (!transcript) return null;
+        
+        try {
+          let transcriptData = transcript;
+          if (typeof transcript === 'string') {
+            transcriptData = JSON.parse(transcript);
+          }
+          
+          // Verificar se tem utterances com timestamps
+          let utterances = [];
+          if (transcriptData.utterances && Array.isArray(transcriptData.utterances)) {
+            utterances = transcriptData.utterances;
+          } else if (Array.isArray(transcriptData)) {
+            utterances = transcriptData;
+          }
+          
+          if (utterances.length > 0) {
+            // Pegar o maior timestamp 'end' de todas as utterances
+            const maxEnd = Math.max(...utterances.map(u => u.end || 0));
+            
+            // AssemblyAI retorna timestamps em milissegundos
+            // Sempre converter dividindo por 1000
+            // Se o valor for muito pequeno (< 1), pode já estar em segundos
+            if (maxEnd < 1) {
+              return maxEnd; // Já está em segundos
+            }
+            return maxEnd / 1000; // Converter de ms para segundos
+          }
+        } catch (e) {
+          console.error('Erro ao calcular duração:', e);
+        }
+        
+        return null;
+      };
+      
+      // Função para formatar duração
+      const formatDuration = (seconds) => {
+        if (!seconds || isNaN(seconds)) return 'N/A';
+        
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        
+        if (hours > 0) {
+          return `${hours}h ${mins}m`;
+        } else if (mins > 0) {
+          return `${mins}m ${secs}s`;
+        } else {
+          return `${secs}s`;
+        }
+      };
       
       // Formatar dados do backend para o formato esperado
       const formattedInterviews = data.map(interview => {
@@ -56,23 +188,30 @@ function ResultsPage() {
         // Converter score de 0-1000 para porcentagem 0-100%
         const scorePercentage = interview.score ? Math.round((interview.score / 1000) * 100) : 0;
         
+        // Usar duração do áudio se disponível, senão calcular do transcript
+        const audioDuration = audioDurations[interview.id];
+        const durationSeconds = audioDuration || calculateDuration(interview.transcript);
+        const formattedDuration = formatDuration(durationSeconds);
+        
         return {
           id: interview.id,
           name: interview.name || 'Candidato sem nome',
           email: interview.email || '',
           date: interview.date ? new Date(interview.date).toLocaleDateString('pt-BR') : 'Data não disponível',
-          duration: 'N/A', // Backend não retorna duração
+          duration: formattedDuration,
           match: scorePercentage, // Agora é porcentagem (0-100%)
           positives: analysis?.positives || ['Aguardando análise'], // CORRIGIDO: era strengths
           negatives: analysis?.negatives || ['Aguardando análise'], // CORRIGIDO: era weaknesses
-          position: interview.position
+          position: interview.position,
+          hasAudio: !!interview.audio_file
         };
       });
       
       setInterviews(formattedInterviews);
     } catch (error) {
       console.error('Erro ao carregar entrevistas:', error);
-      // Não mostra alert, apenas define lista vazia para permitir edição do layout
+      // Mostra mensagem de erro mais clara
+      alert(`Erro ao carregar entrevistas: ${error.message}\n\nVerifique se o backend está rodando.`);
       setInterviews([]);
     } finally {
       setLoading(false);
@@ -138,32 +277,38 @@ function ResultsPage() {
           <h2 className="section-title">Entrevistados</h2>
           
           <div className="interviews-grid">
-            {interviews.map((interview) => (
-              <div key={interview.id} className="interview-card">
-                <h3 className="card-title">{interview.name}</h3>
-                
-                <div className="card-section">
-                  <div className="section-label positives">Pontos positivos</div>
-                  {interview.positives.map((point, idx) => (
-                    <div key={idx} className="section-text">[{point}]</div>
-                  ))}
-                </div>
-                
-                <div className="card-section">
-                  <div className="section-label negatives">Pontos negativos</div>
-                  {interview.negatives.map((point, idx) => (
-                    <div key={idx} className="section-text">[{point}]</div>
-                  ))}
-                </div>
-                
-                <button 
-                  className="btn-ver-detalhes"
-                  onClick={() => handleViewDetails(interview.id)}
-                >
-                  Ver detalhes
-                </button>
+            {interviews.length === 0 ? (
+              <div className="empty-message">
+                <p>Nenhuma entrevista realizada</p>
               </div>
-            ))}
+            ) : (
+              interviews.map((interview) => (
+                <div key={interview.id} className="interview-card">
+                  <h3 className="card-title">{interview.name}</h3>
+                  
+                  <div className="card-section">
+                    <div className="section-label positives">Pontos positivos</div>
+                    {interview.positives.map((point, idx) => (
+                      <div key={idx} className="section-text">[{point}]</div>
+                    ))}
+                  </div>
+                  
+                  <div className="card-section">
+                    <div className="section-label negatives">Pontos negativos</div>
+                    {interview.negatives.map((point, idx) => (
+                      <div key={idx} className="section-text">[{point}]</div>
+                    ))}
+                  </div>
+                  
+                  <button 
+                    className="btn-ver-detalhes"
+                    onClick={() => handleViewDetails(interview.id)}
+                  >
+                    Ver detalhes
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -172,36 +317,42 @@ function ResultsPage() {
           <h2 className="section-title">Ranking</h2>
           
           <div className="ranking-list">
-            {rankedInterviews.slice(0, 5).map((interview, index) => (
-              <div key={interview.id} className="ranking-item">
-                <div className="ranking-header">
-                  <div className="ranking-number">{index + 1}</div>
-                  <div className="ranking-info">
-                    <div className="ranking-name">{interview.name}</div>
-                    <div className="ranking-email">{interview.email}</div>
-                  </div>
-                  <div className="ranking-match">{interview.match}% match</div>
-                </div>
-                
-                <div className="ranking-meta">
-                  <span className="ranking-meta-item">
-                    <CalendarIcon size={16} color="#666" />
-                    <span>{interview.date}</span>
-                  </span>
-                  <span className="ranking-meta-item">
-                    <ClockIcon size={16} color="#666" />
-                    <span>{interview.duration}</span>
-                  </span>
-                </div>
-                
-                <button 
-                  className="btn-ver-detalhes-small"
-                  onClick={() => handleViewDetails(interview.id)}
-                >
-                  Ver detalhes
-                </button>
+            {rankedInterviews.length === 0 ? (
+              <div className="empty-message">
+                <p>Nenhum candidato disponível</p>
               </div>
-            ))}
+            ) : (
+              rankedInterviews.slice(0, 5).map((interview, index) => (
+                <div key={interview.id} className="ranking-item">
+                  <div className="ranking-header">
+                    <div className="ranking-number">{index + 1}</div>
+                    <div className="ranking-info">
+                      <div className="ranking-name">{interview.name}</div>
+                      <div className="ranking-email">{interview.email}</div>
+                    </div>
+                    <div className="ranking-match">{interview.match}% match</div>
+                  </div>
+                  
+                  <div className="ranking-meta">
+                    <span className="ranking-meta-item">
+                      <CalendarIcon size={16} color="#666" />
+                      <span>{interview.date}</span>
+                    </span>
+                    <span className="ranking-meta-item">
+                      <ClockIcon size={16} color="#666" />
+                      <span>{interview.duration}</span>
+                    </span>
+                  </div>
+                  
+                  <button 
+                    className="btn-ver-detalhes-small"
+                    onClick={() => handleViewDetails(interview.id)}
+                  >
+                    Ver detalhes
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

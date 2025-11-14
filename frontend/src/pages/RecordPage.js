@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateAnalysis, updateInterviewNotes, getInterviewById, getGlobalQuestions } from '../services/api';
 import { useRealtimeTranscription } from '../hooks/useRealtimeTranscription';
+import { InfoIcon, FileTextIcon, BriefcaseIcon } from '../components/icons';
 import './RecordPage.css';
 
 function RecordPage() {
@@ -23,7 +24,9 @@ function RecordPage() {
   const isRecordingRef = useRef(false);
   const audioChunksRef = useRef([]);
   
-  // Transcrição em tempo real via WebSocket
+  // Transcrição em tempo real via WebSocket (SEM diarização completa)
+  // NOTA: Esta transcrição é TEMPORÁRIA e será SUBSTITUÍDA pela transcrição
+  // com diarização completa após o upload do áudio ao finalizar a entrevista
   const { transcripts, questions: aiQuestions, isConnected, sendAudioChunk } = useRealtimeTranscription(interviewId);
   
   // Perguntas cadastradas (globais + específicas do cargo)
@@ -52,9 +55,12 @@ function RecordPage() {
       console.log(`Enviando ${audioChunksRef.current.length} chunks de áudio para o backend...`);
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       console.log('Tamanho do áudio:', audioBlob.size, 'bytes');
+      console.log('Duração da gravação:', recordingTime, 'segundos');
       
       const formData = new FormData();
       formData.append('audio', audioBlob, `interview_${interviewId}.webm`);
+      // Enviar também a duração da gravação para o backend usar como metadata
+      formData.append('duration', recordingTime.toString());
       
       const response = await fetch(`http://localhost:8000/positions/interviews/${interviewId}/upload-audio`, {
         method: 'POST',
@@ -66,6 +72,7 @@ function RecordPage() {
       }
       
       console.log('✅ Áudio enviado com sucesso para o backend');
+      console.log('✅ Duração enviada:', recordingTime, 'segundos');
       audioChunksRef.current = []; // Limpar chunks após envio
       return true;
     } catch (error) {
@@ -392,13 +399,16 @@ function RecordPage() {
       
       // 2. Enviar áudio para o backend
       console.log('[2/6] Enviando áudio para o servidor...');
+      console.log('📝 O backend irá processar o áudio COM DIARIZAÇÃO em background');
+      console.log('📝 Esta transcrição com diarização substituirá a transcrição em tempo real');
       const startUpload = Date.now();
-      setProcessingMessage('Enviando áudio para o servidor...');
+      setProcessingMessage('Enviando áudio para o servidor (será processado com diarização)...');
       const audioSent = await uploadAudioToBackend();
       if (!audioSent) {
         console.warn('⚠️ Falha ao enviar áudio, mas continuando com a análise...');
       } else {
         console.log(`⏱️  [2/6] Áudio enviado em ${((Date.now() - startUpload) / 1000).toFixed(2)}s`);
+        console.log('✅ Backend iniciará transcrição COM DIARIZAÇÃO em background');
       }
       
       // 3. Limpar recursos de áudio
@@ -536,7 +546,22 @@ function RecordPage() {
                 <div className="question-header">
                   <div className="question-number-status">
                     <span className="question-number">
-                      {question.isAI ? '🤖 IA' : (question.isGlobal ? '📋 Geral' : '💼 Cargo')}
+                      {question.isAI ? (
+                        <>
+                          <InfoIcon size={16} color="#371C68" />
+                          IA
+                        </>
+                      ) : question.isGlobal ? (
+                        <>
+                          <FileTextIcon size={16} color="#371C68" />
+                          Geral
+                        </>
+                      ) : (
+                        <>
+                          <BriefcaseIcon size={16} color="#371C68" />
+                          Cargo
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>

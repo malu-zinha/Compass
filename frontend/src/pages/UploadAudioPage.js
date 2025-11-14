@@ -113,25 +113,24 @@ function UploadAudioPage() {
       await uploadAudioFile(interviewId, audioFile);
       console.log('Upload concluído!');
       
-      // 2. Transcrever áudio
-      setUploadProgress('Transcrevendo áudio (isso pode demorar)...');
-      console.log('Transcrevendo áudio...');
-      await transcribeAudioFile(interviewId);
-      console.log('Transcrição concluída!');
-      
-      // 3. Gerar análise
-      setUploadProgress('Gerando análise completa...');
-      console.log('Gerando análise...');
-      await generateAnalysis(interviewId);
-      console.log('Análise concluída!');
-      
-      // 4. Navegar para a página da entrevista
-      setUploadProgress('Processamento concluído!');
+      // 2. Navegar para a página da entrevista antes de começar transcrição
       localStorage.removeItem('interviewData');
+      navigate(`/entrevista/${interviewId}`);
       
-      setTimeout(() => {
-        navigate(`/entrevista/${interviewId}`);
-      }, 500);
+      // 3. Transcrever áudio (roda em background)
+      console.log('Transcrevendo áudio...');
+      transcribeAudioFile(interviewId).then(() => {
+        console.log('Transcrição concluída!');
+        // 4. Gerar análise após transcrição
+        console.log('Gerando análise...');
+        generateAnalysis(interviewId).then(() => {
+          console.log('Análise concluída!');
+        }).catch(err => {
+          console.error('Erro ao gerar análise:', err);
+        });
+      }).catch(err => {
+        console.error('Erro ao transcrever:', err);
+      });
       
     } catch (error) {
       console.error('Erro ao fazer upload:', error);

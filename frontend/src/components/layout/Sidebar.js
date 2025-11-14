@@ -24,7 +24,7 @@ function Sidebar({ isOpen, onClose }) {
     { path: '/entrevistas', label: 'Entrevistas', icon: InterviewsIcon },
     { path: '/cargos', label: 'Cargos', icon: JobsIcon },
     { path: '/perguntas', label: 'Perguntas', icon: QuestionsIcon },
-    { path: '/configuracoes', label: 'Configurações', icon: SettingsIcon }
+    { path: null, label: 'Configurações', icon: SettingsIcon }
   ];
 
   return (
@@ -45,7 +45,7 @@ function Sidebar({ isOpen, onClose }) {
             <UserIcon size={24} color="#1a1a1a" />
           </div>
           <div className="user-info">
-            <div className="user-name">Joaquim Germano</div>
+            <div className="user-name">João Silva</div>
             <div className="user-role">Entrevistador</div>
           </div>
         </button>
@@ -55,9 +55,10 @@ function Sidebar({ isOpen, onClose }) {
             const IconComponent = item.icon;
             return (
               <button
-                key={item.path}
-                className={`sidebar-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-                onClick={() => handleLinkClick(item.path)}
+                key={item.path || item.label}
+                className={`sidebar-nav-item ${item.path && location.pathname === item.path ? 'active' : ''}`}
+                onClick={() => item.path ? handleLinkClick(item.path) : null}
+                disabled={!item.path}
               >
                 <span className="nav-icon">
                   <IconComponent size={20} color="#1a1a1a" />
@@ -70,7 +71,7 @@ function Sidebar({ isOpen, onClose }) {
 
         <div className="sidebar-footer">
           <div className="sidebar-email">
-            seuemail@gmail.com
+            joao.silva@compass.com
             <span className="email-arrow">
               <LogoutIcon size={16} color="#1a1a1a" />
             </span>
