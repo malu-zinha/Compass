@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { generateAnalysis, updateInterviewNotes, getInterviewById } from '../services/api';
+import { generateAnalysis, updateInterviewNotes, getInterviewById, getGlobalQuestions } from '../services/api';
 import { useRealtimeTranscription } from '../hooks/useRealtimeTranscription';
 import './RecordPage.css';
 
@@ -21,9 +21,14 @@ function RecordPage() {
   const audioContextRef = useRef(null);
   const processorNodeRef = useRef(null);
   const isRecordingRef = useRef(false);
+  const audioChunksRef = useRef([]);
   
   // Transcrição em tempo real via WebSocket
   const { transcripts, questions: aiQuestions, isConnected, sendAudioChunk } = useRealtimeTranscription(interviewId);
+  
+  // Perguntas cadastradas (globais + específicas do cargo)
+  const [registeredQuestions, setRegisteredQuestions] = useState([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
   
   // Perguntas combinadas (AI + pré-programadas)
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
@@ -35,6 +40,99 @@ function RecordPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState('');
   
+  // Função de cleanup completa para garantir que o microfone seja desligado
+  // Função para enviar áudio para o backend
+  const uploadAudioToBackend = async () => {
+    if (audioChunksRef.current.length === 0) {
+      console.warn('Nenhum áudio gravado para enviar');
+      return false;
+    }
+
+    try {
+      console.log(`Enviando ${audioChunksRef.current.length} chunks de áudio para o backend...`);
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      console.log('Tamanho do áudio:', audioBlob.size, 'bytes');
+      
+      const formData = new FormData();
+      formData.append('audio', audioBlob, `interview_${interviewId}.webm`);
+      
+      const response = await fetch(`http://localhost:8000/positions/interviews/${interviewId}/upload-audio`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao enviar áudio: ${response.status}`);
+      }
+      
+      console.log('✅ Áudio enviado com sucesso para o backend');
+      audioChunksRef.current = []; // Limpar chunks após envio
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar áudio:', error);
+      return false;
+    }
+  };
+
+  const cleanupAllResources = () => {
+    console.log('Limpando todos os recursos de áudio...');
+    
+    // Parar gravação
+    isRecordingRef.current = false;
+    
+    // Parar MediaRecorder
+    if (mediaRecorderRef.current) {
+      try {
+        if (mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+      } catch (e) {
+        console.warn('Erro ao parar MediaRecorder:', e);
+      }
+      mediaRecorderRef.current = null;
+    }
+    
+    // Desconectar e limpar processor
+    if (processorNodeRef.current) {
+      try {
+        processorNodeRef.current.disconnect();
+      } catch (e) {
+        console.warn('Erro ao desconectar processor:', e);
+      }
+      processorNodeRef.current = null;
+    }
+    
+    // Fechar AudioContext
+    if (audioContextRef.current) {
+      try {
+        if (audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close();
+        }
+      } catch (e) {
+        console.warn('Erro ao fechar AudioContext:', e);
+      }
+      audioContextRef.current = null;
+    }
+    
+    // Parar todas as tracks do stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('Track parada:', track.kind);
+      });
+      streamRef.current = null;
+    }
+    
+    // Parar timer
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    setIsRecording(false);
+    console.log('Recursos de áudio limpos');
+  };
+
   // Inicialização
   useEffect(() => {
     // Pegar dados do state da navegação
@@ -53,13 +151,70 @@ function RecordPage() {
       setCandidateData(JSON.parse(savedData));
     }
     
+    // Listener para quando o usuário tenta sair da página
+    const handleBeforeUnload = (e) => {
+      cleanupAllResources();
+    };
+    
+    // Listener para quando o usuário navega (popstate - botão voltar)
+    const handlePopState = () => {
+      cleanupAllResources();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
+    // Cleanup quando componente é desmontado
     return () => {
-      stopRecording();
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      cleanupAllResources();
     };
   }, [location, navigate]);
+
+  // Carregar perguntas cadastradas quando tiver interviewId e position_id
+  useEffect(() => {
+    const loadRegisteredQuestions = async () => {
+      if (!candidateData?.candidatePositionId) {
+        return;
+      }
+      
+      setLoadingQuestions(true);
+      try {
+        // Carregar perguntas globais (sem position_id)
+        const globalQuestions = await getGlobalQuestions(null);
+        
+        // Carregar perguntas específicas do cargo (com position_id)
+        const positionQuestions = await getGlobalQuestions(candidateData.candidatePositionId);
+        
+        // Combinar todas as perguntas cadastradas
+        const allRegistered = [
+          ...globalQuestions.map(q => ({
+            id: `global-${q.id}`,
+            text: q.question,
+            isAI: false,
+            isGlobal: true
+          })),
+          ...positionQuestions.map(q => ({
+            id: `position-${q.id}`,
+            text: q.question,
+            isAI: false,
+            isGlobal: false
+          }))
+        ];
+        
+        setRegisteredQuestions(allRegistered);
+        console.log(`Carregadas ${allRegistered.length} perguntas cadastradas (${globalQuestions.length} globais + ${positionQuestions.length} do cargo)`);
+      } catch (error) {
+        console.error('Erro ao carregar perguntas cadastradas:', error);
+        setRegisteredQuestions([]);
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+    
+    loadRegisteredQuestions();
+  }, [candidateData?.candidatePositionId]);
 
   // Auto-start recording quando tiver interviewId
   useEffect(() => {
@@ -143,8 +298,10 @@ function RecordPage() {
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (e) => {
-        // WebM é salvo apenas para arquivo final, não para transcrição em tempo real
-        // A transcrição usa o PCM do ScriptProcessorNode
+        if (e.data && e.data.size > 0) {
+          console.log('Áudio chunk recebido:', e.data.size, 'bytes');
+          audioChunksRef.current.push(e.data);
+        }
       };
 
       // Capturar dados a cada 1 segundo para salvar arquivo
@@ -159,27 +316,7 @@ function RecordPage() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      isRecordingRef.current = false;
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      
-      // Desconectar e fechar AudioContext
-      if (processorNodeRef.current) {
-        processorNodeRef.current.disconnect();
-        processorNodeRef.current = null;
-      }
-      
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      console.log('Gravação parada');
-    }
+    cleanupAllResources();
   };
 
 
@@ -226,42 +363,92 @@ function RecordPage() {
   };
 
   const handleEndInterview = async () => {
-    stopRecording();
-    
     if (!interviewId) {
       alert('ID da entrevista não encontrado!');
       return;
     }
 
     setIsProcessing(true);
-    setProcessingMessage('Processando entrevista...');
-
+    const startTotal = Date.now();
+    
+    console.log('\n' + '='.repeat(80));
+    console.log('⏱️  INICIANDO FINALIZAÇÃO DA ENTREVISTA');
+    console.log('='.repeat(80) + '\n');
+    
     try {
-      // Salvar anotações primeiro
-      if (notes.trim()) {
-        setProcessingMessage('Salvando anotações...');
-        await updateInterviewNotes(interviewId, notes);
+      // 1. Parar gravação (mas não limpar recursos ainda)
+      console.log('[1/6] Parando gravação...');
+      const startStop = Date.now();
+      setProcessingMessage('Parando gravação...');
+      isRecordingRef.current = false;
+      setIsRecording(false);
+      
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        // Aguardar para garantir que ondataavailable seja chamado
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      console.log(`⏱️  [1/6] Gravação parada em ${((Date.now() - startStop) / 1000).toFixed(2)}s`);
+      
+      // 2. Enviar áudio para o backend
+      console.log('[2/6] Enviando áudio para o servidor...');
+      const startUpload = Date.now();
+      setProcessingMessage('Enviando áudio para o servidor...');
+      const audioSent = await uploadAudioToBackend();
+      if (!audioSent) {
+        console.warn('⚠️ Falha ao enviar áudio, mas continuando com a análise...');
+      } else {
+        console.log(`⏱️  [2/6] Áudio enviado em ${((Date.now() - startUpload) / 1000).toFixed(2)}s`);
       }
       
-      // Aguardar WebSocket finalizar e transcrição estar pronta (otimizado: 5 tentativas, 500ms)
+      // 3. Limpar recursos de áudio
+      console.log('[3/6] Limpando recursos de áudio...');
+      cleanupAllResources();
+      console.log('✅ [3/6] Recursos limpos');
+      
+      // 4. Salvar anotações
+      if (notes.trim()) {
+        console.log('[4/6] Salvando anotações...');
+        const startNotes = Date.now();
+        setProcessingMessage('Salvando anotações...');
+        await updateInterviewNotes(interviewId, notes);
+        console.log(`⏱️  [4/6] Anotações salvas em ${((Date.now() - startNotes) / 1000).toFixed(2)}s`);
+      } else {
+        console.log('[4/6] Sem anotações para salvar');
+      }
+      
+      // 5. Aguardar transcrição estar pronta
+      console.log('[5/6] Aguardando transcrição estar pronta...');
+      const startWait = Date.now();
       setProcessingMessage('Aguardando transcrição...');
       const transcriptReady = await waitForTranscript(5, 500);
       
       if (!transcriptReady) {
-        console.warn('Transcrição não encontrada após várias tentativas, tentando gerar análise mesmo assim...');
-        setProcessingMessage('Transcrição ainda processando, tentando gerar análise...');
+        console.warn('⚠️ Transcrição não encontrada após várias tentativas');
+        console.warn('⚠️ O backend irá transcrever o áudio durante a análise');
+        setProcessingMessage('Preparando para análise...');
+      } else {
+        console.log(`✅ [5/6] Transcrição confirmada em ${((Date.now() - startWait) / 1000).toFixed(2)}s`);
       }
       
-      // Gerar análise
+      // 6. Gerar análise
+      console.log('[6/6] Gerando análise com IA...');
       setProcessingMessage('Gerando análise e resumo... (isso pode levar alguns minutos)');
-      console.log('Iniciando geração de análise...');
-      const startTime = Date.now();
+      const startAnalysis = Date.now();
       await generateAnalysis(interviewId);
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`Análise gerada em ${duration} segundos`);
+      const analysisTime = ((Date.now() - startAnalysis) / 1000).toFixed(2);
+      console.log(`⏱️  [6/6] Análise gerada em ${analysisTime}s`);
       
       // Clean up
       localStorage.removeItem('interviewData');
+      
+      // Garantir que recursos estão limpos antes de navegar
+      cleanupAllResources();
+      
+      const totalTime = ((Date.now() - startTotal) / 1000).toFixed(2);
+      console.log('\n' + '='.repeat(80));
+      console.log(`⏱️  TEMPO TOTAL: ${totalTime}s`);
+      console.log('='.repeat(80) + '\n');
       
       // Navegar para a página de detalhes
       setIsProcessing(false);
@@ -271,12 +458,18 @@ function RecordPage() {
       console.error('Erro ao processar entrevista:', error);
       setIsProcessing(false);
       setProcessingMessage('');
+      // Garantir cleanup mesmo em caso de erro
+      cleanupAllResources();
       alert(`Erro ao processar entrevista: ${error.message}\n\nMas os dados foram salvos. ID: ${interviewId}`);
       navigate('/inicio');
     }
   };
 
-  const allQuestions = [...aiQuestions];
+  // Combinar todas as perguntas: cadastradas (globais + específicas) + IA
+  const allQuestions = [
+    ...registeredQuestions,
+    ...aiQuestions
+  ];
 
   if (!candidateData) {
     return <div>Carregando...</div>;
@@ -293,17 +486,21 @@ function RecordPage() {
             {isRecording && !isConnected && <span style={{color: '#eab308', fontSize: '0.8rem', marginLeft: '0.5rem'}}>⚠ Conectando...</span>}
           </h3>
           <div className="transcription-content">
-            {transcripts.length > 0 && transcripts.map((item, index) => {
-                const speakerLabel = item.speaker === 'A' || item.speaker === 'a' || item.speaker === 'A' 
-                  ? 'Pessoa 1' 
-                  : 'Pessoa 2';
-                const isPersonOne = speakerLabel === 'Pessoa 1';
+            {transcripts.length > 0 && transcripts
+              .map((item, index) => {
+                // Normalizar speaker para maiúscula
+                const speaker = String(item.speaker || 'A').toUpperCase();
+                const speakerLabel = speaker === 'A' ? 'Pessoa 1' : 'Pessoa 2';
+                const isPersonOne = speaker === 'A';
+                // Usar id se disponível, senão usar index como fallback
+                const key = item.id || `transcript-${index}`;
                 
                 return (
-                  <div key={index} className={`transcription-message ${isPersonOne ? 'message-left' : 'message-right'}`}>
+                  <div key={key} className={`transcription-message ${isPersonOne ? 'message-left' : 'message-right'}`}>
                     <div className="message-speaker">{speakerLabel}</div>
-                    <div className={`transcription-bubble ${isPersonOne ? 'candidato' : 'entrevistador'}`}>
+                    <div className={`transcription-bubble ${isPersonOne ? 'candidato' : 'entrevistador'} ${item.is_final ? '' : 'transcribing'}`}>
                       {item.text}
+                      {!item.is_final && <span className="typing-indicator">...</span>}
                     </div>
                   </div>
                 );
@@ -320,7 +517,12 @@ function RecordPage() {
           <h3>Perguntas</h3>
           
           <div className="questions-list">
-            {allQuestions.length === 0 && (
+            {loadingQuestions && (
+              <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+                Carregando perguntas...
+              </p>
+            )}
+            {!loadingQuestions && allQuestions.length === 0 && (
               <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                 {isConnected ? 'Sugestões de perguntas aparecerão aqui...' : 'Aguardando sugestões de perguntas...'}
               </p>
@@ -334,7 +536,7 @@ function RecordPage() {
                 <div className="question-header">
                   <div className="question-number-status">
                     <span className="question-number">
-                      🤖 IA
+                      {question.isAI ? '🤖 IA' : (question.isGlobal ? '📋 Geral' : '💼 Cargo')}
                     </span>
                   </div>
                 </div>
