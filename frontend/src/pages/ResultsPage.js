@@ -284,7 +284,10 @@ function ResultsPage() {
             ) : (
               interviews.map((interview) => (
                 <div key={interview.id} className="interview-card">
+                  <div className="card-header">
                   <h3 className="card-title">{interview.name}</h3>
+                    <span className="card-email">{interview.email}</span>
+                  </div>
                   
                   <div className="card-section">
                     <div className="section-label positives">Pontos positivos</div>

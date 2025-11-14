@@ -43,6 +43,9 @@ function RecordPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState('');
   
+  // Ref para auto-scroll da transcrição
+  const transcriptionContentRef = useRef(null);
+  
   // Função de cleanup completa para garantir que o microfone seja desligado
   // Função para enviar áudio para o backend
   const uploadAudioToBackend = async () => {
@@ -178,6 +181,13 @@ function RecordPage() {
       cleanupAllResources();
     };
   }, [location, navigate]);
+
+  // Auto-scroll da transcrição quando novos transcripts chegam
+  useEffect(() => {
+    if (transcriptionContentRef.current && transcripts.length > 0) {
+      transcriptionContentRef.current.scrollTop = transcriptionContentRef.current.scrollHeight;
+    }
+  }, [transcripts]);
 
   // Carregar perguntas cadastradas quando tiver interviewId e position_id
   useEffect(() => {
@@ -495,27 +505,31 @@ function RecordPage() {
             {isConnected && <span style={{color: '#16a34a', fontSize: '0.8rem', marginLeft: '0.5rem'}}>● AO VIVO</span>}
             {isRecording && !isConnected && <span style={{color: '#eab308', fontSize: '0.8rem', marginLeft: '0.5rem'}}>⚠ Conectando...</span>}
           </h3>
-          <div className="transcription-content">
-            {transcripts.length > 0 && transcripts
-              .map((item, index) => {
-                // Normalizar speaker para maiúscula
-                const speaker = String(item.speaker || 'A').toUpperCase();
-                const speakerLabel = speaker === 'A' ? 'Pessoa 1' : 'Pessoa 2';
-                const isPersonOne = speaker === 'A';
-                // Usar id se disponível, senão usar index como fallback
+          <div className="transcription-content" ref={transcriptionContentRef}>
+            {transcripts.length === 0 ? (
+              <div className="transcription-empty">
+                Aguardando transcrição em tempo real...
+              </div>
+            ) : (
+              <div className="transcription-text-block">
+                {transcripts.map((item, index) => {
                 const key = item.id || `transcript-${index}`;
+                  const isLastItem = index === transcripts.length - 1;
+                  const showTypingIndicator = !item.is_final && isLastItem;
                 
                 return (
-                  <div key={key} className={`transcription-message ${isPersonOne ? 'message-left' : 'message-right'}`}>
-                    <div className="message-speaker">{speakerLabel}</div>
-                    <div className={`transcription-bubble ${isPersonOne ? 'candidato' : 'entrevistador'} ${item.is_final ? '' : 'transcribing'}`}>
+                    <span 
+                      key={key} 
+                      className={`transcription-segment ${item.is_final ? 'final' : 'transcribing'}`}
+                    >
                       {item.text}
-                      {!item.is_final && <span className="typing-indicator">...</span>}
+                      {showTypingIndicator && <span className="typing-indicator">...</span>}
+                      {' '}
+                    </span>
+                  );
+                })}
                     </div>
-                  </div>
-                );
-              })
-            }
+            )}
           </div>
         </div>
       </div>

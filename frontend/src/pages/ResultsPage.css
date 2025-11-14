@@ -47,11 +47,11 @@
 
 .interviews-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 1.25rem;
   overflow-y: auto;
   flex: 1;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   margin-top: 0;
 }
 
@@ -67,12 +67,25 @@
   min-height: auto;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .card-title {
   font-family: 'Coolvetica', sans-serif;
   font-size: 1.25rem;
   font-weight: normal;
   margin: 0;
   color: #1a1a1a;
+}
+
+.card-email {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #666;
+  opacity: 0.7;
 }
 
 .card-section {
@@ -186,7 +199,7 @@
   gap: 1rem;
   overflow-y: auto;
   flex: 1;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   margin-top: 0;
   min-height: 200px;
 }
@@ -308,12 +321,6 @@
 }
 
 /* Responsive */
-@media (max-width: 1280px) {
-  .interviews-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 1024px) {
   .results-container {
     grid-template-columns: 1fr;
