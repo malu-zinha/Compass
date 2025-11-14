@@ -174,14 +174,48 @@ export const generateAnalysis = async (interviewId) => {
 };
 
 export const getInterviews = async (positionId = 0, page = 1, perPage = 100) => {
-  const response = await fetch(`${API_BASE_URL}/positions/interviews/${positionId}?page=${page}&per_page=${perPage}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
   
-  if (!response.ok) {
-    throw new Error('Erro ao buscar entrevistas');
+  try {
+    const response = await fetch(`${API_BASE_URL}/positions/interviews/${positionId}?page=${page}&per_page=${perPage}`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`Erro ao buscar entrevistas: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // 🚨 LOG CRÍTICO: Ver o que chegou da API
+    if (data.interviews && data.interviews.length > 0) {
+      const firstInterview = data.interviews[0];
+      console.log('🌐 API RESPONSE - Primeira entrevista:', {
+        id: firstInterview.id,
+        transcriptType: typeof firstInterview.transcript,
+        transcriptIsArray: Array.isArray(firstInterview.transcript),
+        transcriptKeys: firstInterview.transcript && typeof firstInterview.transcript === 'object' 
+          ? Object.keys(firstInterview.transcript) 
+          : 'não é objeto',
+        hasUtterances: firstInterview.transcript?.utterances ? 'SIM' : 'NÃO',
+        utterancesLength: firstInterview.transcript?.utterances?.length || 
+                         (Array.isArray(firstInterview.transcript) ? firstInterview.transcript.length : 0),
+        firstSpeakers: firstInterview.transcript?.utterances?.slice(0, 3).map(u => u.speaker) ||
+                      (Array.isArray(firstInterview.transcript) ? firstInterview.transcript.slice(0, 3).map(u => u.speaker) : [])
+      });
+    }
+    
+    return data.interviews || [];
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout ao buscar entrevistas. Verifique se o backend está rodando.');
+    }
+    throw error;
   }
-  
-  const data = await response.json();
-  return data.interviews;
 };
 
 export const getInterviewById = async (interviewId) => {

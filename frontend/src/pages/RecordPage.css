@@ -3,7 +3,7 @@
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto;
   height: 100vh;
-  background: #FFF7F5;
+  background: #F5F3FF;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
 }
@@ -185,6 +185,9 @@
   font-weight: 600;
   font-size: 0.95rem;
   color: #1a1a1a;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .status-icon {
