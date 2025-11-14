@@ -52,7 +52,7 @@
 }
 
 .form-input-wrapper {
-  background: #FFDFCD;
+  background: #EDE9FF;
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -95,7 +95,7 @@
 }
 
 .competencies-section {
-  background: #FFDFCD;
+  background: #EDE9FF;
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -232,7 +232,7 @@
 }
 
 .ideal-profile-section {
-  background: #FFDFCD;
+  background: #EDE9FF;
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid rgba(55, 28, 104, 0.1);
@@ -267,8 +267,8 @@
   font-family: 'Coolvetica', sans-serif;
   font-size: 1rem;
   font-weight: normal;
-  background: #EDE9FF;
-  color: #371C68;
+  background: #FFDFCD;
+  color: #602309;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
   cursor: pointer;
@@ -278,7 +278,7 @@
 }
 
 .save-job-btn:hover {
-  background: #ddd5ff;
+  background: #ffd4b8;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }

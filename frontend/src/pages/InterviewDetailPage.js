@@ -26,10 +26,14 @@ function InterviewDetailPage() {
   
   // Audio player state
   const audioRef = useRef(null);
+  const transcriptionRef = useRef(null);
+  const messageRefs = useRef({});
+  const activeMessageIndexRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [activeMessageIndex, setActiveMessageIndex] = useState(null);
   
   const [interviewData, setInterviewData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -166,6 +170,72 @@ function InterviewDetailPage() {
       }
     };
     
+    // Auto-scroll transcription based on current audio time
+    const scrollToCurrentMessage = () => {
+      if (!interviewData?.transcription || !transcriptionRef.current || !audio) return;
+      
+      const currentTimeMs = audio.currentTime * 1000; // Converter para milissegundos
+      const transcription = interviewData.transcription;
+      
+      // Encontrar a mensagem que corresponde ao tempo atual
+      let activeIndex = null;
+      for (let i = 0; i < transcription.length; i++) {
+        const message = transcription[i];
+        // Converter timestamps para milissegundos se necessário
+        let start = message.start || 0;
+        let end = message.end || 0;
+        
+        // Se os timestamps parecem estar em segundos (valores pequenos), converter
+        if (start < 1000 && end < 1000) {
+          start = start * 1000;
+          end = end * 1000;
+        }
+        
+        // Verificar se o tempo atual está dentro desta mensagem
+        if (currentTimeMs >= start && currentTimeMs <= end) {
+          activeIndex = i;
+          break;
+        }
+        // Se passou da última mensagem, usar a última
+        if (i === transcription.length - 1 && currentTimeMs > end) {
+          activeIndex = i;
+        }
+      }
+      
+      // Se encontrou uma mensagem ativa
+      if (activeIndex !== null) {
+        // Atualizar estado apenas se mudou
+        if (activeIndex !== activeMessageIndexRef.current) {
+          activeMessageIndexRef.current = activeIndex;
+          setActiveMessageIndex(activeIndex);
+        }
+        
+        // Fazer scroll até a mensagem
+        const messageElement = messageRefs.current[activeIndex];
+        if (messageElement && transcriptionRef.current) {
+          const container = transcriptionRef.current;
+          const messageTop = messageElement.offsetTop;
+          const messageHeight = messageElement.offsetHeight;
+          const containerHeight = container.clientHeight;
+          const scrollTop = container.scrollTop;
+          
+          // Verificar se a mensagem está visível
+          const messageBottom = messageTop + messageHeight;
+          const containerBottom = scrollTop + containerHeight;
+          
+          // Se a mensagem está acima da área visível ou abaixo
+          if (messageTop < scrollTop || messageBottom > containerBottom) {
+            // Scroll suave até a mensagem, centralizando-a na área visível
+            const targetScroll = messageTop - (containerHeight / 2) + (messageHeight / 2);
+            container.scrollTo({
+              top: Math.max(0, targetScroll),
+              behavior: 'smooth'
+            });
+          }
+        }
+      }
+    };
+    
     const updateDuration = () => {
       console.log('[AUDIO] Tentando atualizar duração:', audio.duration);
       if (audio && audio.duration && isFinite(audio.duration) && !isNaN(audio.duration) && audio.duration > 0) {
@@ -203,7 +273,12 @@ function InterviewDetailPage() {
       updateDuration();
     };
 
-    audio.addEventListener('timeupdate', updateTime);
+    const handleTimeUpdate = () => {
+      updateTime();
+      scrollToCurrentMessage();
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('loadeddata', updateDuration);
@@ -234,7 +309,7 @@ function InterviewDetailPage() {
     }, 10000);
 
     return () => {
-      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('loadeddata', updateDuration);
@@ -246,7 +321,7 @@ function InterviewDetailPage() {
       clearInterval(durationCheckInterval);
       clearTimeout(timeoutId);
     };
-  }, [interviewData?.hasAudio, duration]);
+  }, [interviewData?.hasAudio, interviewData?.transcription, duration]);
 
   const loadInterviewData = async () => {
     try {
@@ -550,6 +625,50 @@ function InterviewDetailPage() {
     if (audio && duration) {
       audio.currentTime = percentage * duration;
       setCurrentTime(audio.currentTime);
+      // Trigger scroll after time update
+      setTimeout(() => {
+        if (interviewData?.transcription && transcriptionRef.current) {
+          const currentTimeMs = audio.currentTime * 1000;
+          const transcription = interviewData.transcription;
+          
+          let activeIndex = null;
+          for (let i = 0; i < transcription.length; i++) {
+            const message = transcription[i];
+            let start = message.start || 0;
+            let end = message.end || 0;
+            
+            if (start < 1000 && end < 1000) {
+              start = start * 1000;
+              end = end * 1000;
+            }
+            
+            if (currentTimeMs >= start && currentTimeMs <= end) {
+              activeIndex = i;
+              break;
+            }
+            if (i === transcription.length - 1 && currentTimeMs > end) {
+              activeIndex = i;
+            }
+          }
+          
+          if (activeIndex !== null) {
+            activeMessageIndexRef.current = activeIndex;
+            setActiveMessageIndex(activeIndex);
+            const messageElement = messageRefs.current[activeIndex];
+            if (messageElement && transcriptionRef.current) {
+              const container = transcriptionRef.current;
+              const messageTop = messageElement.offsetTop;
+              const messageHeight = messageElement.offsetHeight;
+              const containerHeight = container.clientHeight;
+              const targetScroll = messageTop - (containerHeight / 2) + (messageHeight / 2);
+              container.scrollTo({
+                top: Math.max(0, targetScroll),
+                behavior: 'smooth'
+              });
+            }
+          }
+        }
+      }, 100);
     }
   };
 
@@ -629,7 +748,9 @@ function InterviewDetailPage() {
               )}
             </div>
 
-            {/* Histórico */}
+            {/* Histórico - só exibe se houver dados válidos */}
+            {!isProcessing && interviewData.history && interviewData.history.length > 0 && 
+             interviewData.history.filter(item => item.company && item.role).length > 0 && (
             <div className="accordion-section">
               <button 
                 className="accordion-header"
@@ -646,28 +767,18 @@ function InterviewDetailPage() {
               </button>
               {expandedSections.historico && (
                 <div className="accordion-content">
-                  {!isProcessing && interviewData.history && interviewData.history.length > 0 ? (
-                    (() => {
-                      const validHistoryItems = interviewData.history.filter(item => item.company && item.role);
-                      return validHistoryItems.length > 0 ? (
-                        validHistoryItems.map((item, idx) => (
+                    {interviewData.history.filter(item => item.company && item.role).map((item, idx) => (
                           <div key={idx} className="history-item">
                             <div className="history-title">{item.role} - {item.company}</div>
                             {item.description && (
                               <div className="history-description">{item.description}</div>
                             )}
                           </div>
-                        ))
-                      ) : (
-                        <p>Nenhuma informação coletada</p>
-                      );
-                    })()
-                  ) : (
-                    <p>Nenhuma informação coletada</p>
-                  )}
+                    ))}
                 </div>
               )}
             </div>
+            )}
 
             {/* Pontos Positivos */}
             <div className="accordion-section">
@@ -840,7 +951,7 @@ function InterviewDetailPage() {
         <div className="transcription-column">
           <h2 className="section-main-title">Transcrição</h2>
           
-          <div className="transcription-content">
+          <div className="transcription-content" ref={transcriptionRef}>
             {!interviewData.transcription || interviewData.transcription.length === 0 ? (
               <div className="loading-overlay">
                 <div className="spinner"></div>
@@ -858,8 +969,13 @@ function InterviewDetailPage() {
             ) : (
               interviewData.transcription.map((message, idx) => {
                 const isInterviewer = message.speakerLabel === 'Entrevistador';
+                const isActive = activeMessageIndex === idx;
                 return (
-                  <div key={idx} className={`transcription-message ${isInterviewer ? 'message-right' : 'message-left'}`}>
+                  <div 
+                    key={idx} 
+                    ref={el => messageRefs.current[idx] = el}
+                    className={`transcription-message ${isInterviewer ? 'message-right' : 'message-left'} ${isActive ? 'active-message' : ''}`}
+                  >
                     <div className="message-speaker">{message.speakerLabel}</div>
                     <div className={`message-bubble ${isInterviewer ? 'interviewer' : 'interviewee'}`}>
                       {message.text}

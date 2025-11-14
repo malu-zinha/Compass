@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { uploadAudioFile, transcribeAudioFile, generateAnalysis, updateInterviewNotes } from '../services/api';
+import { FolderIcon, CheckIcon } from '../components/icons';
 import './UploadAudioPage.css';
 
 function UploadAudioPage() {
@@ -179,14 +180,18 @@ function UploadAudioPage() {
           
           {!audioFile ? (
             <>
-              <div className="upload-icon">📁</div>
+              <div className="upload-icon">
+                <FolderIcon size={64} color="#371C68" />
+              </div>
               <p className="upload-text">Arraste o arquivo de áudio aqui</p>
               <p className="upload-subtext">ou clique para selecionar</p>
               <p className="upload-formats">Formatos aceitos: MP3, WAV, M4A, WebM, OGG</p>
             </>
           ) : (
             <>
-              <div className="upload-icon success">✓</div>
+              <div className="upload-icon success">
+                <CheckIcon size={48} color="#16a34a" />
+              </div>
               <p className="upload-filename">{audioFile.name}</p>
               <p className="upload-filesize">{formatFileSize(audioFile.size)}</p>
               {!isUploading && (

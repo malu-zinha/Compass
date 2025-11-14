@@ -73,13 +73,16 @@
 }
 
 .upload-icon {
-  font-size: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
 }
 
 .upload-icon.success {
-  color: #16a34a;
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .upload-text {
@@ -167,22 +170,28 @@
 
 .submit-btn {
   width: 100%;
-  background: #D2691E;
-  color: white;
-  border: 1px solid rgba(96, 35, 9, 0.1);
+  background: #FFDFCD !important;
+  color: #602309 !important;
+  border: 1px solid rgba(55, 28, 104, 0.1) !important;
   padding: 1rem 2rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'Coolvetica', sans-serif;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: normal;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #B8551A;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
+  background: #ffd0b8 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .submit-btn:disabled {
@@ -208,10 +217,6 @@
   
   .upload-dropzone {
     padding: 2rem 1rem;
-  }
-  
-  .upload-icon {
-    font-size: 3rem;
   }
 }
 

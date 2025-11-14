@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createCandidate } from '../services/api';
+import { MicrophoneIcon, UploadIcon } from '../components/icons';
 import './InterviewTypePage.css';
 
 function InterviewTypePage() {
@@ -61,11 +62,11 @@ function InterviewTypePage() {
     <div className="interview-type-container">
       <div className="interview-type-content">
         <button className="back-button" onClick={handleBack} disabled={isCreating}>
-          ← Voltar
+          Voltar
         </button>
         
         <h1 className="interview-type-title">
-          Nova Entrevista para {candidateData.candidateName}
+          Nova Entrevista
         </h1>
         <p className="interview-type-subtitle">
           Escolha como deseja realizar a entrevista
@@ -76,7 +77,9 @@ function InterviewTypePage() {
             className={`type-card ${isCreating ? 'disabled' : ''}`}
             onClick={() => !isCreating && handleSelectType('live')}
           >
-            <div className="type-card-icon">🎤</div>
+            <div className="type-card-icon">
+              <MicrophoneIcon size={48} color="#371C68" />
+            </div>
             <h2 className="type-card-title">Entrevista ao vivo</h2>
             <p className="type-card-description">
               Grave a entrevista em tempo real com transcrição automática
@@ -87,7 +90,9 @@ function InterviewTypePage() {
             className={`type-card ${isCreating ? 'disabled' : ''}`}
             onClick={() => !isCreating && handleSelectType('upload')}
           >
-            <div className="type-card-icon">📁</div>
+            <div className="type-card-icon">
+              <UploadIcon size={48} color="#371C68" />
+            </div>
             <h2 className="type-card-title">Upload de Áudio</h2>
             <p className="type-card-description">
               Envie um áudio já gravado para análise
