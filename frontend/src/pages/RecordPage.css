@@ -75,6 +75,21 @@
   max-width: 85%;
 }
 
+.transcription-bubble.transcribing {
+  opacity: 0.85;
+}
+
+.typing-indicator {
+  opacity: 0.5;
+  margin-left: 2px;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.1; }
+}
+
 .transcription-bubble.candidato {
   background: #EDE9FF;
   color: #1a1a1a;

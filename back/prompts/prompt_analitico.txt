@@ -54,12 +54,12 @@ CRITÉRIO DE AVALIAÇÃO: Compare as habilidades, experiências e respostas do c
 }
 
 Diretrizes:
-- "summary": Um resumo conciso (máximo de 3000 caracteres) do que foi discutido na entrevista. DEVE ESTAR EM PORTUGUÊS.
+- "summary": Um resumo conciso (máximo de 3000 caracteres) do que foi discutido na entrevista. DEVE ESTAR EM PORTUGUÊS. Se não houver informação suficiente, escreva "Nenhuma informação coletada".
 - "identity": Um dicionário que identifica os speakers "A" e "B" como "interviewer" ou "candidate" (valores em inglês, mas os textos gerados em português).
-- "skills": Uma lista de habilidades relevantes que o candidato parece possuir e que correspondem aos requisitos da vaga (compare com position_data.skills). DEVE ESTAR EM PORTUGUÊS.
-- "experiences": Uma lista de experiências profissionais mencionadas pelo candidato. Cada entrada deve incluir company (nome da empresa), role (cargo) e uma descrição breve das responsabilidades. DEVE ESTAR EM PORTUGUÊS.
-- "positives": Até 5 aspectos positivos ou pontos fortes que tornam o candidato adequado para a posição. DEVE ESTAR EM PORTUGUÊS.
-- "negatives": Até 5 fraquezas potenciais ou preocupações que podem afetar a adequação do candidato. DEVE ESTAR EM PORTUGUÊS.
+- "skills": Uma lista de habilidades relevantes que o candidato parece possuir e que correspondem aos requisitos da vaga (compare com position_data.skills). DEVE ESTAR EM PORTUGUÊS. Se não houver habilidades identificadas, retorne uma lista com um único elemento: ["Nenhuma informação coletada"].
+- "experiences": Uma lista de experiências profissionais mencionadas pelo candidato. Cada entrada deve incluir company (nome da empresa), role (cargo) e uma descrição breve das responsabilidades. DEVE ESTAR EM PORTUGUÊS. Se não houver experiências mencionadas, retorne uma lista com um único elemento: [{"company": "Nenhuma informação coletada", "role": "Nenhuma informação coletada", "description": "Nenhuma informação coletada"}].
+- "positives": Até 5 aspectos positivos ou pontos fortes que tornam o candidato adequado para a posição. DEVE ESTAR EM PORTUGUÊS. Se não houver pontos positivos identificados, retorne uma lista com um único elemento: ["Nenhuma informação coletada"].
+- "negatives": Até 5 fraquezas potenciais ou preocupações que podem afetar a adequação do candidato. DEVE ESTAR EM PORTUGUÊS. Se não houver pontos negativos identificados, retorne uma lista com um único elemento: ["Nenhuma informação coletada"].
 - "score": Use valores inteiros de 0 a 1000. A pontuação DEVE ser baseada na comparação do candidato com os requisitos específicos da vaga (position_data).
   - "overall": uma pontuação geral (0-1000) avaliando o quão bem o candidato se adequa à vaga específica. Considere: correspondência de habilidades, experiência relevante, adequação cultural e comunicação.
   - "subscores":
