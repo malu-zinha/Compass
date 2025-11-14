@@ -337,19 +337,20 @@
 
 /* Scrollbar Styling */
 .board::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .board::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
   border-radius: 4px;
 }
 
 .board::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #DDD6FE;
   border-radius: 4px;
 }
 
 .board::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: #C4B5FD;
 }
