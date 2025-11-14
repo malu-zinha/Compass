@@ -3,28 +3,56 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #ffffff;
+  background: #F4F1FF;
   padding: 2rem;
 }
 
 .interview-type-content {
   max-width: 900px;
   width: 100%;
+  background: white;
+  border-radius: 24px;
+  padding: 2rem 2rem 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .back-button {
-  background: transparent;
-  border: none;
-  color: #371C68;
-  font-size: 1rem;
+  background: #FFDFCD !important;
+  color: #602309 !important;
+  border: 1px solid rgba(55, 28, 104, 0.1) !important;
+  border-radius: 10px;
+  font-family: 'Coolvetica', sans-serif;
+  font-size: 0.9rem;
+  font-weight: normal;
   cursor: pointer;
   margin-bottom: 1.5rem;
-  padding: 0.5rem 1rem;
-  transition: opacity 0.2s;
+  padding: 0.65rem 1.25rem;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.back-button:hover {
-  opacity: 0.7;
+.back-button:hover:not(:disabled) {
+  background: #ffd0b8 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.back-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-button svg {
+  color: #602309 !important;
+  fill: #602309 !important;
 }
 
 .interview-type-title {
@@ -70,8 +98,15 @@
 }
 
 .type-card-icon {
-  font-size: 4rem;
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.type-card-icon svg {
+  width: 48px;
+  height: 48px;
 }
 
 .type-card-title {
@@ -107,6 +142,14 @@
 }
 
 @media (max-width: 768px) {
+  .interview-type-container {
+    padding: 1rem;
+  }
+
+  .interview-type-content {
+    padding: 1.5rem;
+  }
+
   .type-cards-container {
     grid-template-columns: 1fr;
   }
@@ -120,8 +163,9 @@
     padding: 2rem 1.5rem;
   }
   
-  .type-card-icon {
-    font-size: 3rem;
+  .type-card-icon svg {
+    width: 40px;
+    height: 40px;
   }
   
   .type-card-title {

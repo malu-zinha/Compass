@@ -194,21 +194,22 @@
 
 /* Scrollbar Styling */
 .jobs-grid::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .jobs-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
   border-radius: 4px;
 }
 
 .jobs-grid::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #DDD6FE;
   border-radius: 4px;
 }
 
 .jobs-grid::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: #C4B5FD;
 }
 
 @media (max-width: 1200px) {

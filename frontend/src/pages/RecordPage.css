@@ -45,9 +45,6 @@
 .transcription-content {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
   padding: 1.5rem 0 1.5rem 0;
   margin-top: 0;
 }
@@ -60,44 +57,42 @@
   font-style: italic;
 }
 
-.transcription-message {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.transcription-bubble {
+.transcription-text-block {
   font-family: 'Inter', sans-serif;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 85%;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding: 0.5rem;
+  text-align: justify;
 }
 
-.transcription-bubble.transcribing {
+.transcription-segment {
+  display: inline;
+}
+
+.transcription-segment.transcribing {
   opacity: 0.85;
+  background-color: rgba(237, 233, 255, 0.3);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.transcription-segment.final {
+  opacity: 1;
 }
 
 .typing-indicator {
   opacity: 0.5;
   margin-left: 2px;
   animation: blink 1.5s infinite;
+  font-weight: bold;
 }
 
 @keyframes blink {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 0.1; }
-}
-
-.transcription-bubble.candidato {
-  background: #EDE9FF;
-  color: #1a1a1a;
-}
-
-.transcription-bubble.entrevistador {
-  background: #FFDFCD;
-  color: #1a1a1a;
 }
 
 /* Right Panel */
@@ -386,27 +381,28 @@
 .transcription-content::-webkit-scrollbar,
 .questions-list::-webkit-scrollbar,
 .notes-textarea::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .transcription-content::-webkit-scrollbar-track,
 .questions-list::-webkit-scrollbar-track,
 .notes-textarea::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
   border-radius: 4px;
 }
 
 .transcription-content::-webkit-scrollbar-thumb,
 .questions-list::-webkit-scrollbar-thumb,
 .notes-textarea::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #DDD6FE;
   border-radius: 4px;
 }
 
 .transcription-content::-webkit-scrollbar-thumb:hover,
 .questions-list::-webkit-scrollbar-thumb:hover,
 .notes-textarea::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: #C4B5FD;
 }
 
 /* Responsive */
