@@ -97,10 +97,10 @@ Assistente inteligente que auxilia o entrevistador durante a entrevista:
    
    Documentação da API: `http://localhost:8000/docs`
 
-   5. **Realize o login com os seguintes dados:**
+6. **Realize o login com os seguintes dados:**
   
-   usuário: entrevistador
-   senha: trilha
+   - usuário: entrevistador
+   - senha: trilha
 
 ---
 
