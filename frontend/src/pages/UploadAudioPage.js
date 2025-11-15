@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { uploadAudioFile, transcribeAudioFile, generateAnalysis, updateInterviewNotes } from '../services/api';
+import { uploadAudioFile, updateInterviewNotes } from '../services/api';
 import { FolderIcon, CheckIcon } from '../components/icons';
 import './UploadAudioPage.css';
 
@@ -108,30 +108,16 @@ function UploadAudioPage() {
         console.log('Anotações salvas!');
       }
       
-      // 1. Upload do áudio
+      // 1. Upload do áudio (o backend inicia transcrição automaticamente)
       setUploadProgress('Fazendo upload do áudio...');
       console.log('Fazendo upload do áudio...');
       await uploadAudioFile(interviewId, audioFile);
-      console.log('Upload concluído!');
+      console.log('Upload concluído! O backend iniciará a transcrição automaticamente.');
       
-      // 2. Navegar para a página da entrevista antes de começar transcrição
+      // 2. Navegar imediatamente para a página da entrevista
+      // A página de detalhes mostrará o estado de carregamento e chamará a análise quando necessário
       localStorage.removeItem('interviewData');
       navigate(`/entrevista/${interviewId}`);
-      
-      // 3. Transcrever áudio (roda em background)
-      console.log('Transcrevendo áudio...');
-      transcribeAudioFile(interviewId).then(() => {
-        console.log('Transcrição concluída!');
-        // 4. Gerar análise após transcrição
-        console.log('Gerando análise...');
-        generateAnalysis(interviewId).then(() => {
-          console.log('Análise concluída!');
-        }).catch(err => {
-          console.error('Erro ao gerar análise:', err);
-        });
-      }).catch(err => {
-        console.error('Erro ao transcrever:', err);
-      });
       
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
