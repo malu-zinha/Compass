@@ -80,11 +80,12 @@ Assistente inteligente que auxilia o entrevistador durante a entrevista:
    pip install -r requirements.txt
    ```
 
-4. **Configure a chave da API do AssemblyAI:**
+4. **Configure a chave da API do AssemblyAI e da OPENAI:**
    
    Crie um arquivo `.env` na pasta `back/` com:
    ```
    ASSEMBLYAI_API_KEY=sua_chave_aqui
+   OPENAI_API_KEY=sua_chave_aqui
    ```
 
 5. **Inicie o servidor:**
