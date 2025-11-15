@@ -7,7 +7,7 @@ import ChevronRightIcon from '../components/icons/ChevronRightIcon';
 import PlayIcon from '../components/icons/PlayIcon';
 import PauseIcon from '../components/icons/PauseIcon';
 import VolumeIcon from '../components/icons/VolumeIcon';
-import { getInterviews, getAudioUrl } from '../services/api';
+import { getInterviews, getAudioUrl, generateAnalysis } from '../services/api';
 import './InterviewDetailPage.css';
 
 function InterviewDetailPage() {
@@ -39,6 +39,7 @@ function InterviewDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [audioError, setAudioError] = useState(null);
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
 
   useEffect(() => {
     // Resetar estado quando o ID mudar
@@ -133,6 +134,54 @@ function InterviewDetailPage() {
       console.log('✅ Dados completos! Parando polling.');
     }
   }, [interviewData?.transcription?.length, interviewData?.analysis]);
+
+  // Effect para chamar análise automaticamente quando transcrição estiver pronta
+  useEffect(() => {
+    if (!interviewData || isGeneratingAnalysis) return;
+
+    // Verificar se tem transcrição com diarização
+    const hasTranscript = interviewData.transcription && interviewData.transcription.length > 0;
+    const hasDiarization = hasTranscript && interviewData.transcription.some(item => 
+      item.speaker && (item.speaker.toUpperCase() === 'A' || item.speaker.toUpperCase() === 'B')
+    );
+
+    // Verificar se tem análise
+    const rawAnalysis = interviewData.rawInterview?.analysis;
+    const parsedAnalysis = interviewData.analysis;
+    const hasRawAnalysis = rawAnalysis && (
+      (typeof rawAnalysis === 'string' && rawAnalysis.trim().length > 0 && rawAnalysis.trim() !== '{}') ||
+      (typeof rawAnalysis === 'object' && rawAnalysis !== null && Object.keys(rawAnalysis).length > 0)
+    );
+    const hasParsedAnalysis = parsedAnalysis && 
+                              typeof parsedAnalysis === 'object' && 
+                              parsedAnalysis !== null &&
+                              (parsedAnalysis.summary || 
+                               parsedAnalysis.positives || 
+                               parsedAnalysis.negatives ||
+                               parsedAnalysis.score ||
+                               Object.keys(parsedAnalysis).length > 0);
+    const hasAnalysis = hasRawAnalysis || hasParsedAnalysis;
+
+    // Se tem transcrição com diarização mas não tem análise, chamar análise automaticamente
+    if (hasDiarization && !hasAnalysis) {
+      console.log('📊 Transcrição pronta mas análise não encontrada. Iniciando geração de análise...');
+      setIsGeneratingAnalysis(true);
+      
+      generateAnalysis(parseInt(id))
+        .then(() => {
+          console.log('✅ Análise gerada com sucesso! Recarregando dados...');
+          // Recarregar dados após análise ser gerada
+          setTimeout(() => {
+            loadInterviewData();
+            setIsGeneratingAnalysis(false);
+          }, 1000);
+        })
+        .catch((error) => {
+          console.error('❌ Erro ao gerar análise:', error);
+          setIsGeneratingAnalysis(false);
+        });
+    }
+  }, [interviewData?.transcription, interviewData?.analysis, id, isGeneratingAnalysis]);
 
   // Audio player effects - só roda quando tem áudio e o elemento está montado
   useEffect(() => {
@@ -340,25 +389,64 @@ function InterviewDetailPage() {
         }
       } catch (err) {
         console.error(`[ERROR] ❌ Erro ao buscar entrevistas:`, err);
-        // Tentar buscar sem positionId (pode ser que o endpoint seja diferente)
-        try {
-          console.log(`[DEBUG] 🔄 Tentando buscar sem positionId...`);
-          interviews = await getInterviews();
-          console.log(`[DEBUG] 📋 Total de entrevistas encontradas (fallback): ${interviews.length}`);
-          if (!Array.isArray(interviews)) {
-            console.error(`[ERROR] ❌ getInterviews (fallback) não retornou um array!`);
-            throw new Error('Resposta inválida do servidor');
+        // Se for timeout, aguardar um pouco e tentar novamente
+        if (err.message && err.message.includes('Timeout')) {
+          console.log(`[DEBUG] ⏳ Timeout detectado, aguardando 2 segundos e tentando novamente...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          try {
+            interviews = await getInterviews(0);
+            console.log(`[DEBUG] 📋 Retry bem-sucedido: ${interviews.length} entrevistas`);
+          } catch (retryErr) {
+            console.error(`[ERROR] ❌ Retry também falhou:`, retryErr);
+            throw new Error(`Não foi possível carregar as entrevistas. Verifique se o backend está rodando em http://localhost:8000`);
           }
-        } catch (err2) {
-          console.error(`[ERROR] ❌ Erro no fallback também:`, err2);
-          throw new Error(`Não foi possível carregar as entrevistas: ${err.message || err2.message}`);
+        } else {
+          // Tentar buscar sem positionId (pode ser que o endpoint seja diferente)
+          try {
+            console.log(`[DEBUG] 🔄 Tentando buscar sem positionId...`);
+            interviews = await getInterviews();
+            console.log(`[DEBUG] 📋 Total de entrevistas encontradas (fallback): ${interviews.length}`);
+            if (!Array.isArray(interviews)) {
+              console.error(`[ERROR] ❌ getInterviews (fallback) não retornou um array!`);
+              throw new Error('Resposta inválida do servidor');
+            }
+          } catch (err2) {
+            console.error(`[ERROR] ❌ Erro no fallback também:`, err2);
+            throw new Error(`Não foi possível carregar as entrevistas: ${err.message || err2.message}`);
+          }
         }
       }
       
       if (!interviews || interviews.length === 0) {
         console.warn(`[WARNING] ⚠️ Nenhuma entrevista encontrada no servidor`);
-        alert('Nenhuma entrevista encontrada. Verifique se o backend está rodando.');
+        // Não mostrar alert, apenas log - a página vai mostrar loading
+        console.log(`[DEBUG] ⏳ Aguardando entrevista ser criada...`);
         setLoading(false);
+        // Criar dados vazios para mostrar a página
+        setInterviewData({
+          rawInterview: null,
+          candidate: {
+            candidateName: 'Carregando...',
+            candidateEmail: '',
+            candidatePhone: ''
+          },
+          date: 'Carregando...',
+          position: 'Carregando...',
+          skills: [],
+          history: [],
+          positives: [],
+          negatives: [],
+          specific: 'Aguardando processamento...',
+          notes: '',
+          transcription: [],
+          score: 0,
+          summary: '',
+          analysis: {},
+          audioFile: null,
+          hasAudio: false,
+          audioDuration: null
+        });
+        setIsProcessing(true);
         return;
       }
       
@@ -367,8 +455,33 @@ function InterviewDetailPage() {
       if (!interview) {
         console.error(`[ERROR] ❌ Entrevista ${id} não encontrada!`);
         console.log(`[DEBUG] IDs disponíveis:`, interviews.map(i => i.id));
-        alert(`Entrevista ${id} não encontrada. IDs disponíveis: ${interviews.map(i => i.id).join(', ')}`);
+        // Não mostrar alert, apenas criar dados vazios e continuar tentando
+        console.log(`[DEBUG] ⏳ Entrevista ainda não existe, aguardando...`);
         setLoading(false);
+        setInterviewData({
+          rawInterview: null,
+          candidate: {
+            candidateName: 'Aguardando...',
+            candidateEmail: '',
+            candidatePhone: ''
+          },
+          date: 'Aguardando...',
+          position: 'Aguardando...',
+          skills: [],
+          history: [],
+          positives: [],
+          negatives: [],
+          specific: 'Aguardando criação da entrevista...',
+          notes: '',
+          transcription: [],
+          score: 0,
+          summary: '',
+          analysis: {},
+          audioFile: null,
+          hasAudio: false,
+          audioDuration: null
+        });
+        setIsProcessing(true);
         return;
       }
       
@@ -565,7 +678,38 @@ function InterviewDetailPage() {
       console.error('❌ Interview ID:', id);
       console.error('❌ Error name:', error.name);
       console.error('❌ Error message:', error.message);
-      alert(`Erro ao carregar dados da entrevista: ${error.message}\n\nVerifique o console para mais detalhes.`);
+      
+      // Não mostrar alert, apenas criar dados vazios e continuar tentando
+      console.log('[DEBUG] ⏳ Erro ao carregar, mas continuando com dados vazios e polling...');
+      setLoading(false);
+      
+      // Criar dados vazios para mostrar a página com loading
+      if (!interviewData) {
+        setInterviewData({
+          rawInterview: null,
+          candidate: {
+            candidateName: 'Erro ao carregar',
+            candidateEmail: '',
+            candidatePhone: ''
+          },
+          date: 'Erro',
+          position: 'Erro',
+          skills: [],
+          history: [],
+          positives: [],
+          negatives: [],
+          specific: `Erro: ${error.message}. Tentando novamente...`,
+          notes: '',
+          transcription: [],
+          score: 0,
+          summary: '',
+          analysis: {},
+          audioFile: null,
+          hasAudio: false,
+          audioDuration: null
+        });
+      }
+      setIsProcessing(true);
     } finally {
       // SEMPRE desligar o loading, mesmo se houver erro
       console.log('[DEBUG] ✅ Finalizando loadInterviewData - desligando loading');
@@ -686,12 +830,40 @@ function InterviewDetailPage() {
     }
   };
 
-  if (loading) {
-    return <div style={{padding: '2rem', textAlign: 'center'}}>Carregando entrevista...</div>;
+  // Mostrar página mesmo sem dados, com loading
+  if (loading && !interviewData) {
+    return (
+      <div className="interview-detail-page">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Header 
+          title="Carregando entrevista..."
+          showInfo={false}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <div style={{padding: '2rem', textAlign: 'center'}}>
+          <div className="spinner" style={{margin: '0 auto'}}></div>
+          <p style={{marginTop: '1rem', color: '#666'}}>Carregando dados da entrevista...</p>
+        </div>
+      </div>
+    );
   }
 
+  // Se não tem dados ainda, mostrar página com loading
   if (!interviewData) {
-    return <div style={{padding: '2rem', textAlign: 'center'}}>Entrevista não encontrada</div>;
+    return (
+      <div className="interview-detail-page">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Header 
+          title="Aguardando entrevista..."
+          showInfo={false}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <div style={{padding: '2rem', textAlign: 'center'}}>
+          <div className="spinner" style={{margin: '0 auto'}}></div>
+          <p style={{marginTop: '1rem', color: '#666'}}>Aguardando dados da entrevista...</p>
+        </div>
+      </div>
+    );
   }
 
   const audioProgress = duration ? (currentTime / duration) * 100 : 0;
@@ -712,9 +884,19 @@ function InterviewDetailPage() {
           <h2 className="section-main-title">Resumo</h2>
           
           <div className="resume-content">
-            {isProcessing ? (
+            {isProcessing || isGeneratingAnalysis ? (
               <div className="loading-overlay">
                 <div className="spinner"></div>
+                <p style={{ 
+                  marginTop: '1rem', 
+                  color: '#666', 
+                  fontSize: '0.9rem',
+                  textAlign: 'center'
+                }}>
+                  {isGeneratingAnalysis 
+                    ? 'Gerando análise completa...' 
+                    : 'Processando transcrição e análise...'}
+                </p>
               </div>
             ) : (
               <>
@@ -955,14 +1137,16 @@ function InterviewDetailPage() {
             {!interviewData.transcription || interviewData.transcription.length === 0 ? (
               <div className="loading-overlay">
                 <div className="spinner"></div>
-                {isProcessing && (
+                {(isProcessing || isGeneratingAnalysis) && (
                   <p style={{ 
                     marginTop: '1rem', 
                     color: '#666', 
                     fontSize: '0.9rem',
                     textAlign: 'center'
                   }}>
-                    Carregando transcrição e gerando resumo
+                    {isGeneratingAnalysis 
+                      ? 'Gerando análise completa...' 
+                      : 'Carregando transcrição e gerando resumo...'}
                   </p>
                 )}
               </div>

@@ -2,6 +2,7 @@ import json
 import sqlite3
 import os
 import mimetypes
+import asyncio
 from datetime import datetime
 from models import InterviewCreateRequest, QuestionCreateRequest, NotesUpdateRequest
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
@@ -44,19 +45,47 @@ def insert_interview(request: InterviewCreateRequest):
 
 @router.post("/{id}/audio-file")
 async def insert_interview_audio(id: int, audio: UploadFile = File(...)):
-
-    os.makedirs("uploads", exist_ok=True)
-
-    date = datetime.now().isoformat()
-    base_filename, ext = os.path.splitext(audio.filename)
-    safe_filename = f"interview_{id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
-    audio_file = f"uploads/{safe_filename}"
+    import time
+    start_time = time.time()
     
-    with open(audio_file, "wb") as f:
-        f.write(await audio.read())
+    print(f"\n{'='*80}")
+    print(f"[DEBUG] 📥 Recebendo áudio para interview ID: {id} (endpoint /audio-file)")
+    print(f"{'='*80}")
+    
+    # Verificar se a entrevista existe
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM interviews WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    
+    if not row:
+        conn.close()
+        print(f"[ERROR] ❌ Interview {id} não encontrado")
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        os.makedirs("uploads", exist_ok=True)
+
+        date = datetime.now().isoformat()
+        base_filename, ext = os.path.splitext(audio.filename)
+        safe_filename = f"interview_{id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+        audio_file = f"uploads/{safe_filename}"
+        
+        print(f"[DEBUG] 💾 Salvando áudio em: {audio_file}")
+        start_save = time.time()
+        
+        with open(audio_file, "wb") as f:
+            content = await audio.read()
+            f.write(content)
+        
+        save_time = time.time() - start_save
+        file_size = os.path.getsize(audio_file)
+        file_size_mb = file_size / 1024 / 1024
+        
+        print(f"[TIMING] ⏱️  Salvamento levou: {save_time:.2f}s")
+        print(f"[DEBUG] ✅ Áudio salvo: {file_size_mb:.2f} MB ({file_size} bytes)")
+        print(f"[DEBUG] 📁 Formato: {ext.upper() if ext else 'DESCONHECIDO'}")
+        
         cursor.execute(
             """UPDATE interviews SET
                 audio_file = ?,
@@ -66,12 +95,36 @@ async def insert_interview_audio(id: int, audio: UploadFile = File(...)):
         )
         conn.commit()
         conn.close()
+        
+        total_time = time.time() - start_time
+        print(f"[TIMING] ⏱️  Upload total: {total_time:.2f}s")
+        print(f"{'='*80}\n")
+        
+        # Iniciar transcrição em background
+        print(f"[DEBUG] 🚀 Iniciando transcrição em background para interview {id}")
+        print(f"[DEBUG] 📤 Vai enviar para AssemblyAI em breve...")
+        
+        # Importar a função de transcrição do outro router
+        from routers.interview_processing import transcribe_audio_background
+        asyncio.create_task(transcribe_audio_background(id, audio_file))
+        
+        print(f"[DEBUG] ✅ Task de transcrição criada e rodando em background")
+        
     except sqlite3.Error as e:
+        conn.close()
+        print(f"[ERROR] ❌ Erro ao inserir áudio no banco de dados: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao inserir áudio no banco de dados: {e}")
+    except Exception as e:
+        if conn:
+            conn.close()
+        print(f"[ERROR] ❌ Erro ao processar upload: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro ao processar upload: {str(e)}")
 
     return JSONResponse(content={
         "id": id,
-        "message": "Áudio registrado com sucesso!"
+        "message": "Áudio registrado com sucesso! Transcrição iniciada em background."
     })
 
 @router.post("/questions")

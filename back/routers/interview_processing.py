@@ -405,7 +405,10 @@ async def upload_audio(id: int, audio: UploadFile = File(...), duration: str = N
         print(f"{'='*80}\n")
         
         # Iniciar transcrição em background (não bloqueia a resposta)
+        print(f"[DEBUG] 🚀 Iniciando transcrição em background para interview {id}")
+        print(f"[DEBUG] 📤 Vai enviar para AssemblyAI em breve...")
         asyncio.create_task(transcribe_audio_background(id, audio_path))
+        print(f"[DEBUG] ✅ Task de transcrição criada e rodando em background")
         
         # Retornar duração se foi fornecida
         response_data = {
@@ -457,20 +460,21 @@ async def transcribe_audio_background(interview_id: int, audio_path: str):
     """Transcreve áudio em background após upload com diarização completa"""
     try:
         print(f"\n{'='*80}")
-        print(f"[BACKGROUND] 🎙️ Iniciando transcrição COMPLETA em background para interview {interview_id}")
-        print(f"[BACKGROUND] 📝 Esta transcrição COM DIARIZAÇÃO substituirá a transcrição em tempo real")
+        print(f"[DEBUG] 🎙️ Iniciando transcrição COMPLETA em background para interview {interview_id}")
+        print(f"[DEBUG] 📝 Esta transcrição COM DIARIZAÇÃO substituirá a transcrição em tempo real")
         print(f"{'='*80}\n")
         
         # Aguardar um pouco para garantir que o arquivo foi salvo completamente
         await asyncio.sleep(2)
         
         if not os.path.exists(audio_path):
-            print(f"[BACKGROUND] ⚠️ Arquivo de áudio não encontrado: {audio_path}")
+            print(f"[DEBUG] ⚠️ Arquivo de áudio não encontrado: {audio_path}")
             return
         
         file_size_mb = os.path.getsize(audio_path) / 1024 / 1024
-        print(f"[BACKGROUND] 📁 Tamanho do arquivo: {file_size_mb:.2f} MB")
-        print(f"[BACKGROUND] 📤 Enviando para AssemblyAI com diarização (speakers=2)...")
+        print(f"[DEBUG] 📁 Tamanho do arquivo: {file_size_mb:.2f} MB")
+        print(f"[DEBUG] 📤 Enviando para AssemblyAI com diarização (speakers=2)...")
+        print(f"[DEBUG] 🔗 Conectando ao AssemblyAI...")
         
         config = aai.TranscriptionConfig(
             language_code="pt",
@@ -480,11 +484,12 @@ async def transcribe_audio_background(interview_id: int, audio_path: str):
         
         import time
         start_time = time.time()
+        print(f"[DEBUG] ✅ Enviando requisição para AssemblyAI agora...")
         transcript = aai.Transcriber(config=config).transcribe(audio_path)
         transcription_time = time.time() - start_time
         
-        print(f"[BACKGROUND] ⏱️  Transcrição levou {transcription_time:.2f}s")
-        print(f"[BACKGROUND] Status: {transcript.status}")
+        print(f"[DEBUG] ⏱️  Transcrição levou {transcription_time:.2f}s")
+        print(f"[DEBUG] 📊 Status: {transcript.status}")
         
         if transcript.status == "error":
             print(f"[BACKGROUND] ❌ Erro na transcrição: {transcript.error}")
