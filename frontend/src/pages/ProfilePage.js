@@ -8,8 +8,8 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    nome: 'João Silva',
-    email: 'joao.silva@compass.com',
+    nome: localStorage.getItem('userName') || 'Entrevistador',
+    email: localStorage.getItem('userEmail') || 'trilha@gmail.com',
     cargo: 'Entrevistador',
     telefone: '(11) 98765-4321',
     empresa: 'Compass Tech',
@@ -47,7 +47,9 @@ export default function ProfilePage() {
           <div className="profile-header">
             <div className="profile-avatar-section">
               <div className="profile-avatar">
-                <span className="avatar-initials">JS</span>
+                <span className="avatar-initials">
+                  {formData.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                </span>
               </div>
               <button className="change-avatar-btn">
                 Alterar foto

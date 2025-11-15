@@ -40,10 +40,11 @@ const AuthScreen = () => {
       }
 
       // Simulate auth check (replace with real API call)
-      // For now accept joaosilva/1234 as valid credentials
-      if (formData.usuario === 'joaosilva' && formData.senha === '1234') {
+      // For now accept entrevistador/trilha as valid credentials
+      if (formData.usuario === 'entrevistador' && formData.senha === 'trilha') {
         // Salvar nome do usuário no localStorage
-        localStorage.setItem('userName', 'João Silva');
+        localStorage.setItem('userName', 'Entrevistador');
+        localStorage.setItem('userEmail', 'trilha@gmail.com');
         setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
         // Navigate to homepage after 1 second
         setTimeout(() => {
