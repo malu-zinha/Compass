@@ -175,7 +175,7 @@ export const generateAnalysis = async (interviewId) => {
 
 export const getInterviews = async (positionId = 0, page = 1, perPage = 100) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos de timeout (aumentado)
   
   try {
     const response = await fetch(`${API_BASE_URL}/positions/interviews/${positionId}?page=${page}&per_page=${perPage}`, {
@@ -212,7 +212,7 @@ export const getInterviews = async (positionId = 0, page = 1, perPage = 100) => 
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Timeout ao buscar entrevistas. Verifique se o backend está rodando.');
+      throw new Error('Timeout ao buscar entrevistas. Verifique se o backend está rodando em http://localhost:8000');
     }
     throw error;
   }

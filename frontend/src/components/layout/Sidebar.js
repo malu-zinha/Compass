@@ -45,7 +45,7 @@ function Sidebar({ isOpen, onClose }) {
             <UserIcon size={24} color="#1a1a1a" />
           </div>
           <div className="user-info">
-            <div className="user-name">João Silva</div>
+            <div className="user-name">{localStorage.getItem('userName') || 'Entrevistador'}</div>
             <div className="user-role">Entrevistador</div>
           </div>
         </button>
@@ -71,7 +71,7 @@ function Sidebar({ isOpen, onClose }) {
 
         <div className="sidebar-footer">
           <div className="sidebar-email">
-            joao.silva@compass.com
+            {localStorage.getItem('userEmail') || 'trilha@gmail.com'}
             <span className="email-arrow">
               <LogoutIcon size={16} color="#1a1a1a" />
             </span>
