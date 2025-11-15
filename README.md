@@ -99,26 +99,6 @@ Assistente inteligente que auxilia o entrevistador durante a entrevista:
 
 ---
 
-## Estrutura do Projeto
-
-```
-Compass/
-├── frontend/          # Aplicação React
-│   ├── src/
-│   │   ├── components/    # Componentes reutilizáveis
-│   │   ├── pages/         # Páginas da aplicação
-│   │   └── services/      # Serviços de API
-│   └── package.json
-│
-└── back/              # API FastAPI
-    ├── routers/          # Endpoints da API
-    ├── models.py         # Modelos de dados
-    ├── database.py       # Configuração do banco
-    ├── prompts/          # Prompts para IA
-    └── requirements.txt
-```
-
----
 
 ## Tecnologias Utilizadas
 
