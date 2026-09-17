@@ -13,6 +13,17 @@ def test_update_email_conflict(auth_client, client):
     assert auth_client.patch("/users/me", json={"email": "b@example.com"}).status_code == 409
 
 
+def test_update_me_ignores_explicit_nulls(auth_client):
+    auth_client.patch("/users/me", json={"phone": "11 98888-7777", "company": "ACME"})
+    r = auth_client.patch("/users/me", json={"name": None, "email": None, "phone": None})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["name"] == "Ana Souza"
+    assert body["email"] == "ana@example.com"
+    assert body["phone"] == "11 98888-7777"
+    assert body["company"] == "ACME"
+
+
 def test_avatar_upload_and_signed_download(auth_client):
     r = auth_client.post("/users/me/avatar", files={"file": ("foto.png", PNG, "image/png")})
     url = r.json()["avatar_url"]
@@ -37,3 +48,13 @@ def test_settings_defaults_and_validation(auth_client):
     assert auth_client.patch("/users/me/settings", json={"timezone": "Marte/Base"}).status_code == 422
     r = auth_client.patch("/users/me/settings", json={"transcription_language": "en"})
     assert r.json()["transcription_language"] == "en"
+
+
+def test_update_settings_ignores_explicit_nulls(auth_client):
+    auth_client.patch("/users/me/settings", json={"transcription_language": "en"})
+    r = auth_client.patch("/users/me/settings", json={"suggest_questions": None, "timezone": None})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["suggest_questions"] is True
+    assert body["timezone"] == "America/Sao_Paulo"
+    assert body["transcription_language"] == "en"

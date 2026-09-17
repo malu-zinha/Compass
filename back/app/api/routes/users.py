@@ -31,7 +31,7 @@ def update_me(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserOut:
-    data = payload.model_dump(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True, exclude_none=True)
     new_email = data.get("email")
     if new_email is not None and new_email != current_user.email:
         exists = db.query(User).filter(User.email == new_email, User.id != current_user.id).first()
@@ -81,7 +81,7 @@ def update_settings(
     db: Session = Depends(get_db),
 ) -> UserSettingsOut:
     settings_row = get_or_create_settings(db, current_user)
-    data = payload.model_dump(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True, exclude_none=True)
     timezone = data.get("timezone")
     if timezone is not None:
         try:

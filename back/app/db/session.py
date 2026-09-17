@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 
 def build_engine(settings) -> Engine:
-    engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
+    engine = create_engine(
+        settings.database_url, connect_args={"check_same_thread": False}, hide_parameters=True
+    )
 
     @event.listens_for(engine, "connect")
     def _pragmas(dbapi_conn, _):

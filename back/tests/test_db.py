@@ -48,3 +48,7 @@ def test_alembic_upgrade_creates_schema(settings, monkeypatch):
     tables = set(inspect(create_engine(settings.database_url)).get_table_names())
     assert {"users", "user_settings", "positions", "questions", "interviews", "interview_questions"} <= tables
     get_settings.cache_clear()
+
+
+def test_engine_hides_sql_parameters_in_logs(app):
+    assert app.state.engine.hide_parameters is True
