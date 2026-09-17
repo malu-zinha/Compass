@@ -11,7 +11,6 @@ from openai import AsyncOpenAI
 import aiofiles
 from dotenv import load_dotenv
 import websockets
-import base64
 import struct
 
 load_dotenv()
@@ -445,16 +444,6 @@ def append_transcript_to_prompt(prompt, utterances):
         [f"Speaker {utt['speaker']}: {utt['text']}" for utt in utterances]
     )
     return prompt + "\n\n" + transcript_text
-
-async def save_transcript_to_db(id: int, transcript_data: dict):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    transcript_json_text = json.dumps(transcript_data)
-    cursor.execute(
-        "UPDATE interviews SET transcript = ? WHERE id = ?", (transcript_json_text, id)
-    )
-    conn.commit()
-    conn.close()
 
 async def transcribe_audio_background(interview_id: int, audio_path: str):
     """Transcreve áudio em background após upload com diarização completa"""

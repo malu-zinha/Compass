@@ -135,18 +135,6 @@ export const uploadAudioFile = async (interviewId, audioFile) => {
   return response.json();
 };
 
-export const transcribeAudioFile = async (interviewId) => {
-  const response = await fetch(`${API_BASE_URL}/positions/interviews/${interviewId}/transcribe_audio_file`, {
-    method: 'POST',
-  });
-  
-  if (!response.ok) {
-    throw new Error('Erro ao transcrever entrevista');
-  }
-  
-  return response.json();
-};
-
 export const generateAnalysis = async (interviewId) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutos de timeout
@@ -356,27 +344,4 @@ export const deleteGlobalQuestion = async (questionId) => {
   }
   
   return response.json();
-};
-
-// ============================================
-// PROCESSO COMPLETO DE UPLOAD
-// ============================================
-
-export const processUploadedInterview = async (interviewId, onProgress) => {
-  try {
-    // 1. Transcrever áudio
-    onProgress?.('Transcrevendo áudio (isso pode demorar)...');
-    await transcribeAudioFile(interviewId);
-    
-    // 2. Gerar análise completa
-    onProgress?.('Gerando análise completa...');
-    await generateAnalysis(interviewId);
-    
-    onProgress?.('Processamento concluído!');
-    
-    return interviewId;
-  } catch (error) {
-    console.error('Erro no processamento:', error);
-    throw error;
-  }
 };
