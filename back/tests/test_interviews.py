@@ -65,6 +65,17 @@ def test_update_validates_fields_and_keeps_stored_values(auth_client, position_i
     assert body["candidate_name"] == "Carla" and body["candidate_email"] == "carla@example.com"
 
 
+def test_get_tolerates_invalid_stored_analysis(auth_client, app, position_id):
+    from app.db.models import Interview
+
+    iid = auth_client.post("/interviews", json=payload(position_id)).json()["id"]
+    with app.state.session_factory() as db:
+        db.get(Interview, iid).analysis = {"positives": ["p"]}
+        db.commit()
+    r = auth_client.get(f"/interviews/{iid}")
+    assert r.status_code == 200 and r.json()["analysis"] is None
+
+
 def test_mark_question_asked(auth_client, position_id):
     auth_client.post("/questions", json={"text": "Geral"})
     iid = auth_client.post("/interviews", json=payload(position_id)).json()["id"]

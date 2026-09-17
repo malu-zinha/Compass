@@ -71,3 +71,7 @@ class InterviewQuestionUpdate(BaseModel):
 class AudioUrlOut(BaseModel):
     url: str
     expires_at: int
+
+
+class ReprocessIn(BaseModel):
+    step: Literal["full", "analysis"]

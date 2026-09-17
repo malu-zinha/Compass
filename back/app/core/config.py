@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     draft_ttl_hours: int = 24
     live_abandon_minutes: int = 10
     maintenance_interval_seconds: int = 300
+    maintenance_enabled: bool = True
     log_level: str = "INFO"
 
     @field_validator("data_dir")

@@ -3,12 +3,12 @@ import mimetypes
 from math import ceil
 from typing import Literal
 
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from app.api.deps import get_current_user
-from app.core.errors import Conflict, NotFound, PayloadTooLarge
+from app.core.errors import Conflict, NotFound, PayloadTooLarge, Unprocessable
 from app.core.signing import sign, verify_signature
 from app.db.base import utcnow
 from app.db.models import PROCESSING_STATUSES, Interview, InterviewQuestion, InterviewStatus, Position, User
@@ -22,6 +22,7 @@ from app.schemas.interviews import (
     InterviewQuestionUpdate,
     InterviewSummary,
     InterviewUpdate,
+    ReprocessIn,
 )
 from app.services.interviews import (
     create_interview,
@@ -137,6 +138,7 @@ def remove_interview(
 def upload_audio(
     interview_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -154,12 +156,19 @@ def upload_audio(
 
     previous_audio = interview.audio_filename
     interview.audio_filename = storage.save_audio(interview.id, file)
-    interview.status = InterviewStatus.uploaded
+    # Um novo áudio invalida qualquer resultado anterior (R25a).
+    interview.transcript = None
+    interview.analysis = None
+    interview.score = None
     interview.error_message = None
+    interview.audio_duration_seconds = None
+    interview.status = InterviewStatus.uploaded
     db.commit()
     db.refresh(interview)
     storage.delete_file(settings.audio_dir, previous_audio)
+    storage.pcm_path(interview.id).unlink(missing_ok=True)
     logger.info("Áudio da entrevista %s enviado", interview.id)
+    background_tasks.add_task(request.app.state.pipeline.process, interview.id, "full")
     return to_detail(interview)
 
 
@@ -198,6 +207,38 @@ def get_audio(
         raise NotFound("Esta entrevista não possui áudio.")
     media_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
     return FileResponse(path, media_type=media_type)
+
+
+@router.post("/{interview_id}/reprocess", response_model=InterviewDetail, status_code=202)
+def reprocess_interview(
+    interview_id: int,
+    payload: ReprocessIn,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> InterviewDetail:
+    interview = get_interview_or_404(db, interview_id)
+    pipeline = request.app.state.pipeline
+    already_processing = (
+        interview.status == InterviewStatus.recording
+        or interview.status in PROCESSING_STATUSES
+        or pipeline.is_running(interview.id)
+    )
+    if already_processing:
+        raise Conflict("A entrevista já está sendo processada.")
+    if payload.step == "full" and not interview.audio_filename:
+        raise Unprocessable("Esta entrevista não possui áudio para transcrever.")
+    if payload.step == "analysis" and not interview.transcript:
+        raise Unprocessable("Esta entrevista ainda não possui transcrição.")
+
+    interview.status = InterviewStatus.uploaded if payload.step == "full" else InterviewStatus.analyzing
+    interview.error_message = None
+    db.commit()
+    db.refresh(interview)
+    logger.info("Entrevista %s marcada para reprocessamento (step=%s)", interview.id, payload.step)
+    background_tasks.add_task(pipeline.process, interview.id, payload.step)
+    return to_detail(interview)
 
 
 @router.get("/{interview_id}/questions", response_model=list[InterviewQuestionOut])

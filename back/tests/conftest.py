@@ -11,7 +11,7 @@ from app.main import create_app
 def settings(tmp_path):
     return Settings(
         _env_file=None, openai_api_key="test", assemblyai_api_key="test",
-        jwt_secret="test-secret-" + "x" * 32, data_dir=tmp_path,
+        jwt_secret="test-secret-" + "x" * 32, data_dir=tmp_path, maintenance_enabled=False,
     )
 
 
@@ -19,6 +19,10 @@ def settings(tmp_path):
 def app(settings):
     app = create_app(settings)
     Base.metadata.create_all(app.state.engine)
+    from tests.fakes import FakeAnalyzer, FakeTranscriber
+
+    app.state.pipeline.transcriber = FakeTranscriber()
+    app.state.pipeline.analyzer = FakeAnalyzer()
     return app
 
 
