@@ -54,7 +54,7 @@ function ResultsPage() {
     
     // Cleanup: remover listeners quando componente desmontar
     return () => {
-      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+      Object.entries(audioRefs.current).forEach(([, audio]) => {
         if (audio) {
           audio.removeEventListener('loadedmetadata', () => {});
           audio.removeEventListener('error', () => {});

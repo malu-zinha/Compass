@@ -1,5 +1,7 @@
 // API Service - Centraliza todas as chamadas ao backend
-const API_BASE_URL = 'http://localhost:8000';
+import { API_URL } from '../api/config';
+
+const API_BASE_URL = API_URL;
 
 // ============================================
 // POSITIONS (Cargos)
@@ -155,7 +157,7 @@ export const generateAnalysis = async (interviewId) => {
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Timeout ao gerar análise. A análise pode estar demorando mais que o esperado.');
+      throw new Error('Timeout ao gerar análise. A análise pode estar demorando mais que o esperado.', { cause: error });
     }
     throw error;
   }
@@ -200,7 +202,7 @@ export const getInterviews = async (positionId = 0, page = 1, perPage = 100) => 
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Timeout ao buscar entrevistas. Verifique se o backend está rodando em http://localhost:8000');
+      throw new Error(`Timeout ao buscar entrevistas. Verifique se o backend está rodando em ${API_URL}`, { cause: error });
     }
     throw error;
   }

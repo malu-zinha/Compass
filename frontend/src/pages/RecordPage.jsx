@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { generateAnalysis, updateInterviewNotes, getInterviewById, getGlobalQuestions } from '../services/api';
 import { useRealtimeTranscription } from '../hooks/useRealtimeTranscription';
 import { InfoIcon, FileTextIcon, BriefcaseIcon } from '../components/icons';
+import { API_URL } from '../api/config';
 import './RecordPage.css';
 
 function RecordPage() {
@@ -65,7 +66,7 @@ function RecordPage() {
       // Enviar também a duração da gravação para o backend usar como metadata
       formData.append('duration', recordingTime.toString());
       
-      const response = await fetch(`http://localhost:8000/positions/interviews/${interviewId}/upload-audio`, {
+      const response = await fetch(`${API_URL}/positions/interviews/${interviewId}/upload-audio`, {
         method: 'POST',
         body: formData
       });
@@ -162,7 +163,7 @@ function RecordPage() {
     }
     
     // Listener para quando o usuário tenta sair da página
-    const handleBeforeUnload = (e) => {
+    const handleBeforeUnload = () => {
       cleanupAllResources();
     };
     
@@ -332,12 +333,6 @@ function RecordPage() {
     }
   };
 
-  const stopRecording = () => {
-    cleanupAllResources();
-  };
-
-
-  
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -357,7 +352,7 @@ function RecordPage() {
           if (typeof transcriptData === 'string' && transcriptData.trim()) {
             try {
               transcriptData = JSON.parse(transcriptData);
-            } catch (e) {
+            } catch {
               // Se não for JSON válido, considerar como vazio
               transcriptData = null;
             }
@@ -368,7 +363,7 @@ function RecordPage() {
             return true;
           }
         }
-      } catch (error) {
+      } catch {
         console.log(`Tentativa ${i + 1}/${maxRetries}: Transcrição ainda não disponível...`);
       }
       
