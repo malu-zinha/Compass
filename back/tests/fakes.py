@@ -1,6 +1,7 @@
 import asyncio
 
 from app.schemas.analysis import InterviewAnalysis, QAPair, Score, SpeakerRole, Subscores
+from app.schemas.comparisons import ComparisonRank, ComparisonResult
 from app.services.live.suggestions import SuggestedQuestion
 from app.services.live.upstream import TurnEvent
 from app.services.transcription import TranscriptionResult, Utterance
@@ -75,3 +76,19 @@ class FakeSuggester:
         if self.error:
             raise self.error
         return [SuggestedQuestion(text="Pode dar um exemplo?", kind="new", based_on="")]
+
+
+class FakeComparator:
+    def __init__(self, result: ComparisonResult | None = None):
+        self.result, self.calls = result, []
+
+    def compare(self, data):
+        self.calls.append(data)
+        if self.result is not None:
+            return self.result
+        ranked = sorted(data.candidates, key=lambda c: c["score"], reverse=True)
+        ranking = [
+            ComparisonRank(interview_id=c["interview_id"], rank=idx + 1, rationale="ok")
+            for idx, c in enumerate(ranked)
+        ]
+        return ComparisonResult(summary="Comparação de teste entre os candidatos.", ranking=ranking)

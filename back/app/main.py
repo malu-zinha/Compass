@@ -5,13 +5,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import sessionmaker
 
-from app.api.routes import auth, health, interviews, live, positions, questions, users
+from app.api.routes import auth, comparisons, health, interviews, live, positions, questions, users
 from app.core import maintenance
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.db.session import build_engine
 from app.services.analysis import OpenAIAnalyzer
+from app.services.comparison import OpenAIComparator
 from app.services.live.registry import LiveRegistry
 from app.services.live.suggestions import OpenAISuggester
 from app.services.live.upstream import AssemblyAIStreamingTranscriber
@@ -51,6 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings.assemblyai_api_key.get_secret_value(), settings.assemblyai_streaming_model
     )
     app.state.suggester = OpenAISuggester(settings)
+    app.state.comparator = OpenAIComparator(settings)
     app.state.live_registry = LiveRegistry()
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                        allow_methods=["*"], allow_headers=["*"])
@@ -62,4 +64,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(questions.router)
     app.include_router(interviews.router)
     app.include_router(live.router)
+    app.include_router(comparisons.router)
     return app
