@@ -1,3 +1,6 @@
+import logging
+
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.errors import NotFound, Unprocessable
@@ -11,9 +14,12 @@ from app.db.models import (
     QuestionSource,
     User,
 )
+from app.schemas.analysis import InterviewAnalysis
 from app.schemas.interviews import InterviewCreate, InterviewDetail, InterviewSummary
 from app.services.storage import Storage
 from app.services.users import get_or_create_settings
+
+logger = logging.getLogger(__name__)
 
 
 def get_interview_or_404(db: Session, interview_id: int) -> Interview:
@@ -88,6 +94,12 @@ def to_summary(interview: Interview) -> InterviewSummary:
 
 def to_detail(interview: Interview) -> InterviewDetail:
     summary = to_summary(interview)
+    analysis = None
+    if isinstance(interview.analysis, dict):
+        try:
+            analysis = InterviewAnalysis(**interview.analysis)
+        except ValidationError:
+            logger.warning("Análise inválida armazenada na entrevista %s", interview.id)
     return InterviewDetail(
         **summary.model_dump(),
         candidate_phone=interview.candidate_phone,
@@ -97,7 +109,7 @@ def to_detail(interview: Interview) -> InterviewDetail:
         recording_consent=interview.recording_consent,
         has_audio=interview.audio_filename is not None,
         transcript=interview.transcript,
-        analysis=interview.analysis,
+        analysis=analysis,
     )
 
 
