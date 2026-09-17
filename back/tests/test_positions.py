@@ -1,4 +1,4 @@
-from app.db.models import Interview, InterviewMode
+from app.db.models import Interview, InterviewMode, InterviewStatus
 
 POS = {"name": "Dev Python", "description": "Backend", "ideal_profile": "Autônomo e curioso",
        "skills": ["Python", "SQL"], "vacancies": 2}
@@ -34,3 +34,17 @@ def test_delete_position_removes_audio_files(auth_client, app, position_id, sett
         db.commit()
     auth_client.delete(f"/positions/{position_id}")
     assert not audio.exists()
+
+
+def test_delete_position_removes_live_recording_pcm(auth_client, app, position_id):
+    with app.state.session_factory() as db:
+        interview = Interview(position_id=position_id, candidate_name="C", candidate_email="c@x.com",
+                              candidate_phone="1", mode=InterviewMode.live, recording_consent=True,
+                              status=InterviewStatus.recording)
+        db.add(interview)
+        db.commit()
+        iid = interview.id
+    pcm = app.state.storage.pcm_path(iid)
+    pcm.write_bytes(b"\x00" * 3200)
+    assert auth_client.delete(f"/positions/{position_id}").status_code == 204
+    assert not pcm.exists()

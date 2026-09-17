@@ -48,6 +48,11 @@ class Storage:
         if name:
             (directory / Path(name).name).unlink(missing_ok=True)
 
+    def delete_interview_files(self, interview_id: int, audio_filename: str | None) -> None:
+        """Apaga o áudio final e o `.pcm` de uma gravação ao vivo, se existirem."""
+        self.delete_file(self.settings.audio_dir, audio_filename)
+        self.pcm_path(interview_id).unlink(missing_ok=True)
+
     @staticmethod
     def _copy_limited(upload: UploadFile, dest: Path, limit_mb: int) -> None:
         limit, total = limit_mb * CHUNK, 0

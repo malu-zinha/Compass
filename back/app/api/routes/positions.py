@@ -85,11 +85,10 @@ def delete_position(
     db: Session = Depends(get_db),
 ) -> None:
     position = _get_position(db, position_id)
-    names = [i.audio_filename for i in position.interviews if i.audio_filename]
+    files = [(i.id, i.audio_filename) for i in position.interviews]
     db.delete(position)
     db.commit()
-    settings = request.app.state.settings
     storage: Storage = request.app.state.storage
-    for name in names:
-        storage.delete_file(settings.audio_dir, name)
+    for interview_id, audio_filename in files:
+        storage.delete_interview_files(interview_id, audio_filename)
     logger.info("Cargo %s excluído", position_id)
