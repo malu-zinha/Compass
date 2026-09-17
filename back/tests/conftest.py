@@ -42,3 +42,10 @@ def auth_client(client):
 def user(auth_client, app) -> User:
     with app.state.session_factory() as db:
         return db.query(User).filter_by(username="ana").one()
+
+
+@pytest.fixture
+def position_id(auth_client) -> int:
+    payload = {"name": "Dev Python", "description": "Backend", "ideal_profile": "Autônomo e curioso",
+               "skills": ["Python", "SQL"], "vacancies": 2}
+    return auth_client.post("/positions", json=payload).json()["id"]
