@@ -2,6 +2,8 @@ import asyncio
 import os
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.orm import Session
+
 from app.core import maintenance
 from app.db.models import Interview, InterviewMode, InterviewStatus
 
@@ -114,3 +116,23 @@ def test_abandoned_recording_without_audio_is_marked_error(app, position_id):
     with app.state.session_factory() as db:
         i = db.get(Interview, iid)
         assert i.status == InterviewStatus.error and i.error_message == "Nenhum áudio foi gravado."
+
+
+def test_pcm_is_kept_until_the_finalization_is_committed(app, position_id, settings, monkeypatch):
+    iid = _add(app, position_id, status=InterviewStatus.recording)
+    pcm = settings.audio_dir / f"interview_{iid}.pcm"
+    pcm.write_bytes(b"\x00" * 32000)
+    _age(pcm, 30)
+
+    def failing_commit(self):
+        raise RuntimeError("falha simulada no commit")
+
+    monkeypatch.setattr(Session, "commit", failing_commit)
+    assert maintenance.run_once(app.state, datetime.now(UTC)) == []
+    monkeypatch.undo()
+    assert pcm.exists()
+    with app.state.session_factory() as db:
+        i = db.get(Interview, iid)
+        assert i.status == InterviewStatus.recording and i.audio_filename is None
+    assert (iid, "full") in maintenance.run_once(app.state, datetime.now(UTC))  # nova tentativa
+    assert not pcm.exists()

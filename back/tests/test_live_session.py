@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import time
 
 import pytest
@@ -6,6 +7,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from app.db.models import Interview, InterviewStatus, UserSettings
 from app.services.live import session as live_session
+from app.services.live.persistence import finalize_recording
 from tests.fakes import FakeStreaming, FakeSuggester
 from tests.helpers import create_interview
 
@@ -183,6 +185,77 @@ def test_new_connection_replaces_previous_and_keeps_appending(auth_client, app, 
     assert not app.state.live_registry.is_active(iid)
     assert wait_status(auth_client, iid, "done")
     assert settings.audio_dir.joinpath(f"interview_{iid}.wav").stat().st_size == 44 + 2 * len(PCM)
+
+
+class BlockingClose(FakeStreaming):
+    """`close()` só termina quando o teste liberar: segura a conexão dentro do `stop`."""
+
+    def __init__(self):
+        super().__init__()
+        self.closing, self.release = threading.Event(), threading.Event()
+
+    async def close(self):
+        self.closing.set()
+        while not self.release.is_set():
+            await asyncio.sleep(0.01)
+        self.closed = True
+
+
+def test_reconnect_during_stop_cannot_overwrite_the_recording(auth_client, app, live, settings, monkeypatch):
+    monkeypatch.setattr(live_session, "CLOSE_TIMEOUT_SECONDS", 30)
+    scheduled = []
+    real_schedule = live_session.schedule
+
+    def spy_schedule(state, jobs):
+        scheduled.extend(jobs)
+        real_schedule(state, jobs)
+
+    monkeypatch.setattr(live_session, "schedule", spy_schedule)
+    iid, token, _ = live
+    streaming = BlockingClose()
+    _use_streaming(app, streaming)
+    first_audio = PCM * 10
+    url = f"/interviews/{iid}/live"
+    try:
+        with auth_client.websocket_connect(url) as first:
+            first.send_json({"type": "auth", "token": token})
+            assert first.receive_json() == {"type": "ready"}
+            first.send_bytes(first_audio)
+            first.receive_json()
+            first.receive_json()
+            first.send_json({"type": "stop"})
+            assert streaming.closing.wait(timeout=3)  # a primeira está no stop, ainda sem finalizar
+            with auth_client.websocket_connect(url) as second:
+                second.send_json({"type": "auth", "token": token})
+                with pytest.raises(WebSocketDisconnect) as replaced:
+                    first.receive_json()  # a segunda passou do 4409 inicial e está no acquire
+                assert replaced.value.code == 4000
+                streaming.release.set()  # a primeira finaliza e libera o registry
+                with pytest.raises(WebSocketDisconnect) as rejected:
+                    second.receive_json()
+                assert rejected.value.code == 4409
+    finally:
+        streaming.release.set()
+    assert wait_status(auth_client, iid, "done")
+    assert scheduled == [(iid, "full")]
+    assert app.state.pipeline.transcriber.calls == 1
+    assert settings.audio_dir.joinpath(f"interview_{iid}.wav").stat().st_size == 44 + len(first_audio)
+
+
+def test_finalize_only_claims_interviews_still_recording(app, live, settings):
+    iid, _, _ = live
+    wav = settings.audio_dir / f"interview_{iid}.wav"
+    wav.write_bytes(b"A" * 100)
+    pcm = app.state.storage.pcm_path(iid)
+    pcm.write_bytes(PCM)
+    with app.state.session_factory() as db:
+        interview = db.get(Interview, iid)
+        interview.status, interview.audio_filename = InterviewStatus.uploaded, wav.name
+        db.commit()
+    assert finalize_recording(app.state, iid) is False
+    assert wav.read_bytes() == b"A" * 100 and pcm.exists()
+    with app.state.session_factory() as db:
+        assert db.get(Interview, iid).status == InterviewStatus.uploaded
 
 
 def test_stop_without_audio_marks_error(auth_client, app, live, settings):
