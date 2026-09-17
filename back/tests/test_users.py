@@ -1,3 +1,5 @@
+import time
+
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
 
 
@@ -30,6 +32,14 @@ def test_avatar_upload_and_signed_download(auth_client):
     assert r.status_code == 200 and "signature=" in url
     assert auth_client.get(url).content == PNG
     assert auth_client.get(url.replace("signature=", "signature=x")).status_code == 403
+
+
+def test_avatar_rejects_non_ascii_signature(auth_client):
+    r = auth_client.post("/users/me/avatar", files={"file": ("foto.png", PNG, "image/png")})
+    user_id = r.json()["avatar_url"].split("/users/")[1].split("/avatar")[0]
+    expires = int(time.time()) + 3600
+    r = auth_client.get(f"/users/{user_id}/avatar?expires={expires}&signature=%C3%A9")
+    assert r.status_code == 403
 
 
 def test_avatar_rejects_type_and_size(auth_client, settings):

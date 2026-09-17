@@ -57,6 +57,14 @@ def test_get_update_delete(auth_client, position_id):
     assert auth_client.get(f"/interviews/{iid}").status_code == 404
 
 
+def test_update_validates_fields_and_keeps_stored_values(auth_client, position_id):
+    iid = auth_client.post("/interviews", json=payload(position_id)).json()["id"]
+    assert auth_client.patch(f"/interviews/{iid}", json={"candidate_email": "nope"}).status_code == 422
+    assert auth_client.patch(f"/interviews/{iid}", json={"candidate_name": ""}).status_code == 422
+    body = auth_client.get(f"/interviews/{iid}").json()
+    assert body["candidate_name"] == "Carla" and body["candidate_email"] == "carla@example.com"
+
+
 def test_mark_question_asked(auth_client, position_id):
     auth_client.post("/questions", json={"text": "Geral"})
     iid = auth_client.post("/interviews", json=payload(position_id)).json()["id"]

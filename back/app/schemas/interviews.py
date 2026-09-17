@@ -19,9 +19,9 @@ class InterviewCreate(BaseModel):
 
 
 class InterviewUpdate(BaseModel):
-    candidate_name: str | None = None
-    candidate_email: str | None = None
-    candidate_phone: str | None = None
+    candidate_name: str | None = Field(None, min_length=1, max_length=120)
+    candidate_email: str | None = Field(None, pattern=EMAIL_PATTERN, max_length=254)
+    candidate_phone: str | None = Field(None, min_length=1, max_length=40)
     notes: str | None = None
 
 

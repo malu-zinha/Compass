@@ -11,7 +11,11 @@ def sign(resource: str, settings) -> tuple[int, str]:
 
 
 def verify_signature(resource: str, expires: int, signature: str, settings) -> None:
-    if expires < time.time() or not hmac.compare_digest(signature, _digest(resource, expires, settings)):
+    if (
+        expires < time.time()
+        or not signature.isascii()
+        or not hmac.compare_digest(signature, _digest(resource, expires, settings))
+    ):
         raise Forbidden("Link expirado ou inválido.")
 
 
