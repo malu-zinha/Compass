@@ -8,11 +8,10 @@ from app.schemas.users import UserOut
 def get_or_create_settings(db: Session, user: User) -> UserSettings:
     if user.settings is not None:
         return user.settings
-    settings_row = UserSettings(user_id=user.id)
-    db.add(settings_row)
+    user.settings = UserSettings()
     db.commit()
-    db.refresh(settings_row)
-    return settings_row
+    db.refresh(user.settings)
+    return user.settings
 
 
 def user_out(user: User, settings) -> UserOut:
