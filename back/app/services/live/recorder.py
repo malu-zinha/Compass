@@ -48,12 +48,18 @@ def wav_header(data_size: int) -> bytes:
     ])
 
 
-def finalize_wav(pcm_path: Path, wav_path: Path) -> float:
-    """Gera o WAV a partir do PCM sem carregá-lo na memória, apaga o `.pcm` e devolve a duração (s)."""
+def write_wav(pcm_path: Path, wav_path: Path) -> float:
+    """Gera o WAV a partir do PCM sem carregá-lo na memória e devolve a duração (s). Mantém o `.pcm`."""
     pcm_path, wav_path = Path(pcm_path), Path(wav_path)
     data_size = pcm_path.stat().st_size
     with pcm_path.open("rb") as pcm, wav_path.open("wb") as wav:
         wav.write(wav_header(data_size))
         shutil.copyfileobj(pcm, wav, COPY_CHUNK)
-    pcm_path.unlink(missing_ok=True)
     return data_size / BYTES_PER_SECOND
+
+
+def finalize_wav(pcm_path: Path, wav_path: Path) -> float:
+    """`write_wav` e depois apaga o `.pcm`."""
+    duration = write_wav(pcm_path, wav_path)
+    Path(pcm_path).unlink(missing_ok=True)
+    return duration

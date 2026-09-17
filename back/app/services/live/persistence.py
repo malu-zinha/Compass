@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Interview, InterviewQuestion, InterviewStatus, QuestionSource, User
 from app.schemas.interviews import InterviewQuestionOut
-from app.services.live.recorder import finalize_wav
+from app.services.live.recorder import write_wav
 from app.services.live.suggestions import SuggestedQuestion, SuggestionInput
 from app.services.users import get_or_create_settings
 
@@ -51,6 +51,12 @@ def load_live_target(
         return target, snapshot
 
 
+def get_interview_status(state, interview_id: int) -> InterviewStatus | None:
+    with state.session_factory() as db:
+        interview = db.get(Interview, interview_id)
+        return None if interview is None else interview.status
+
+
 def build_suggestion_input(state, interview_id: int, recent: list[str]) -> SuggestionInput:
     with state.session_factory() as db:
         questions = (
@@ -83,20 +89,30 @@ def save_ai_questions(
 
 
 def finalize_interview_recording(db: Session, storage, interview: Interview) -> bool:
-    """Gera o WAV do `.pcm` e marca `uploaded`. Sem áudio, marca `error`. Devolve se há áudio."""
+    """Reivindica a finalização: só age se a entrevista ainda está em `recording` (relido do banco).
+
+    Com áudio: gera o WAV, marca `uploaded` e devolve True (o chamador agenda o pipeline).
+    Sem áudio: marca `error`. Já finalizada por outra conexão/manutenção: não toca em nada.
+    O `.pcm` só é apagado depois do commit, para uma falha permitir nova tentativa.
+    """
+    db.refresh(interview)
+    if interview.status != InterviewStatus.recording:
+        logger.info("Entrevista %s já não está gravando; finalização ignorada", interview.id)
+        return False
     pcm = storage.pcm_path(interview.id)
     size = pcm.stat().st_size if pcm.exists() else 0
     if size == 0:
-        pcm.unlink(missing_ok=True)
         interview.status, interview.error_message = InterviewStatus.error, NO_AUDIO_MESSAGE
         db.commit()
+        pcm.unlink(missing_ok=True)
         logger.info("Entrevista %s encerrada sem áudio gravado", interview.id)
         return False
     name = f"interview_{interview.id}.wav"
-    duration = finalize_wav(pcm, storage.audio_path(name))
+    duration = write_wav(pcm, storage.audio_path(name))
     interview.audio_filename, interview.audio_duration_seconds = name, duration
     interview.status, interview.error_message = InterviewStatus.uploaded, None
     db.commit()
+    pcm.unlink(missing_ok=True)
     logger.info("Gravação da entrevista %s finalizada (%s bytes, %.1fs)", interview.id, size, duration)
     return True
 
