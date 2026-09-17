@@ -1,3 +1,5 @@
+import asyncio
+import os
 from datetime import UTC, datetime, timedelta
 
 from app.core import maintenance
@@ -71,3 +73,44 @@ def test_retention_disabled_keeps_old_audio(app, position_id, settings):
     assert (settings.audio_dir / "old.mp3").exists()
     with app.state.session_factory() as db:
         assert db.get(Interview, iid).audio_filename == "old.mp3"
+
+
+def _age(path, minutes: int) -> None:
+    old = (datetime.now(UTC) - timedelta(minutes=minutes)).timestamp()
+    os.utime(path, (old, old))
+
+
+def test_abandoned_recording_is_finalized_and_queued(app, position_id, settings):
+    iid = _add(app, position_id, status=InterviewStatus.recording)
+    pcm = settings.audio_dir / f"interview_{iid}.pcm"
+    pcm.write_bytes(b"\x00" * 32000)
+    _age(pcm, 30)
+    jobs = maintenance.run_once(app.state, datetime.now(UTC))
+    assert (iid, "full") in jobs and not pcm.exists()
+    with app.state.session_factory() as db:
+        i = db.get(Interview, iid)
+        assert i.status == InterviewStatus.uploaded and i.audio_filename == f"interview_{iid}.wav"
+        assert i.audio_duration_seconds == 1.0
+
+
+def test_active_or_recent_recordings_are_left_alone(app, position_id, settings):
+    active = _add(app, position_id, status=InterviewStatus.recording)
+    recent = _add(app, position_id, status=InterviewStatus.recording)
+    for iid in (active, recent):
+        (settings.audio_dir / f"interview_{iid}.pcm").write_bytes(b"\x00" * 32000)
+    _age(settings.audio_dir / f"interview_{active}.pcm", 30)
+    asyncio.run(app.state.live_registry.acquire(active, object()))
+    jobs = maintenance.run_once(app.state, datetime.now(UTC))
+    assert jobs == []
+    with app.state.session_factory() as db:
+        assert {db.get(Interview, i).status for i in (active, recent)} == {InterviewStatus.recording}
+
+
+def test_abandoned_recording_without_audio_is_marked_error(app, position_id):
+    iid = _add(app, position_id, status=InterviewStatus.recording,
+               updated_at=datetime.now(UTC) - timedelta(minutes=30))
+    jobs = maintenance.run_once(app.state, datetime.now(UTC))
+    assert iid not in [job_id for job_id, _ in jobs]
+    with app.state.session_factory() as db:
+        i = db.get(Interview, iid)
+        assert i.status == InterviewStatus.error and i.error_message == "Nenhum áudio foi gravado."

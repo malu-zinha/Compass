@@ -3,6 +3,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 from app.db.models import PROCESSING_STATUSES, Interview, InterviewStatus
+from app.services.live.persistence import finalize_interview_recording
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,32 @@ def run_once(state, now: datetime) -> list[tuple[int, str]]:
                 db.commit()
                 logger.info("Manutenção: áudio de %s entrevistas removido por retenção", len(expired_audio))
 
-        # 3. reenfileira entrevistas em processamento que não estão rodando
+        # 3. gravações ao vivo abandonadas (sem conexão ativa e paradas há mais que o limite);
+        #    as finalizadas viram `uploaded` e entram na fila no passo 4.
+        registry = getattr(state, "live_registry", None)
+        abandon_cutoff = now - timedelta(minutes=settings.live_abandon_minutes)
+        recordings = db.query(Interview).filter(Interview.status == InterviewStatus.recording).all()
+        recovered = 0
+        for interview in recordings:
+            if registry is not None and registry.is_active(interview.id):
+                continue
+            pcm = storage.pcm_path(interview.id)
+            if pcm.exists():
+                last_activity = datetime.fromtimestamp(pcm.stat().st_mtime, UTC)
+            else:
+                last_activity = _aware(interview.updated_at)
+            if last_activity >= abandon_cutoff:
+                continue
+            try:
+                finalize_interview_recording(db, storage, interview)
+                recovered += 1
+            except Exception:  # uma gravação com problema não bloqueia o resto da manutenção
+                db.rollback()
+                logger.exception("Manutenção: falha ao finalizar a gravação da entrevista %s", interview.id)
+        if recovered:
+            logger.info("Manutenção: %s gravações ao vivo abandonadas finalizadas", recovered)
+
+        # 4. reenfileira entrevistas em processamento que não estão rodando
         pending = db.query(Interview).filter(Interview.status.in_(PROCESSING_STATUSES)).all()
         for interview in pending:
             if pipeline.is_running(interview.id):

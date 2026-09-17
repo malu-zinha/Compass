@@ -118,5 +118,4 @@ def delete_interview(db: Session, storage: Storage, interview: Interview) -> Non
     audio_filename = interview.audio_filename
     db.delete(interview)
     db.commit()
-    storage.delete_file(storage.settings.audio_dir, audio_filename)
-    storage.pcm_path(interview_id).unlink(missing_ok=True)
+    storage.delete_interview_files(interview_id, audio_filename)

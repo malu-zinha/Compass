@@ -1,4 +1,8 @@
+import asyncio
+
 from app.schemas.analysis import InterviewAnalysis, QAPair, Score, SpeakerRole, Subscores
+from app.services.live.suggestions import SuggestedQuestion
+from app.services.live.upstream import TurnEvent
 from app.services.transcription import TranscriptionResult, Utterance
 
 
@@ -39,3 +43,35 @@ class FakeAnalyzer:
         if self.error:
             raise self.error
         return make_analysis(self.score)
+
+
+class FakeStreaming:
+    """Para cada chunk de áudio recebido, emite um turno parcial e depois um final."""
+
+    def __init__(self):
+        self.queue: asyncio.Queue = asyncio.Queue()
+        self.closed = False
+        self.count = 0
+
+    async def send_audio(self, chunk):
+        self.count += 1
+        await self.queue.put(TurnEvent(self.count, "olá", False))
+        await self.queue.put(TurnEvent(self.count, "Olá, tudo bem?", True))
+
+    async def events(self):
+        while True:
+            yield await self.queue.get()
+
+    async def close(self):
+        self.closed = True
+
+
+class FakeSuggester:
+    def __init__(self, error: Exception | None = None):
+        self.calls, self.error = [], error
+
+    async def suggest(self, data):
+        self.calls.append(data)
+        if self.error:
+            raise self.error
+        return [SuggestedQuestion(text="Pode dar um exemplo?", kind="new", based_on="")]
