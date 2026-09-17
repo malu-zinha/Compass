@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import sessionmaker
 
 from app.api.routes import health
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
+from app.db.session import build_engine
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -14,6 +16,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         d.mkdir(parents=True, exist_ok=True)
     app = FastAPI(title="Compass API", version="1.0.0")
     app.state.settings = settings
+    app.state.engine = build_engine(settings)
+    app.state.session_factory = sessionmaker(bind=app.state.engine, autoflush=False, expire_on_commit=False)
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                        allow_methods=["*"], allow_headers=["*"])
     register_exception_handlers(app)
