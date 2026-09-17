@@ -8,6 +8,7 @@ import PlayIcon from '../components/icons/PlayIcon';
 import PauseIcon from '../components/icons/PauseIcon';
 import VolumeIcon from '../components/icons/VolumeIcon';
 import { getInterviews, getAudioUrl, generateAnalysis } from '../services/api';
+import { API_URL } from '../api/config';
 import './InterviewDetailPage.css';
 
 function InterviewDetailPage() {
@@ -32,7 +33,6 @@ function InterviewDetailPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
   const [activeMessageIndex, setActiveMessageIndex] = useState(null);
   
   const [interviewData, setInterviewData] = useState(null);
@@ -398,7 +398,7 @@ function InterviewDetailPage() {
             console.log(`[DEBUG] 📋 Retry bem-sucedido: ${interviews.length} entrevistas`);
           } catch (retryErr) {
             console.error(`[ERROR] ❌ Retry também falhou:`, retryErr);
-            throw new Error(`Não foi possível carregar as entrevistas. Verifique se o backend está rodando em http://localhost:8000`);
+            throw new Error(`Não foi possível carregar as entrevistas. Verifique se o backend está rodando em ${API_URL}`, { cause: retryErr });
           }
         } else {
           // Tentar buscar sem positionId (pode ser que o endpoint seja diferente)
@@ -408,11 +408,11 @@ function InterviewDetailPage() {
             console.log(`[DEBUG] 📋 Total de entrevistas encontradas (fallback): ${interviews.length}`);
             if (!Array.isArray(interviews)) {
               console.error(`[ERROR] ❌ getInterviews (fallback) não retornou um array!`);
-              throw new Error('Resposta inválida do servidor');
+              throw new Error('Resposta inválida do servidor', { cause: err });
             }
           } catch (err2) {
             console.error(`[ERROR] ❌ Erro no fallback também:`, err2);
-            throw new Error(`Não foi possível carregar as entrevistas: ${err.message || err2.message}`);
+            throw new Error(`Não foi possível carregar as entrevistas: ${err.message || err2.message}`, { cause: err2 });
           }
         }
       }
@@ -755,7 +755,7 @@ function InterviewDetailPage() {
       console.error('Interview ID:', id);
       console.error('Has audio file:', interviewData?.hasAudio);
       console.error('Audio file path:', interviewData?.audioFile);
-      alert(`Erro ao reproduzir áudio: ${error.message}\n\nVerifique se:\n1. O backend está rodando em http://localhost:8000\n2. O arquivo de áudio existe no servidor\n3. O console para mais detalhes`);
+      alert(`Erro ao reproduzir áudio: ${error.message}\n\nVerifique se:\n1. O backend está rodando em ${API_URL}\n2. O arquivo de áudio existe no servidor\n3. O console para mais detalhes`);
     }
   };
 
@@ -1188,7 +1188,7 @@ function InterviewDetailPage() {
                     
                     const errorMessages = {
                       1: 'Download do áudio foi cancelado',
-                      2: 'Erro de rede. Verifique se o backend está rodando em http://localhost:8000',
+                      2: `Erro de rede. Verifique se o backend está rodando em ${API_URL}`,
                       3: 'Erro ao decodificar o áudio. O arquivo pode estar corrompido.',
                       4: 'Formato de áudio não suportado'
                     };

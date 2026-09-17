@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { WS_URL } from '../api/config';
 
-const WS_BASE_URL = 'ws://localhost:8000';
+const WS_BASE_URL = WS_URL;
 
 export const useRealtimeTranscription = (interviewId) => {
   const [transcripts, setTranscripts] = useState([]);

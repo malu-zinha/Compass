@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '../components/layout';
 import { getGlobalQuestions, createGlobalQuestion, deleteGlobalQuestion, getPositions } from '../services/api';
 import styles from '../styles/questions.module.css';
 
 export default function QuestionsPage() {
-  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Estado de seleção de tipo
@@ -20,9 +18,8 @@ export default function QuestionsPage() {
   const [newQuestionText, setNewQuestionText] = useState('');
   
   // Selection mode
-  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectionMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   // Carregar cargos quando selecionar tipo "position"
   useEffect(() => {
@@ -82,15 +79,6 @@ export default function QuestionsPage() {
     }
   };
 
-  const toggleSelectionMode = () => {
-    if (selectionMode) {
-      setSelected(new Set());
-      setSelectionMode(false);
-    } else {
-      setSelectionMode(true);
-    }
-  };
-
   const toggleSelect = (index) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -98,29 +86,6 @@ export default function QuestionsPage() {
       else next.add(index);
       return next;
     });
-  };
-
-  const deleteSelected = () => {
-    if (selected.size === 0) return;
-    setDeleteConfirm(true);
-  };
-
-  const confirmDeleteSelected = async () => {
-    try {
-      const idsToDelete = Array.from(selected).map(i => perguntas[i].id);
-      await Promise.all(idsToDelete.map(id => deleteGlobalQuestion(id)));
-      setSelected(new Set());
-      setSelectionMode(false);
-      setDeleteConfirm(false);
-      await loadQuestions(); // Recarregar perguntas
-    } catch (error) {
-      console.error('Erro ao deletar perguntas:', error);
-      alert('Erro ao deletar perguntas. Verifique se o backend está rodando.');
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeleteConfirm(false);
   };
 
   const handleDeleteQuestion = async (questionId) => {
