@@ -16,6 +16,9 @@ class Storage:
     def avatar_path(self, name: str) -> Path:
         return self.settings.avatar_dir / Path(name).name
 
+    def audio_path(self, name: str) -> Path:
+        return self.settings.audio_dir / Path(name).name
+
     def save_avatar(self, user_id: int, upload: UploadFile) -> str:
         ext = Path(upload.filename or "").suffix.lower()
         if ext not in AVATAR_EXTENSIONS or not (upload.content_type or "").startswith("image/"):
