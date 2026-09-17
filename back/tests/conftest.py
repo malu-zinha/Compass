@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
+from app.db.base import Base
 from app.main import create_app
 
 
@@ -15,7 +16,9 @@ def settings(tmp_path):
 
 @pytest.fixture
 def app(settings):
-    return create_app(settings)
+    app = create_app(settings)
+    Base.metadata.create_all(app.state.engine)
+    return app
 
 
 @pytest.fixture
