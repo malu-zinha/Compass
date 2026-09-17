@@ -19,7 +19,7 @@ def settings(tmp_path):
 def app(settings):
     app = create_app(settings)
     Base.metadata.create_all(app.state.engine)
-    from tests.fakes import FakeAnalyzer, FakeSuggester, FakeTranscriber
+    from tests.fakes import FakeAnalyzer, FakeComparator, FakeSuggester, FakeTranscriber
 
     app.state.pipeline.transcriber = FakeTranscriber()
     app.state.pipeline.analyzer = FakeAnalyzer()
@@ -30,6 +30,7 @@ def app(settings):
     # Padrões seguros: nenhum teste abre conexão real com AssemblyAI/OpenAI.
     app.state.streaming_factory = streaming_disabled
     app.state.suggester = FakeSuggester()
+    app.state.comparator = FakeComparator()
     return app
 
 
