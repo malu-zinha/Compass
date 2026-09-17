@@ -18,7 +18,7 @@ components/
 ```javascript
 import { Header, Sidebar } from '../components/layout';
 import { InfoModal } from '../components/common';
-import { CheckIcon, ThumbsUpIcon } from '../components/icons';
+import { CheckIcon, UserIcon } from '../components/icons';
 ```
 
 ### Importação Geral
@@ -39,9 +39,9 @@ import { Header, Sidebar, InfoModal, CheckIcon } from '../components';
 Todos os ícones SVG do projeto estão disponíveis em `components/icons/`:
 - BriefcaseIcon, CalendarIcon, ChartIcon, CheckIcon
 - ChevronDownIcon, ChevronRightIcon, ClockIcon, CompareIcon
-- EqualsIcon, FileTextIcon, HomeIcon, InfoIcon
+- FileTextIcon, HomeIcon, InfoIcon
 - InterviewsIcon, JobsIcon, LogoutIcon, MenuIcon
-- MicrophoneIcon, NextIcon, PauseIcon, PlayIcon
-- PlusIcon, PreviousIcon, QuestionsIcon, SettingsIcon
-- ThumbsDownIcon, ThumbsUpIcon, UserIcon, VolumeIcon
+- MicrophoneIcon, PauseIcon, PlayIcon
+- PlusIcon, QuestionsIcon, SettingsIcon
+- UserIcon, VolumeIcon
 

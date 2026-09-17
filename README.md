@@ -36,7 +36,7 @@ Assistente inteligente que auxilia o entrevistador durante a entrevista:
 
 ### Pré-requisitos
 - **Node.js** (v14 ou superior) e **npm**
-- **Python** (v3.8 ou superior)
+- **Python** (v3.10 ou superior)
 - **Chave de API do AssemblyAI** (para transcrição de áudio)
 
 ---
