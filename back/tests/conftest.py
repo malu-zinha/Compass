@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.db.base import Base
+from app.db.models import User
 from app.main import create_app
 
 
@@ -25,3 +26,19 @@ def app(settings):
 def client(app):
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
+
+
+@pytest.fixture
+def auth_client(client):
+    client.post("/auth/register", json={"name": "Ana Souza", "email": "ana@example.com",
+                                        "username": "ana", "password": "senha-forte-123"})
+    login = client.post("/auth/login", json={"username": "ana", "password": "senha-forte-123"})
+    token = login.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
+
+@pytest.fixture
+def user(auth_client, app) -> User:
+    with app.state.session_factory() as db:
+        return db.query(User).filter_by(username="ana").one()
