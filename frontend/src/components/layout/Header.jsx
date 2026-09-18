@@ -7,7 +7,10 @@ import InfoIcon from '../icons/InfoIcon';
 import PlusIcon from '../icons/PlusIcon';
 import './Header.css';
 
-function Header({ title, showComparar = false, showInfo = false, onInfoClick, onMenuClick, showMenu = true }) {
+function Header({
+  title, showComparar = false, compareLabel = 'Comparar', onCompareClick,
+  showInfo = false, onInfoClick, onMenuClick, showMenu = true,
+}) {
   const navigate = useNavigate();
 
   return (
@@ -29,9 +32,9 @@ function Header({ title, showComparar = false, showInfo = false, onInfoClick, on
       
       <div className="header-actions">
         {showComparar && (
-          <button className="header-btn btn-comparar">
+          <button className="header-btn btn-comparar" onClick={onCompareClick}>
             <CompareIcon size={16} color="#371C68" />
-            <span>Comparar</span>
+            <span>{compareLabel}</span>
           </button>
         )}
         

@@ -7,7 +7,8 @@ import NewInterviewPage from '../features/interviews/new/NewInterviewPage';
 import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
 import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
 import RecordPage from '../features/interviews/live/RecordPage';
-import ResultsPage from '../pages/ResultsPage';
+import ResultsPage from '../features/interviews/results/ResultsPage';
+import ComparePage from '../features/interviews/results/ComparePage';
 import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
 import JobsPage from '../features/positions/JobsPage';
 import JobEditorPage from '../features/positions/JobEditorPage';
@@ -18,9 +19,6 @@ import SettingsPage from '../pages/SettingsPage';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 import './App.css';
-
-// Placeholder até a T3.6 criar a página de comparação de verdade.
-const ComparePlaceholder = () => null;
 
 export const ROUTES = {
   home: '/',
@@ -56,7 +54,7 @@ function App() {
               <Route path={ROUTES.ranking} element={<RankingSelectPage />} />
               <Route path={ROUTES.entrevistas} element={<ResultsPage />} />
               <Route path={ROUTES.entrevistasPorCargo} element={<ResultsPage />} />
-              <Route path={ROUTES.comparar} element={<ComparePlaceholder />} />
+              <Route path={ROUTES.comparar} element={<ComparePage />} />
               <Route path={ROUTES.entrevista} element={<InterviewDetailPage />} />
               <Route path={ROUTES.cargos} element={<JobsPage />} />
               <Route path={ROUTES.cargosNovo} element={<JobEditorPage />} />
