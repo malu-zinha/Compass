@@ -5,8 +5,10 @@ const MAX_BUFFERED_CHUNKS = 300; // ~30 s de áudio em frames de 100 ms
 const MAX_BACKOFF_MS = 10000;
 const STOP_TIMEOUT_MS = 15000;
 const CLOSE_UNAUTHORIZED = 4401;
-const CLOSE_REJECTED = [4404, 4409];
-const CLOSE_REPLACED = 4000;
+const CLOSE_REPLACED = 4000; // outra aba/janela assumiu a entrevista
+// Sem stop pendente, estes fechamentos encerram a sessão (sem reconectar) e chamam onRejected.
+// 4000 é terminal para duas abas não se derrubarem em loop gravando o áudio em dobro.
+const CLOSE_REJECTED = [CLOSE_REPLACED, 4404, 4409];
 
 // Solta os handlers antes de fechar: o onclose desse socket não dispara reconexão.
 function detachAndClose(ws) {
@@ -16,8 +18,11 @@ function detachAndClose(ws) {
   try { ws.close(); } catch { /* já fechado */ }
 }
 
+// `turn_id` recomeça do 0 a cada conexão: só é o mesmo turno se a geração também bate.
 function upsertTurn(turns, turn) {
-  const index = turns.findIndex((item) => item.turn_id === turn.turn_id);
+  const index = turns.findIndex(
+    (item) => item.generation === turn.generation && item.turn_id === turn.turn_id,
+  );
   if (index === -1) return [...turns, turn];
   const next = turns.slice();
   next[index] = turn;
@@ -50,6 +55,7 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
   const stopRef = useRef(null); // { promise, resolve, timer, settled } depois do stop()
   const reconnectTimerRef = useRef(null);
   const connectRef = useRef(null);
+  const generationRef = useRef(0); // conexão atual; distingue turnos de conexões diferentes
 
   useEffect(() => {
     tokenRef.current = token;
@@ -81,7 +87,7 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
     stopRef.current = null;
     bufferRef.current = [];
 
-    const handleMessage = (ws, message) => {
+    const handleMessage = (ws, generation, message) => {
       if (message.type === 'ready') {
         retries = 0;
         liveRef.current = true;
@@ -93,7 +99,9 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
         // stop() pedido antes desta conexão ficar pronta: envia agora, depois do áudio pendente.
         if (stopRef.current && !stopRef.current.settled) ws.send(JSON.stringify({ type: 'stop' }));
       } else if (message.type === 'transcript') {
-        const turn = { turn_id: message.turn_id, text: message.text, is_final: Boolean(message.is_final) };
+        const turn = {
+          generation, turn_id: message.turn_id, text: message.text, is_final: Boolean(message.is_final),
+        };
         setTurns((current) => upsertTurn(current, turn));
       } else if (message.type === 'suggestions') {
         setSuggestions((current) => addSuggestions(current, message.questions));
@@ -128,6 +136,8 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
         // Depois do stop, 4000 é a corrida documentada: o áudio já foi salvo.
         settleStop(code === CLOSE_REPLACED ? 'ended' : 'closed');
       } else if (CLOSE_REJECTED.includes(code)) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
         setStatus('closed');
         callbacksRef.current.onRejected?.(code);
       } else {
@@ -137,6 +147,8 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
 
     const connect = () => {
       if (disposed) return;
+      generationRef.current += 1;
+      const generation = generationRef.current;
       const ws = new WebSocket(liveSocketUrl(interviewId));
       wsRef.current = ws;
       ws.onopen = () => ws.send(JSON.stringify({ type: 'auth', token: tokenRef.current }));
@@ -144,7 +156,7 @@ export function useLiveSession(interviewId, token, { onUnauthorized, onRejected 
         if (wsRef.current !== ws || typeof event.data !== 'string') return;
         let message;
         try { message = JSON.parse(event.data); } catch { return; }
-        handleMessage(ws, message);
+        handleMessage(ws, generation, message);
       };
       ws.onclose = (event) => handleClose(ws, event.code);
     };

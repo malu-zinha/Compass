@@ -26,7 +26,8 @@ test('autentica na abertura e substitui o texto do turno', () => {
   act(() => ws.message({ type: 'transcript', turn_id: 1, text: 'olá', is_final: false }));
   act(() => ws.message({ type: 'transcript', turn_id: 1, text: 'Olá, tudo bem?', is_final: true }));
   expect(result.current.status).toBe('live');
-  expect(result.current.turns).toEqual([{ turn_id: 1, text: 'Olá, tudo bem?', is_final: true }]);
+  expect(result.current.turns).toHaveLength(1);
+  expect(result.current.turns[0]).toMatchObject({ turn_id: 1, text: 'Olá, tudo bem?', is_final: true });
 });
 
 test('guarda o áudio durante a reconexão e reenvia ao reconectar', async () => {
@@ -97,13 +98,30 @@ test('4000 depois do stop resolve o stop() e encerra com sucesso', async () => {
   expect(MockSocket.instances).toHaveLength(1);
 });
 
-test('4000 sem stop reconecta como uma queda', async () => {
-  const { result } = renderHook(() => useLiveSession(5, 'tok'));
+test('4000 sem stop (outra aba assumiu) encerra a sessão, chama onRejected e não reconecta', async () => {
+  const onRejected = vi.fn();
+  const { result } = renderHook(() => useLiveSession(5, 'tok', { onRejected }));
   act(() => { MockSocket.instances[0].open(); MockSocket.instances[0].message({ type: 'ready' }); });
   act(() => MockSocket.instances[0].closeWith(4000));
-  expect(result.current.status).toBe('reconnecting');
+  expect(onRejected).toHaveBeenCalledWith(4000);
+  expect(result.current.status).toBe('closed');
+  await act(async () => { vi.advanceTimersByTime(30000); });
+  expect(MockSocket.instances).toHaveLength(1);
+});
+
+test('turnos de conexões diferentes não se sobrescrevem (turn_id recomeça do 0)', async () => {
+  const { result } = renderHook(() => useLiveSession(5, 'tok'));
+  const ws = MockSocket.instances[0];
+  act(() => { ws.open(); ws.message({ type: 'ready' }); });
+  act(() => ws.message({ type: 'transcript', turn_id: 0, text: 'A', is_final: true }));
+  act(() => ws.drop());
   await act(async () => { vi.advanceTimersByTime(1000); });
-  expect(MockSocket.instances).toHaveLength(2);
+  const ws2 = MockSocket.instances[1];
+  act(() => { ws2.open(); ws2.message({ type: 'ready' }); });
+  act(() => ws2.message({ type: 'transcript', turn_id: 0, text: 'B', is_final: false }));
+  expect(result.current.turns.map((turn) => turn.text)).toEqual(['A', 'B']);
+  expect(result.current.turns[0]).toMatchObject({ turn_id: 0, text: 'A', is_final: true });
+  expect(result.current.turns[1]).toMatchObject({ turn_id: 0, text: 'B', is_final: false });
 });
 
 test('reconecta com backoff crescente (1s, 2s)', async () => {
