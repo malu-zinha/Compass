@@ -82,3 +82,10 @@ def test_mark_question_asked(auth_client, position_id):
     qid = auth_client.get(f"/interviews/{iid}/questions").json()[0]["id"]
     r = auth_client.patch(f"/interviews/{iid}/questions/{qid}", json={"asked": True})
     assert r.json()["asked"] is True and r.json()["asked_at"] is not None
+
+
+def test_created_at_is_serialized_with_utc_offset(auth_client, position_id):
+    iid = auth_client.post("/interviews", json=payload(position_id)).json()["id"]
+    listed = auth_client.get("/interviews").json()["items"][0]
+    assert listed["created_at"].endswith("+00:00")
+    assert auth_client.get(f"/interviews/{iid}").json()["created_at"].endswith("+00:00")

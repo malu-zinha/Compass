@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from app.schemas.analysis import InterviewAnalysis
 
@@ -40,6 +40,13 @@ class InterviewSummary(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("created_at")
+    def _serialize_created_at(self, value: datetime) -> str:
+        # O SQLite devolve datetimes sem fuso; eles são gravados em UTC.
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.isoformat()
 
 
 class InterviewDetail(InterviewSummary):
