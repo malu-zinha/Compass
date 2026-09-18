@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import './ProfilePage.css';
 
 export default function ProfilePage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { openSidebar } = useLayout();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -38,8 +39,7 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header title="Perfil" onMenuClick={() => setSidebarOpen(true)} />
+      <Header title="Perfil" onMenuClick={openSidebar} />
       
       <main className="profile-content">
         <div className="profile-container">

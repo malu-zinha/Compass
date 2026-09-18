@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import styles from '../styles/auth.module.css';
-import logo from '../logo.svg';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import styles from '../../styles/auth.module.css';
+import logo from '../../logo.svg';
+import { useAuth } from '../../auth/AuthContext';
 
 const AuthScreen = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,8 @@ const AuthScreen = () => {
   const [notification, setNotification] = useState(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, register, user } = useAuth();
 
   const handleInputChange = (e) => {
     setFormData({
@@ -25,7 +28,7 @@ const AuthScreen = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // reset errors
     setErrors({});
@@ -39,19 +42,14 @@ const AuthScreen = () => {
         return;
       }
 
-      // Simulate auth check (replace with real API call)
-      // For now accept entrevistador/trilha as valid credentials
-      if (formData.usuario === 'entrevistador' && formData.senha === 'trilha') {
-        // Salvar nome do usuário no localStorage
-        localStorage.setItem('userName', 'Entrevistador');
-        localStorage.setItem('userEmail', 'trilha@gmail.com');
+      try {
+        await login(formData.usuario, formData.senha);
         setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
-        // Navigate to homepage after 1 second
         setTimeout(() => {
-          navigate('/inicio');
+          navigate(location.state?.from ?? '/inicio');
         }, 1000);
-      } else {
-        setErrors({ general: 'Usuário ou senha incorretos.' });
+      } catch (error) {
+        setErrors({ general: error.detail });
       }
     } else {
       const newErrors = {};
@@ -65,15 +63,21 @@ const AuthScreen = () => {
         return;
       }
 
-      // Salvar nome do usuário no localStorage
-      localStorage.setItem('userName', formData.nome);
-      // Simulate successful registration
-      setNotification({ type: 'success', message: 'Cadastro realizado com sucesso!' });
-      // Switch to login after 1 second
-      setTimeout(() => {
-        setCurrentScreen('login');
-        setFormData({ nome: '', email: '', usuario: '', senha: '' });
-      }, 1000);
+      try {
+        await register({
+          name: formData.nome,
+          email: formData.email,
+          username: formData.usuario,
+          password: formData.senha,
+        });
+        setNotification({ type: 'success', message: 'Cadastro realizado com sucesso!' });
+        setTimeout(() => {
+          setCurrentScreen('login');
+          setFormData({ nome: '', email: '', usuario: '', senha: '' });
+        }, 1000);
+      } catch (error) {
+        setErrors({ general: error.detail });
+      }
     }
   };
 
@@ -93,19 +97,23 @@ const AuthScreen = () => {
     }
   }, [notification]);
 
+  if (user) {
+    return <Navigate to="/inicio" replace />;
+  }
+
   return (
     <div className={styles.overlay}>
       <div className={styles.modal} role="dialog" aria-modal="true">
-        <button 
-          className={styles.closeButton} 
-          aria-label="Voltar" 
+        <button
+          className={styles.closeButton}
+          aria-label="Voltar"
           onClick={() => navigate('/')}
         >
           &times;
         </button>
 
         {currentScreen === 'login' ? (
-          <LoginScreen 
+          <LoginScreen
             formData={formData}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
@@ -114,7 +122,7 @@ const AuthScreen = () => {
             notification={notification}
           />
         ) : (
-          <RegisterScreen 
+          <RegisterScreen
             formData={formData}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import { InfoModal } from '../components/common';
 import ChevronDownIcon from '../components/icons/ChevronDownIcon';
 import ChevronRightIcon from '../components/icons/ChevronRightIcon';
@@ -13,7 +14,7 @@ import './InterviewDetailPage.css';
 
 function InterviewDetailPage() {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { openSidebar } = useLayout();
   const [showModal, setShowModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     habilidades: true,
@@ -834,11 +835,10 @@ function InterviewDetailPage() {
   if (loading && !interviewData) {
     return (
       <div className="interview-detail-page">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <Header 
           title="Carregando entrevista..."
           showInfo={false}
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={openSidebar}
         />
         <div style={{padding: '2rem', textAlign: 'center'}}>
           <div className="spinner" style={{margin: '0 auto'}}></div>
@@ -852,11 +852,10 @@ function InterviewDetailPage() {
   if (!interviewData) {
     return (
       <div className="interview-detail-page">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <Header 
           title="Aguardando entrevista..."
           showInfo={false}
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={openSidebar}
         />
         <div style={{padding: '2rem', textAlign: 'center'}}>
           <div className="spinner" style={{margin: '0 auto'}}></div>
@@ -870,12 +869,11 @@ function InterviewDetailPage() {
 
   return (
     <div className="interview-detail-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Header 
         title={`${interviewData.candidate.candidateName} - ${interviewData.date}`}
         showInfo={true}
         onInfoClick={() => setShowModal(true)}
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
       
       <div className="detail-container">

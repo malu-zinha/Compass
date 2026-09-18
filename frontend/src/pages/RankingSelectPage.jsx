@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import { getPositions } from '../services/api';
 import './RankingSelectPage.css';
 
 function RankingSelectPage() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { openSidebar } = useLayout();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,10 +38,9 @@ function RankingSelectPage() {
 
   return (
     <div className="ranking-select-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header 
+      <Header
         title="Selecionar Ranking"
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
       
       <div className="ranking-select-content">

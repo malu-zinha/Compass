@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../logo.svg';
+import { useAuth } from '../../auth/AuthContext';
 import HomeIcon from '../icons/HomeIcon';
 import InterviewsIcon from '../icons/InterviewsIcon';
 import JobsIcon from '../icons/JobsIcon';
@@ -13,6 +14,7 @@ import './Sidebar.css';
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleLinkClick = (path) => {
     navigate(path);
@@ -24,8 +26,13 @@ function Sidebar({ isOpen, onClose }) {
     { path: '/entrevistas', label: 'Entrevistas', icon: InterviewsIcon },
     { path: '/cargos', label: 'Cargos', icon: JobsIcon },
     { path: '/perguntas', label: 'Perguntas', icon: QuestionsIcon },
-    { path: null, label: 'Configurações', icon: SettingsIcon }
+    { path: '/configuracoes', label: 'Configurações', icon: SettingsIcon }
   ];
+
+  const handleLogoutClick = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <>
@@ -37,7 +44,7 @@ function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <button 
+        <button
           className="sidebar-user"
           onClick={() => handleLinkClick('/perfil')}
         >
@@ -45,8 +52,8 @@ function Sidebar({ isOpen, onClose }) {
             <UserIcon size={24} color="#1a1a1a" />
           </div>
           <div className="user-info">
-            <div className="user-name">{localStorage.getItem('userName') || 'Entrevistador'}</div>
-            <div className="user-role">Entrevistador</div>
+            <div className="user-name">{user?.name}</div>
+            <div className="user-role">{user?.job_title}</div>
           </div>
         </button>
 
@@ -70,12 +77,16 @@ function Sidebar({ isOpen, onClose }) {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-email">
-            {localStorage.getItem('userEmail') || 'trilha@gmail.com'}
+          <button
+            className="sidebar-email"
+            style={{ border: 'none' }}
+            onClick={handleLogoutClick}
+          >
+            {user?.email}
             <span className="email-arrow">
               <LogoutIcon size={16} color="#1a1a1a" />
             </span>
-          </div>
+          </button>
         </div>
       </div>
     </>
@@ -83,4 +94,3 @@ function Sidebar({ isOpen, onClose }) {
 }
 
 export default Sidebar;
-
