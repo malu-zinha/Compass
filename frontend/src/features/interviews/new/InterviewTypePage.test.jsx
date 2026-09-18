@@ -34,6 +34,26 @@ test('ao vivo cria a entrevista e vai para /gravar/:id', async () => {
     mode: 'live',
   });
   expect(router.state.location.pathname).toBe('/gravar/42');
+  expect(sessionStorage.getItem('compass.interviewDraft')).toBeNull();
+});
+
+test('após criar ao vivo, remontar a página sem rascunho redireciona e não recria a entrevista', async () => {
+  const { createInterview } = await import('../../../api/interviews');
+  const first = renderWithRouter(<InterviewTypePage />, '/tipo-entrevista', ['/gravar/:id']);
+
+  await userEvent.click(screen.getByText('Entrevista ao vivo'));
+  expect(first.router.state.location.pathname).toBe('/gravar/42');
+
+  // Simula o usuário apertando "Voltar" do navegador para /tipo-entrevista:
+  // a página remonta e o rascunho já foi limpo pela criação anterior.
+  first.unmount();
+  createInterview.mockClear();
+
+  const second = renderWithRouter(<InterviewTypePage />, '/tipo-entrevista', ['/nova-entrevista']);
+
+  expect(await screen.findByText('/nova-entrevista')).toBeInTheDocument();
+  expect(second.router.state.location.pathname).toBe('/nova-entrevista');
+  expect(createInterview).not.toHaveBeenCalled();
 });
 
 test('upload não cria entrevista antes do envio', async () => {
