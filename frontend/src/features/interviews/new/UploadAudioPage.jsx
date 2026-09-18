@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { uploadAudioFile, updateInterviewNotes } from '../services/api';
-import { FolderIcon, CheckIcon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
+import { createInterview, deleteInterview, uploadInterviewAudio } from '../../../api/interviews';
+import { FolderIcon, CheckIcon } from '../../../components/icons';
+import { useInterviewDraft } from './useInterviewDraft';
 import './UploadAudioPage.css';
 
 function UploadAudioPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const fileInputRef = useRef(null);
-  
-  const [interviewId, setInterviewId] = useState(null);
-  const [candidateData, setCandidateData] = useState(null);
+  const { draft, clearDraft } = useInterviewDraft();
+  // Evita que o redirecionamento por "sem rascunho" dispare de novo quando o
+  // próprio clearDraft() do fluxo de sucesso zera o draft.
+  const isNavigatingAwayRef = useRef(false);
+
   const [audioFile, setAudioFile] = useState(null);
   const [notes, setNotes] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -18,22 +20,10 @@ function UploadAudioPage() {
   const [uploadProgress, setUploadProgress] = useState('');
 
   useEffect(() => {
-    // Pegar dados do state da navegação
-    if (location.state?.interviewId && location.state?.candidateData) {
-      setInterviewId(location.state.interviewId);
-      setCandidateData(location.state.candidateData);
-      console.log('Interview ID recebido:', location.state.interviewId);
-    } else {
-      // Fallback: tentar localStorage
-      const savedData = localStorage.getItem('interviewData');
-      if (!savedData) {
-        alert('Dados da entrevista não encontrados');
-        navigate('/nova-entrevista');
-        return;
-      }
-      setCandidateData(JSON.parse(savedData));
+    if (!draft && !isNavigatingAwayRef.current) {
+      navigate('/nova-entrevista');
     }
-  }, [location, navigate]);
+  }, [draft, navigate]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -47,25 +37,25 @@ function UploadAudioPage() {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     handleFileSelect(file);
   };
 
   const handleFileSelect = (file) => {
     if (!file) return;
-    
+
     const validTypes = ['audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
     const validExtensions = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
-    
+
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     const isValidType = validTypes.includes(file.type) || validExtensions.includes(fileExtension);
-    
+
     if (!isValidType) {
       alert('Por favor, selecione um arquivo de áudio válido (.mp3, .wav, .m4a, .webm, .ogg)');
       return;
     }
-    
+
     setAudioFile(file);
   };
 
@@ -92,36 +82,43 @@ function UploadAudioPage() {
       return;
     }
 
-    if (!interviewId) {
-      alert('ID da entrevista não encontrado!');
+    if (!draft) {
+      alert('Dados da entrevista não encontrados!');
       return;
     }
 
     setIsUploading(true);
+    let createdId = null;
 
     try {
-      // 0. Salvar anotações primeiro
-      if (notes.trim()) {
-        setUploadProgress('Salvando anotações...');
-        console.log('Salvando anotações...');
-        await updateInterviewNotes(interviewId, notes);
-        console.log('Anotações salvas!');
-      }
-      
-      // 1. Upload do áudio (o backend inicia transcrição automaticamente)
+      setUploadProgress('Criando entrevista...');
+      const created = await createInterview({
+        position_id: draft.position_id,
+        candidate_name: draft.candidate_name,
+        candidate_email: draft.candidate_email,
+        candidate_phone: draft.candidate_phone,
+        recording_consent: draft.recording_consent,
+        mode: 'upload',
+        notes: notes.trim(),
+      });
+      createdId = created.id;
+
       setUploadProgress('Fazendo upload do áudio...');
-      console.log('Fazendo upload do áudio...');
-      await uploadAudioFile(interviewId, audioFile);
-      console.log('Upload concluído! O backend iniciará a transcrição automaticamente.');
-      
-      // 2. Navegar imediatamente para a página da entrevista
-      // A página de detalhes mostrará o estado de carregamento e chamará a análise quando necessário
-      localStorage.removeItem('interviewData');
-      navigate(`/entrevista/${interviewId}`);
-      
+      await uploadInterviewAudio(createdId, audioFile);
+
+      isNavigatingAwayRef.current = true;
+      clearDraft();
+      navigate(`/entrevista/${createdId}`);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      alert(`Erro ao processar: ${error.message}\n\nVerifique se o backend está rodando.`);
+      if (createdId != null) {
+        try {
+          await deleteInterview(createdId);
+        } catch {
+          // A entrevista órfã não pôde ser removida; nada mais a fazer aqui.
+        }
+      }
+      alert(error.detail || 'Erro ao processar o áudio. Verifique se o backend está rodando.');
       setIsUploading(false);
       setUploadProgress('');
     }
@@ -131,7 +128,7 @@ function UploadAudioPage() {
     navigate('/tipo-entrevista');
   };
 
-  if (!candidateData) {
+  if (!draft) {
     return <div>Carregando...</div>;
   }
 
@@ -141,13 +138,13 @@ function UploadAudioPage() {
         <button className="back-button" onClick={handleBack} disabled={isUploading}>
           ← Voltar
         </button>
-        
+
         <h1 className="upload-title">Upload de Áudio</h1>
         <p className="upload-subtitle">
-          Envie o arquivo de áudio da entrevista com {candidateData.candidateName}
+          Envie o arquivo de áudio da entrevista com {draft.candidate_name}
         </p>
 
-        <div 
+        <div
           className={`upload-dropzone ${isDragging ? 'dragging' : ''} ${audioFile ? 'has-file' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -163,7 +160,7 @@ function UploadAudioPage() {
             style={{ display: 'none' }}
             disabled={isUploading}
           />
-          
+
           {!audioFile ? (
             <>
               <div className="upload-icon">
@@ -181,7 +178,7 @@ function UploadAudioPage() {
               <p className="upload-filename">{audioFile.name}</p>
               <p className="upload-filesize">{formatFileSize(audioFile.size)}</p>
               {!isUploading && (
-                <button 
+                <button
                   className="change-file-btn"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -211,7 +208,7 @@ function UploadAudioPage() {
         <button
           className="submit-btn"
           onClick={handleUpload}
-          disabled={!audioFile || isUploading || !interviewId}
+          disabled={!audioFile || isUploading}
         >
           {isUploading ? uploadProgress || 'Processando...' : 'Enviar e Processar'}
         </button>

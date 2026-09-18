@@ -1,51 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createCandidate } from '../services/api';
-import { MicrophoneIcon, UploadIcon } from '../components/icons';
+import { createInterview } from '../../../api/interviews';
+import { MicrophoneIcon, UploadIcon } from '../../../components/icons';
+import { useInterviewDraft } from './useInterviewDraft';
 import './InterviewTypePage.css';
 
 function InterviewTypePage() {
   const navigate = useNavigate();
-  const [candidateData, setCandidateData] = useState(null);
+  const { draft } = useInterviewDraft();
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    const savedData = localStorage.getItem('interviewData');
-    if (!savedData) {
+    if (!draft) {
       navigate('/nova-entrevista');
-      return;
     }
-    
-    setCandidateData(JSON.parse(savedData));
-  }, [navigate]);
+  }, [draft, navigate]);
 
   const handleSelectType = async (type) => {
-    if (!candidateData) return;
-    
+    if (!draft) return;
+
+    if (type === 'upload') {
+      navigate('/upload');
+      return;
+    }
+
     setIsCreating(true);
-    
+
     try {
-      // Criar o candidato no backend
-      const result = await createCandidate({
-        name: candidateData.candidateName,
-        email: candidateData.candidateEmail,
-        phone: candidateData.candidatePhone,
-        notes: '',
-        position_id: candidateData.candidatePositionId
+      const result = await createInterview({
+        position_id: draft.position_id,
+        candidate_name: draft.candidate_name,
+        candidate_email: draft.candidate_email,
+        candidate_phone: draft.candidate_phone,
+        recording_consent: draft.recording_consent,
+        mode: 'live',
       });
-      
-      const interviewId = result.id;
-      console.log('Candidato criado com ID:', interviewId);
-      
-      // Navegar para a página correspondente passando o interviewId
-      if (type === 'live') {
-        navigate('/gravar', { state: { interviewId, candidateData } });
-      } else if (type === 'upload') {
-        navigate('/upload', { state: { interviewId, candidateData } });
-      }
+
+      navigate(`/gravar/${result.id}`);
     } catch (error) {
-      console.error('Erro ao criar candidato:', error);
-      alert('Erro ao criar candidato. Verifique se o backend está rodando.');
+      console.error('Erro ao criar entrevista:', error);
+      alert(error.detail || 'Erro ao criar entrevista. Verifique se o backend está rodando.');
       setIsCreating(false);
     }
   };
@@ -54,7 +48,7 @@ function InterviewTypePage() {
     navigate('/nova-entrevista');
   };
 
-  if (!candidateData) {
+  if (!draft) {
     return <div>Carregando...</div>;
   }
 
@@ -64,7 +58,7 @@ function InterviewTypePage() {
         <button className="back-button" onClick={handleBack} disabled={isCreating}>
           Voltar
         </button>
-        
+
         <h1 className="interview-type-title">
           Nova Entrevista
         </h1>
@@ -73,7 +67,7 @@ function InterviewTypePage() {
         </p>
 
         <div className="type-cards-container">
-          <div 
+          <div
             className={`type-card ${isCreating ? 'disabled' : ''}`}
             onClick={() => !isCreating && handleSelectType('live')}
           >
@@ -86,7 +80,7 @@ function InterviewTypePage() {
             </p>
           </div>
 
-          <div 
+          <div
             className={`type-card ${isCreating ? 'disabled' : ''}`}
             onClick={() => !isCreating && handleSelectType('upload')}
           >
@@ -107,9 +101,9 @@ function InterviewTypePage() {
         )}
 
         <div className="candidate-info">
-          <p><strong>Cargo:</strong> {candidateData.candidatePosition}</p>
-          <p><strong>Email:</strong> {candidateData.candidateEmail}</p>
-          <p><strong>Telefone:</strong> {candidateData.candidatePhone}</p>
+          <p><strong>Cargo:</strong> {draft.position_name}</p>
+          <p><strong>Email:</strong> {draft.candidate_email}</p>
+          <p><strong>Telefone:</strong> {draft.candidate_phone}</p>
         </div>
       </div>
     </div>
