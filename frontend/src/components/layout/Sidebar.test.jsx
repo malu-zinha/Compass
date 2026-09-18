@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import { AuthContext } from '../../auth/AuthContext';
 import Sidebar from './Sidebar';
@@ -10,8 +10,12 @@ const user = { id: 1, name: 'Ana Souza', job_title: 'Recrutadora', email: 'ana@e
 const renderSidebar = (logout = vi.fn()) => {
   render(
     <AuthContext.Provider value={{ user, logout }}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/inicio']}>
         <Sidebar isOpen onClose={() => {}} />
+        <Routes>
+          <Route path="/" element={<p>landing</p>} />
+          <Route path="/inicio" element={<p>tela inicial</p>} />
+        </Routes>
       </MemoryRouter>
     </AuthContext.Provider>,
   );
@@ -30,6 +34,7 @@ test('clicar no e-mail chama logout e navega para /', async () => {
   renderSidebar(logout);
   await userEvent.click(screen.getByRole('button', { name: /ana@empresa\.com/i }));
   expect(logout).toHaveBeenCalled();
+  expect(await screen.findByText('landing')).toBeInTheDocument();
 });
 
 test('item Configurações está habilitado e navega para /configuracoes', async () => {

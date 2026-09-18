@@ -15,18 +15,37 @@ export function AuthProvider({ children }) {
   });
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(Boolean(token));
+  const [connectionError, setConnectionError] = useState(false);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
-    setAuthToken(null); setToken(null); setUser(null);
+    setAuthToken(null); setToken(null); setUser(null); setConnectionError(false);
   }, []);
 
   useEffect(() => setUnauthorizedHandler(logout), [logout]);
 
+  const fetchMe = useCallback(() => {
+    setConnectionError(false);
+    return getMe()
+      .then(setUser)
+      .catch((error) => {
+        // Um 401 já disparou o logout via setUnauthorizedHandler (client.js). Qualquer
+        // outro erro (rede, 5xx) preserva a sessão e só sinaliza a falha de conexão.
+        if (error.status !== 401) setConnectionError(true);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
     if (!token) { setLoading(false); return; }
-    getMe().then(setUser).catch(logout).finally(() => setLoading(false));
-  }, [token, logout]);
+    setLoading(true);
+    fetchMe();
+  }, [token, fetchMe]);
+
+  const retry = useCallback(() => {
+    setLoading(true);
+    fetchMe();
+  }, [fetchMe]);
 
   const login = useCallback(async (username, password) => {
     const { access_token: accessToken, user: loggedUser } = await authApi.login(username, password);
@@ -34,7 +53,8 @@ export function AuthProvider({ children }) {
     setAuthToken(accessToken); setToken(accessToken); setUser(loggedUser);
   }, []);
 
-  const value = useMemo(() => ({ user, token, loading, login, register: authApi.register, logout, setUser }),
-    [user, token, loading, login, logout]);
+  const value = useMemo(() => ({
+    user, token, loading, login, register: authApi.register, logout, setUser, connectionError, retry,
+  }), [user, token, loading, login, logout, connectionError, retry]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
