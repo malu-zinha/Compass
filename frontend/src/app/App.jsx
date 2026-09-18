@@ -6,7 +6,7 @@ import AuthScreen from '../features/auth/AuthScreen';
 import NewInterviewPage from '../features/interviews/new/NewInterviewPage';
 import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
 import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
-import RecordPage from '../pages/RecordPage';
+import RecordPage from '../features/interviews/live/RecordPage';
 import ResultsPage from '../pages/ResultsPage';
 import InterviewDetailPage from '../pages/InterviewDetailPage';
 import JobsPage from '../features/positions/JobsPage';
