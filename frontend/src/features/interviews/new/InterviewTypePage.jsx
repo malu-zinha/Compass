@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createInterview } from '../../../api/interviews';
 import { MicrophoneIcon, UploadIcon } from '../../../components/icons';
@@ -7,11 +7,14 @@ import './InterviewTypePage.css';
 
 function InterviewTypePage() {
   const navigate = useNavigate();
-  const { draft } = useInterviewDraft();
+  const { draft, clearDraft } = useInterviewDraft();
   const [isCreating, setIsCreating] = useState(false);
+  // Evita que o redirecionamento por "sem rascunho" dispare de novo quando o
+  // próprio clearDraft() do fluxo ao vivo zera o draft.
+  const isNavigatingAwayRef = useRef(false);
 
   useEffect(() => {
-    if (!draft) {
+    if (!draft && !isNavigatingAwayRef.current) {
       navigate('/nova-entrevista');
     }
   }, [draft, navigate]);
@@ -36,6 +39,8 @@ function InterviewTypePage() {
         mode: 'live',
       });
 
+      isNavigatingAwayRef.current = true;
+      clearDraft();
       navigate(`/gravar/${result.id}`);
     } catch (error) {
       console.error('Erro ao criar entrevista:', error);
