@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/layout';
-import { useLayout } from '../app/AppLayout';
-import { getPositions } from '../services/api';
+import { Header } from '../../../components/layout';
+import { useLayout } from '../../../app/AppLayout';
+import { listPositions } from '../../../api/positions';
 import './RankingSelectPage.css';
 
 function RankingSelectPage() {
@@ -18,11 +18,11 @@ function RankingSelectPage() {
   const loadPositions = async () => {
     try {
       setLoading(true);
-      const data = await getPositions();
-      setPositions(data);
+      const data = await listPositions();
+      setPositions(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert('Erro ao carregar cargos. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ function RankingSelectPage() {
   };
 
   const handleViewAll = () => {
-    navigate('/entrevistas/0');
+    navigate('/entrevistas');
   };
 
   return (
@@ -42,7 +42,7 @@ function RankingSelectPage() {
         title="Selecionar Ranking"
         onMenuClick={openSidebar}
       />
-      
+
       <div className="ranking-select-content">
         <div className="ranking-select-header">
           <h2 className="section-title">Escolha o cargo para ver o ranking</h2>
@@ -57,7 +57,7 @@ function RankingSelectPage() {
           ) : (
             <>
               {/* Opção "Todos os candidatos" */}
-              <div 
+              <div
                 className="position-card all-candidates"
                 onClick={handleViewAll}
               >
@@ -70,8 +70,8 @@ function RankingSelectPage() {
 
               {/* Cargos específicos */}
               {positions.map((position) => (
-                <div 
-                  key={position.id} 
+                <div
+                  key={position.id}
                   className="position-card"
                   onClick={() => handleSelectPosition(position.id)}
                 >
@@ -94,4 +94,3 @@ function RankingSelectPage() {
 }
 
 export default RankingSelectPage;
-

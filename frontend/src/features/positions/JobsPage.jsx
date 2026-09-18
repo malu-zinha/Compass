@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/layout';
-import { useLayout } from '../app/AppLayout';
-import { getPositions, deletePosition } from '../services/api';
+import { Header } from '../../components/layout';
+import { useLayout } from '../../app/AppLayout';
+import { listPositions, deletePosition } from '../../api/positions';
 import './JobsPage.css';
 
 function JobsPage() {
@@ -18,11 +18,11 @@ function JobsPage() {
   const loadJobs = async () => {
     try {
       setLoading(true);
-      const data = await getPositions();
-      setJobs(data);
+      const data = await listPositions();
+      setJobs(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert('Erro ao carregar cargos. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
@@ -37,13 +37,13 @@ function JobsPage() {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm('Tem certeza que deseja excluir este cargo?')) {
+    if (window.confirm('Excluir este cargo também exclui todas as entrevistas, gravações e perguntas vinculadas. Deseja continuar?')) {
       try {
         await deletePosition(jobId);
         setJobs(jobs.filter(job => job.id !== jobId));
       } catch (error) {
         console.error('Erro ao deletar cargo:', error);
-        alert('Erro ao deletar cargo');
+        alert(error.detail || 'Erro ao deletar cargo');
       }
     }
   };
@@ -74,7 +74,7 @@ function JobsPage() {
               </div>
             ) : jobs.map((job) => (
               <div key={job.id} className="job-card">
-                <button 
+                <button
                   className="delete-job-btn"
                   onClick={() => handleDeleteJob(job.id)}
                   aria-label="Excluir cargo"
@@ -82,14 +82,14 @@ function JobsPage() {
                   ×
                 </button>
                 <h3 className="job-card-title">{job.name}</h3>
-                
+
                 <div className="job-vacancies-badge">
                   {job.vacancies} {job.vacancies === 1 ? 'vaga disponível' : 'vagas disponíveis'}
                 </div>
 
                 <p className="job-card-description">{job.description}</p>
 
-                <button 
+                <button
                   className="edit-job-btn"
                   onClick={() => handleEditJob(job.id)}
                 >
@@ -105,4 +105,3 @@ function JobsPage() {
 }
 
 export default JobsPage;
-

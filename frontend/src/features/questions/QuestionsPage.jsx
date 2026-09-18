@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Header } from '../components/layout';
-import { useLayout } from '../app/AppLayout';
-import { getGlobalQuestions, createGlobalQuestion, deleteGlobalQuestion, getPositions } from '../services/api';
-import styles from '../styles/questions.module.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { Header } from '../../components/layout';
+import { useLayout } from '../../app/AppLayout';
+import { listQuestions, createQuestion, deleteQuestion, updateQuestion } from '../../api/questions';
+import { listPositions } from '../../api/positions';
+import styles from '../../styles/questions.module.css';
+
+const questionInputStyle = {
+  flex: 1,
+  padding: '0.75rem',
+  border: '1px solid rgba(55, 28, 104, 0.2)',
+  borderRadius: '6px',
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '0.9rem',
+  outline: 'none'
+};
 
 export default function QuestionsPage() {
   const { openSidebar } = useLayout();
@@ -12,15 +23,20 @@ export default function QuestionsPage() {
   const [selectedPositionId, setSelectedPositionId] = useState(null);
   const [positions, setPositions] = useState([]);
   const [loadingPositions, setLoadingPositions] = useState(false);
-  
+
   // Estado de perguntas
   const [perguntas, setPerguntas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState('');
-  
+
   // Selection mode
   const [selectionMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
+
+  // Edição de pergunta (duplo clique)
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const editResolvedRef = useRef(true);
 
   // Carregar cargos quando selecionar tipo "position"
   useEffect(() => {
@@ -39,8 +55,8 @@ export default function QuestionsPage() {
   const loadPositions = async () => {
     setLoadingPositions(true);
     try {
-      const data = await getPositions(1, 100);
-      setPositions(data);
+      const data = await listPositions();
+      setPositions(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
     } finally {
@@ -52,11 +68,8 @@ export default function QuestionsPage() {
     setLoading(true);
     try {
       const positionId = questionType === 'position' ? selectedPositionId : null;
-      const questions = await getGlobalQuestions(positionId);
-      setPerguntas(questions.map(q => ({
-        id: q.id,
-        text: q.question
-      })));
+      const questions = await listQuestions(positionId);
+      setPerguntas(questions);
     } catch (error) {
       console.error('Erro ao carregar perguntas:', error);
       setPerguntas([]);
@@ -68,15 +81,15 @@ export default function QuestionsPage() {
   const handleAddFromInput = async () => {
     const t = newQuestionText.trim();
     if (!t) return;
-    
+
     try {
       const positionId = questionType === 'position' ? selectedPositionId : null;
-      await createGlobalQuestion(t, positionId);
+      await createQuestion(t, positionId);
       setNewQuestionText('');
       await loadQuestions(); // Recarregar perguntas
     } catch (error) {
       console.error('Erro ao criar pergunta:', error);
-      alert('Erro ao criar pergunta. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao criar pergunta. Verifique se o backend está rodando.');
     }
   };
 
@@ -91,19 +104,65 @@ export default function QuestionsPage() {
 
   const handleDeleteQuestion = async (questionId) => {
     try {
-      await deleteGlobalQuestion(questionId);
+      await deleteQuestion(questionId);
       await loadQuestions(); // Recarregar perguntas
     } catch (error) {
       console.error('Erro ao deletar pergunta:', error);
-      alert('Erro ao deletar pergunta. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao deletar pergunta. Verifique se o backend está rodando.');
     }
+  };
+
+  const startEditing = (question) => {
+    if (selectionMode) return;
+    editResolvedRef.current = false;
+    setEditingId(question.id);
+    setEditingText(question.text);
+  };
+
+  const finishEditing = () => {
+    editResolvedRef.current = true;
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const commitEditing = async (questionId, text) => {
+    if (editResolvedRef.current) return;
+    const trimmed = text.trim();
+    if (!trimmed) {
+      finishEditing();
+      return;
+    }
+    finishEditing();
+    try {
+      const updated = await updateQuestion(questionId, trimmed);
+      setPerguntas((prev) => prev.map((q) => (
+        q.id === questionId ? { ...q, text: updated?.text ?? trimmed } : q
+      )));
+    } catch (error) {
+      console.error('Erro ao editar pergunta:', error);
+      alert(error.detail || 'Erro ao editar pergunta. Verifique se o backend está rodando.');
+    }
+  };
+
+  const handleEditKeyDown = (e, question) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEditing(question.id, editingText);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      finishEditing();
+    }
+  };
+
+  const handleEditBlur = (question) => {
+    commitEditing(question.id, editingText);
   };
 
   // Tela de seleção de tipo
   if (!questionType) {
     return (
       <div className={styles.wrapper}>
-        <Header 
+        <Header
           title="Perguntas"
           onMenuClick={openSidebar}
         />
@@ -185,7 +244,7 @@ export default function QuestionsPage() {
   if (questionType === 'position' && !selectedPositionId) {
     return (
       <div className={styles.wrapper}>
-        <Header 
+        <Header
           title="Perguntas por Cargo"
           onMenuClick={openSidebar}
         />
@@ -194,7 +253,7 @@ export default function QuestionsPage() {
           <div className={styles.contentCard}>
             <div className={styles.titleRow}>
               <h2 className={styles.title}>Selecione o cargo</h2>
-              <button 
+              <button
                 onClick={() => setQuestionType(null)}
                 style={{
                   padding: '0.65rem 1.25rem',
@@ -255,13 +314,13 @@ export default function QuestionsPage() {
 
   // Tela principal de perguntas
   const selectedPosition = positions.find(p => p.id === selectedPositionId);
-  const pageTitle = questionType === 'general' 
-    ? 'Perguntas Gerais' 
+  const pageTitle = questionType === 'general'
+    ? 'Perguntas Gerais'
     : `Perguntas - ${selectedPosition?.name || 'Cargo'}`;
 
   return (
     <div className={styles.wrapper}>
-      <Header 
+      <Header
         title={pageTitle}
         onMenuClick={openSidebar}
       />
@@ -271,7 +330,7 @@ export default function QuestionsPage() {
           <div className={styles.titleRow}>
             <h2 className={styles.title}>Lista de perguntas</h2>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <button 
+              <button
                 onClick={() => {
                   setQuestionType(null);
                   setSelectedPositionId(null);
@@ -300,18 +359,10 @@ export default function QuestionsPage() {
               onChange={(e) => setNewQuestionText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddFromInput()}
               placeholder="Digite uma nova pergunta e pressione Enter"
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                border: '1px solid rgba(55, 28, 104, 0.2)',
-                borderRadius: '6px',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.9rem',
-                outline: 'none'
-              }}
+              style={questionInputStyle}
             />
-            <button 
-              className={styles.addQuestionBtn} 
+            <button
+              className={styles.addQuestionBtn}
               onClick={handleAddFromInput}
               aria-label="Adiciona pergunta"
             >
@@ -321,20 +372,20 @@ export default function QuestionsPage() {
 
           <section className={styles.board}>
             {loading ? (
-              <p style={{ 
-                fontFamily: 'Inter, sans-serif', 
-                textAlign: 'center', 
-                color: '#666', 
+              <p style={{
+                fontFamily: 'Inter, sans-serif',
+                textAlign: 'center',
+                color: '#666',
                 fontSize: '1rem',
                 padding: '3rem 1rem'
               }}>
                 Carregando perguntas...
               </p>
             ) : perguntas.length === 0 ? (
-              <p style={{ 
-                fontFamily: 'Inter, sans-serif', 
-                textAlign: 'center', 
-                color: '#666', 
+              <p style={{
+                fontFamily: 'Inter, sans-serif',
+                textAlign: 'center',
+                color: '#666',
                 fontSize: '1rem',
                 padding: '3rem 1rem'
               }}>
@@ -348,7 +399,19 @@ export default function QuestionsPage() {
                     className={`${styles.card} ${selectionMode && selected.has(i) ? styles.selected : ''}`}
                     onClick={() => selectionMode && toggleSelect(i)}
                   >
-                    <div className={styles.cardTitle}>{q.text}</div>
+                    {editingId === q.id ? (
+                      <input
+                        type="text"
+                        style={questionInputStyle}
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyDown={(e) => handleEditKeyDown(e, q)}
+                        onBlur={() => handleEditBlur(q)}
+                        autoFocus
+                      />
+                    ) : (
+                      <div className={styles.cardTitle} onDoubleClick={() => startEditing(q)}>{q.text}</div>
+                    )}
                     <button
                       className={styles.removeX}
                       aria-label={`Remover ${q.text}`}

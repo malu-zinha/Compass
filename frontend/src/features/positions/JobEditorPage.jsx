@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../components/layout';
-import { useLayout } from '../app/AppLayout';
-import { createPosition, getPosition, updatePosition } from '../services/api';
+import { Header } from '../../components/layout';
+import { useLayout } from '../../app/AppLayout';
+import { createPosition, getPosition, updatePosition } from '../../api/positions';
 import './JobEditorPage.css';
 
 function JobEditorPage() {
@@ -10,12 +10,12 @@ function JobEditorPage() {
   const [jobName, setJobName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobVacancies, setJobVacancies] = useState('');
-  const [competencies, setCompetencies] = useState([]);
+  const [skills, setSkills] = useState([]);
   const [competencyInput, setCompetencyInput] = useState('');
   const [isAddingCompetency, setIsAddingCompetency] = useState(false);
   const [idealProfile, setIdealProfile] = useState('');
   const inputRef = useRef(null);
-  
+
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = !!id;
@@ -39,17 +39,17 @@ function JobEditorPage() {
       measureElement.style.padding = '0';
       measureElement.textContent = text;
       document.body.appendChild(measureElement);
-      
+
       const width = measureElement.offsetWidth;
       const maxWidth = 280;
       const minWidth = 180;
       const padding = 40;
       const newWidth = Math.min(Math.max(width + padding, minWidth), maxWidth);
-      
+
       inputRef.current.style.width = `${newWidth}px`;
       inputRef.current.style.height = 'auto';
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-      
+
       document.body.removeChild(measureElement);
     }
   }, [competencyInput, isAddingCompetency]);
@@ -60,10 +60,11 @@ function JobEditorPage() {
       setJobName(position.name);
       setJobDescription(position.description);
       setJobVacancies(position.vacancies.toString());
-      setCompetencies(position.competencies || []);
+      setSkills(position.skills || []);
+      setIdealProfile(position.ideal_profile || '');
     } catch (error) {
       console.error('Erro ao carregar cargo:', error);
-      alert('Erro ao carregar cargo. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
       navigate('/cargos');
     }
   };
@@ -71,8 +72,8 @@ function JobEditorPage() {
   const handleAddCompetency = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && competencyInput && competencyInput.trim()) {
       e.preventDefault();
-      if (!competencies.includes(competencyInput.trim())) {
-        setCompetencies([...competencies, competencyInput.trim()]);
+      if (!skills.includes(competencyInput.trim())) {
+        setSkills([...skills, competencyInput.trim()]);
       }
       setCompetencyInput('');
       setIsAddingCompetency(false);
@@ -89,45 +90,43 @@ function JobEditorPage() {
   };
 
   const handleCompetencyInputBlur = () => {
-    if (competencyInput && competencyInput.trim() && !competencies.includes(competencyInput.trim())) {
-      setCompetencies([...competencies, competencyInput.trim()]);
+    if (competencyInput && competencyInput.trim() && !skills.includes(competencyInput.trim())) {
+      setSkills([...skills, competencyInput.trim()]);
     }
     setCompetencyInput('');
     setIsAddingCompetency(false);
   };
 
   const handleRemoveCompetency = (index) => {
-    setCompetencies(competencies.filter((_, i) => i !== index));
+    setSkills(skills.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
-    if (!jobName || !jobDescription || competencies.length === 0) {
+    if (!jobName || !jobDescription || skills.length === 0) {
       alert('Preencha todos os campos obrigatórios');
       return;
     }
 
+    const payload = {
+      name: jobName,
+      skills,
+      description: jobDescription,
+      ideal_profile: idealProfile,
+      vacancies: parseInt(jobVacancies) || 0,
+    };
+
     try {
       if (isEditing) {
-        await updatePosition(id, {
-          name: jobName,
-          competencies: competencies,
-          description: jobDescription,
-          vacancies: parseInt(jobVacancies) || 0
-        });
+        await updatePosition(id, payload);
         alert('Cargo atualizado com sucesso!');
       } else {
-        await createPosition({
-          name: jobName,
-          competencies: competencies,
-          description: jobDescription,
-          vacancies: parseInt(jobVacancies) || 0
-        });
+        await createPosition(payload);
         alert('Cargo salvo com sucesso!');
       }
       navigate('/cargos');
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
-      alert('Erro ao salvar cargo. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
     }
   };
 
@@ -174,7 +173,7 @@ function JobEditorPage() {
                   <label className="form-label">Competências necessárias</label>
                   <div className="competency-input-wrapper">
                     <div className="competencies-tags">
-                      {competencies.map((comp, index) => (
+                      {skills.map((comp, index) => (
                         <div key={index} className="competency-tag">
                           <span>{comp}</span>
                           <button
@@ -261,4 +260,3 @@ function JobEditorPage() {
 }
 
 export default JobEditorPage;
-
