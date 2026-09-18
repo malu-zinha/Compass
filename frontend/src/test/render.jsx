@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, Outlet } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, Outlet, createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { vi } from 'vitest';
 import { AuthContext } from '../auth/AuthContext';
 
@@ -43,4 +43,29 @@ export function renderWithLayout(ui, path = '/') {
       </MemoryRouter>
     </AuthContext.Provider>,
   );
+}
+
+// Renders `ui` at `path` using a real data router (createMemoryRouter), so
+// pages that navigate can be asserted on via `router.state.location`.
+// `extraPaths` are registered as simple routes (each rendering `<p/>`) so
+// navigation targets resolve instead of erroring.
+export function renderWithRouter(ui, path = '/', extraPaths = []) {
+  const router = createMemoryRouter(
+    [
+      { path, element: ui },
+      ...extraPaths.map((extraPath) => ({ path: extraPath, element: <p>{extraPath}</p> })),
+    ],
+    { initialEntries: [path] },
+  );
+  const view = render(
+    <AuthContext.Provider value={fakeAuthValue()}>
+      <RouterProvider router={router} />
+    </AuthContext.Provider>,
+  );
+  return { router, ...view };
+}
+
+export function omit(obj, key) {
+  const { [key]: _omitted, ...rest } = obj;
+  return rest;
 }

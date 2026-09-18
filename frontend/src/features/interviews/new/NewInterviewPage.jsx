@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPositions } from '../services/api';
-import './NewInterviewpage.css';
+import { listPositions } from '../../../api/positions';
+import { useInterviewDraft } from './useInterviewDraft';
+import './NewInterviewPage.css';
 
 function NewInterviewPage() {
   const navigate = useNavigate();
-  
+  const { saveDraft } = useInterviewDraft();
+
   const [candidateName, setCandidateName] = useState('');
   const [candidateEmail, setCandidateEmail] = useState('');
   const [candidatePhone, setCandidatePhone] = useState('');
   const [candidatePositionId, setCandidatePositionId] = useState('');
+  const [recordingConsent, setRecordingConsent] = useState(false);
   const [availableJobs, setAvailableJobs] = useState([]);
 
   useEffect(() => {
@@ -18,25 +21,26 @@ function NewInterviewPage() {
 
   const loadPositions = async () => {
     try {
-      const data = await getPositions();
-      setAvailableJobs(data);
+      const data = await listPositions();
+      setAvailableJobs(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert('Erro ao carregar cargos. Verifique se o backend está rodando.');
+      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     }
-  };
-
-  const isFormValid = () => {
-    return candidateName.trim() && 
-           candidateEmail.trim() && 
-           candidatePhone.trim() && 
-           candidatePositionId &&
-           validateEmail(candidateEmail);
   };
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
+  };
+
+  const isFormValid = () => {
+    return candidateName.trim() &&
+           candidateEmail.trim() &&
+           candidatePhone.trim() &&
+           candidatePositionId &&
+           recordingConsent &&
+           validateEmail(candidateEmail);
   };
 
   const handleStartInterview = () => {
@@ -45,18 +49,17 @@ function NewInterviewPage() {
       return;
     }
 
-    const selectedJob = availableJobs.find(j => j.id === parseInt(candidatePositionId));
-    
-    const interviewData = {
-      candidateName: candidateName.trim(),
-      candidateEmail: candidateEmail.trim(),
-      candidatePhone: candidatePhone.trim(),
-      candidatePositionId: parseInt(candidatePositionId),
-      candidatePosition: selectedJob ? selectedJob.name : '',
-      timestamp: new Date().toISOString()
-    };
+    const selectedJob = availableJobs.find((job) => job.id === parseInt(candidatePositionId, 10));
 
-    localStorage.setItem('interviewData', JSON.stringify(interviewData));
+    saveDraft({
+      candidate_name: candidateName.trim(),
+      candidate_email: candidateEmail.trim(),
+      candidate_phone: candidatePhone.trim(),
+      position_id: parseInt(candidatePositionId, 10),
+      position_name: selectedJob ? selectedJob.name : '',
+      recording_consent: recordingConsent,
+    });
+
     navigate('/tipo-entrevista');
   };
 
@@ -130,6 +133,21 @@ function NewInterviewPage() {
               ))}
             </select>
           </div>
+
+          <div className="form-field">
+            <label
+              htmlFor="recording-consent"
+              style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+            >
+              <input
+                id="recording-consent"
+                type="checkbox"
+                checked={recordingConsent}
+                onChange={(e) => setRecordingConsent(e.target.checked)}
+              />
+              Confirmo que o candidato autorizou a gravação e o processamento da entrevista.
+            </label>
+          </div>
         </div>
 
         <button
@@ -145,4 +163,3 @@ function NewInterviewPage() {
 }
 
 export default NewInterviewPage;
-
