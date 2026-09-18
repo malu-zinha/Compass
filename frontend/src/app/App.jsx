@@ -8,7 +8,7 @@ import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
 import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
 import RecordPage from '../features/interviews/live/RecordPage';
 import ResultsPage from '../pages/ResultsPage';
-import InterviewDetailPage from '../pages/InterviewDetailPage';
+import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
 import JobsPage from '../features/positions/JobsPage';
 import JobEditorPage from '../features/positions/JobEditorPage';
 import RankingSelectPage from '../features/interviews/results/RankingSelectPage';
