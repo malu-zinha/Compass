@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import { createPosition, getPosition, updatePosition } from '../services/api';
 import './JobEditorPage.css';
 
 function JobEditorPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { openSidebar } = useLayout();
   const [jobName, setJobName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobVacancies, setJobVacancies] = useState('');
@@ -132,10 +133,9 @@ function JobEditorPage() {
 
   return (
     <div className="job-editor-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header 
+      <Header
         title={isEditing ? "Editar cargo" : "Novo cargo"}
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
       <div className="job-editor-content">
         <div className="editor-container">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import CalendarIcon from '../components/icons/CalendarIcon';
 import ClockIcon from '../components/icons/ClockIcon';
 import { getInterviews, getPositions, getAudioUrl } from '../services/api';
@@ -9,9 +10,9 @@ import './ResultsPage.css';
 function ResultsPage() {
   const navigate = useNavigate();
   const { positionId } = useParams();
+  const { openSidebar } = useLayout();
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [audioDurations, setAudioDurations] = useState({});
   const audioRefs = useRef({});
@@ -230,11 +231,10 @@ function ResultsPage() {
 
   return (
     <div className="results-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header 
+      <Header
         title={selectedPosition ? `Ranking - ${selectedPosition.name}` : "Análise de candidatos"}
         showComparar={true}
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
       
       {selectedPosition && (

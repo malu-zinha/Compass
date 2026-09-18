@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
-import logo from '../logo.svg';
-import { ChartIcon, ClockIcon, BriefcaseIcon, InfoIcon, JobsIcon, FileTextIcon, MicrophoneIcon, QuestionsIcon } from '../components/icons';
+import logo from '../../logo.svg';
+import { ChartIcon, ClockIcon, BriefcaseIcon, InfoIcon, JobsIcon, FileTextIcon, MicrophoneIcon, QuestionsIcon } from '../../components/icons';
 
 export default function LandingPage() {
   const navigate = useNavigate();

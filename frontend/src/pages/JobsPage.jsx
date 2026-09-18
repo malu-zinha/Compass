@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import { getPositions, deletePosition } from '../services/api';
 import './JobsPage.css';
 
 function JobsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { openSidebar } = useLayout();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -49,10 +50,9 @@ function JobsPage() {
 
   return (
     <div className="jobs-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header 
+      <Header
         title="Cargos"
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
       <div className="jobs-content">
         <div className="jobs-section">

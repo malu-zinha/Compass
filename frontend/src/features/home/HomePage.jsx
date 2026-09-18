@@ -1,28 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '../components/layout';
-import { MicrophoneIcon, ChartIcon, BriefcaseIcon, FileTextIcon } from '../components/icons';
+import { Header } from '../../components/layout';
+import { MicrophoneIcon, ChartIcon, BriefcaseIcon, FileTextIcon } from '../../components/icons';
+import { useAuth } from '../../auth/AuthContext';
+import { useLayout } from '../../app/AppLayout';
 import './HomePage.css';
 
 function HomePage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userFirstName, setUserFirstName] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Pegar nome do usuário do localStorage
-    const userName = localStorage.getItem('userName');
-    if (userName) {
-      // Pegar apenas o primeiro nome
-      const firstName = userName.split(' ')[0];
-      setUserFirstName(firstName);
-    }
-  }, []);
+  const { user } = useAuth();
+  const { openSidebar } = useLayout();
+  const userFirstName = user?.name ? user.name.split(' ')[0] : '';
 
   return (
     <div className="home-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header title="Início" onMenuClick={() => setSidebarOpen(true)} />
+      <Header title="Início" onMenuClick={openSidebar} />
       <div className="home-content">
         <div className="welcome-section">
           <h1 className="welcome-title">
@@ -70,4 +62,3 @@ function HomePage() {
 }
 
 export default HomePage;
-

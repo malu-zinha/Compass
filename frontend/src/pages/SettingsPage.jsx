@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import './SettingsPage.css';
 
 export default function SettingsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+  const { openSidebar } = useLayout();
+
   // Configurações gerais
   const [generalSettings, setGeneralSettings] = useState({
     language: 'pt-BR',
@@ -55,8 +56,7 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Header title="Configurações" onMenuClick={() => setSidebarOpen(true)} />
+      <Header title="Configurações" onMenuClick={openSidebar} />
       
       <main className="settings-content">
         <div className="settings-container">

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Sidebar, Header } from '../components/layout';
+import { Header } from '../components/layout';
+import { useLayout } from '../app/AppLayout';
 import { getGlobalQuestions, createGlobalQuestion, deleteGlobalQuestion, getPositions } from '../services/api';
 import styles from '../styles/questions.module.css';
 
 export default function QuestionsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+  const { openSidebar } = useLayout();
+
   // Estado de seleção de tipo
   const [questionType, setQuestionType] = useState(null); // null, 'general', 'position'
   const [selectedPositionId, setSelectedPositionId] = useState(null);
@@ -102,10 +103,9 @@ export default function QuestionsPage() {
   if (!questionType) {
     return (
       <div className={styles.wrapper}>
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <Header 
           title="Perguntas"
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={openSidebar}
         />
 
         <main className={styles.main}>
@@ -185,10 +185,9 @@ export default function QuestionsPage() {
   if (questionType === 'position' && !selectedPositionId) {
     return (
       <div className={styles.wrapper}>
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <Header 
           title="Perguntas por Cargo"
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={openSidebar}
         />
 
         <main className={styles.main}>
@@ -262,10 +261,9 @@ export default function QuestionsPage() {
 
   return (
     <div className={styles.wrapper}>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Header 
         title={pageTitle}
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={openSidebar}
       />
 
       <main className={styles.main}>
