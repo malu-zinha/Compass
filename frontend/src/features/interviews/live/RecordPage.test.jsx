@@ -68,6 +68,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 test('liga o microfone quando a sessão fica ao vivo e usa o token da sessão', async () => {
@@ -126,12 +127,25 @@ test('entrevista já encerrada redireciona para o detalhe', async () => {
 });
 
 test('sessão recusada (4409) leva ao detalhe e 4401 desloga', async () => {
+  const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
   const router = renderRecordPage();
   await screen.findByText('Fale sobre você');
   const options = useLiveSession.mock.calls.at(-1)[2];
 
   expect(options.onUnauthorized).toBe(auth.logout);
   act(() => { options.onRejected(4409); });
+  await waitFor(() => expect(router.state.location.pathname).toBe('/entrevista/7'));
+  expect(alertSpy).not.toHaveBeenCalled();
+});
+
+test('sessão assumida por outra aba (4000) avisa e vai para o detalhe', async () => {
+  const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  const router = renderRecordPage();
+  await screen.findByText('Fale sobre você');
+  const options = useLiveSession.mock.calls.at(-1)[2];
+
+  act(() => { options.onRejected(4000); });
+  expect(alertSpy).toHaveBeenCalledWith('Esta entrevista foi aberta em outra aba ou janela.');
   await waitFor(() => expect(router.state.location.pathname).toBe('/entrevista/7'));
 });
 

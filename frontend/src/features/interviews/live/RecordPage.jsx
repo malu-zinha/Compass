@@ -37,8 +37,15 @@ function RecordPage() {
 
   const goToDetail = useCallback(() => navigate(`/entrevista/${id}`, { replace: true }), [navigate, id]);
 
+  // Sessão recusada (4404/4409) ou assumida por outra aba (4000): vai para o detalhe;
+  // ao desmontar, o microfone é liberado.
+  const handleRejected = useCallback((code) => {
+    if (code === 4000) alert('Esta entrevista foi aberta em outra aba ou janela.');
+    goToDetail();
+  }, [goToDetail]);
+
   // Sessão ao vivo: o áudio vai só pelo WebSocket e o servidor grava o WAV final.
-  const session = useLiveSession(id, token, { onUnauthorized: logout, onRejected: goToDetail });
+  const session = useLiveSession(id, token, { onUnauthorized: logout, onRejected: handleRejected });
   const { start: startMic, stop: stopMic, error: micError } = useMicrophonePcm({ onChunk: session.sendAudio });
 
   // Gravação

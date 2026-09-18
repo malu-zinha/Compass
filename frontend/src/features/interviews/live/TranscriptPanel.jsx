@@ -37,7 +37,7 @@ function TranscriptPanel({ turns, status, errorMessage }) {
 
                 return (
                   <span
-                    key={turn.turn_id}
+                    key={`${turn.generation}-${turn.turn_id}`}
                     className={`transcription-segment ${turn.is_final ? 'final' : 'transcribing'}`}
                   >
                     {turn.text}
