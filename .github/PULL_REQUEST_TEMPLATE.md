@@ -19,9 +19,10 @@ Exemplo: "Corrige o bug que impedia o upload de arquivos grandes" ou "Adiciona e
 Descreva passos claros para validar a mudança localmente (comandos, endpoints, dados de exemplo).
 
 Exemplo:
-1. Rode `npm install`
-2. Rode `npm run dev`
-3. Abra `http://localhost:3000` e acesse o endpoint `/api/summarize` com o payload X
+1. Rode `cd back && pytest`
+2. Rode `cd frontend && npm test -- --run`
+3. Rode `cd frontend && npm run dev`
+4. Abra `http://localhost:3000/inicio`
 
 ---
 
