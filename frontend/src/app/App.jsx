@@ -16,6 +16,7 @@ import RankingSelectPage from '../features/interviews/results/RankingSelectPage'
 import QuestionsPage from '../features/questions/QuestionsPage';
 import ProfilePage from '../features/profile/ProfilePage';
 import SettingsPage from '../features/settings/SettingsPage';
+import NotFoundPage from '../features/not-found/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 import FlowLayout from './FlowLayout';
@@ -69,6 +70,7 @@ function App() {
             <Route path={ROUTES.gravar} element={<RecordPage />} />
           </Route>
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

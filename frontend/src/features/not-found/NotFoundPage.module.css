@@ -1,0 +1,43 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 100vh;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+/* A agulha gira devagar e para apontando: a bússola "reencontra" o norte. */
+.mark {
+  color: var(--color-text);
+  animation: seek 1.6s var(--ease-out) both;
+}
+
+@keyframes seek {
+  0% { transform: rotate(-200deg); opacity: 0; }
+  60% { transform: rotate(20deg); opacity: 1; }
+  100% { transform: rotate(0deg); }
+}
+
+.code {
+  margin: var(--space-2) 0 0;
+  color: var(--color-primary-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-3xl);
+}
+
+.text {
+  max-width: 420px;
+  margin: 0 0 var(--space-4);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+}
