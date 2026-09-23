@@ -2,14 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
-import { AuthContext } from '../../auth/AuthContext';
 import Sidebar from './Sidebar';
+import { TestProviders } from '../../test/render';
 
 const user = { id: 1, name: 'Ana Souza', job_title: 'Recrutadora', email: 'ana@empresa.com' };
 
 const renderSidebar = (logout = vi.fn()) => {
   render(
-    <AuthContext.Provider value={{ user, logout }}>
+    <TestProviders auth={{ user, logout }}>
       <MemoryRouter initialEntries={['/inicio']}>
         <Sidebar isOpen onClose={() => {}} />
         <Routes>
@@ -17,7 +17,7 @@ const renderSidebar = (logout = vi.fn()) => {
           <Route path="/inicio" element={<p>tela inicial</p>} />
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return logout;
 };

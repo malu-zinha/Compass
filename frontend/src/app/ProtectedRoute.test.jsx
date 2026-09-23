@@ -1,18 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
-import { AuthContext } from '../auth/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import { TestProviders } from '../test/render';
 
 const renderAt = (value) => render(
-  <AuthContext.Provider value={value}>
+  <TestProviders auth={value}>
     <MemoryRouter initialEntries={['/inicio']}>
       <Routes>
         <Route path="/login" element={<p>tela de login</p>} />
         <Route element={<ProtectedRoute />}><Route path="/inicio" element={<p>área logada</p>} /></Route>
       </Routes>
     </MemoryRouter>
-  </AuthContext.Provider>,
+  </TestProviders>,
 );
 
 test('sem usuário redireciona para /login', () => {

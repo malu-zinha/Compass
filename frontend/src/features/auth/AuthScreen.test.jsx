@@ -3,13 +3,13 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { vi } from 'vitest';
-import { AuthContext } from '../../auth/AuthContext';
 import { ApiError } from '../../api/client';
 import AuthScreen from './AuthScreen';
+import { TestProviders } from '../../test/render';
 
 test('login inválido mostra a mensagem da API', async () => {
   const login = vi.fn().mockRejectedValue(new ApiError(401, 'Usuário ou senha incorretos.'));
-  render(<AuthContext.Provider value={{ login, register: vi.fn(), user: null }}><MemoryRouter><AuthScreen /></MemoryRouter></AuthContext.Provider>);
+  render(<TestProviders auth={{ login, register: vi.fn(), user: null }}><MemoryRouter><AuthScreen /></MemoryRouter></TestProviders>);
   await userEvent.type(screen.getByPlaceholderText('Usuário'), 'ana');
   await userEvent.type(screen.getByPlaceholderText('Senha'), 'errada');
   await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
@@ -27,7 +27,7 @@ test('login bem-sucedido navega uma única vez para a rota de origem, sem timer 
   const login = vi.fn().mockResolvedValue();
   const transitions = [];
   render(
-    <AuthContext.Provider value={{ login, register: vi.fn(), user: null }}>
+    <TestProviders auth={{ login, register: vi.fn(), user: null }}>
       <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: '/entrevista/7' } }]}>
         <PathRecorder onChange={(p) => transitions.push(p)} />
         <Routes>
@@ -36,7 +36,7 @@ test('login bem-sucedido navega uma única vez para a rota de origem, sem timer 
           <Route path="/inicio" element={<div>Início</div>} />
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>
+    </TestProviders>
   );
 
   await userEvent.type(screen.getByPlaceholderText('Usuário'), 'ana');
