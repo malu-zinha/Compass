@@ -19,11 +19,10 @@ test('salva o perfil ideal junto com o cargo', async () => {
   const { createPosition } = await import('../../api/positions');
   renderWithLayout(<JobEditorPage />, '/cargos/novo');
 
-  await userEvent.type(screen.getByPlaceholderText('Nome do cargo'), 'Dev Python');
-  await userEvent.type(screen.getByPlaceholderText('Descrição da vaga'), 'Vaga para dev backend');
-  await userEvent.click(screen.getByRole('button', { name: 'Adicionar competência' }));
-  await userEvent.type(screen.getByPlaceholderText('Digite a competência'), 'Python{Enter}');
-  await userEvent.type(screen.getByPlaceholderText('Descreva o perfil ideal...'), 'Autônomo');
+  await userEvent.type(screen.getByLabelText(/^Nome/), 'Dev Python');
+  await userEvent.type(screen.getByLabelText(/^Descrição da vaga/), 'Vaga para dev backend');
+  await userEvent.type(screen.getByLabelText(/^Competências necessárias/), 'Python{Enter}');
+  await userEvent.type(screen.getByLabelText('Perfil ideal'), 'Autônomo');
   await userEvent.click(screen.getByRole('button', { name: 'Salvar cargo' }));
 
   expect(createPosition).toHaveBeenCalledWith(expect.objectContaining({
@@ -58,4 +57,22 @@ test('carrega o perfil ideal ao editar um cargo existente', async () => {
 
   expect(await screen.findByDisplayValue('Proativo')).toBeInTheDocument();
   expect(screen.getByDisplayValue('Dev Node')).toBeInTheDocument();
+});
+
+test('campos obrigatórios vazios mostram erro no campo e não salvam', async () => {
+  const { createPosition } = await import('../../api/positions');
+  renderWithLayout(<JobEditorPage />, '/cargos/novo');
+  await userEvent.click(screen.getByRole('button', { name: 'Salvar cargo' }));
+  expect(screen.getByLabelText(/^Nome/)).toHaveAccessibleDescription('Dê um nome ao cargo.');
+  expect(screen.getByLabelText(/^Competências necessárias/)).toHaveAttribute('aria-invalid', 'true');
+  expect(createPosition).not.toHaveBeenCalled();
+});
+
+test('competências: vírgula adiciona, duplicata é ignorada e o chip remove', async () => {
+  renderWithLayout(<JobEditorPage />, '/cargos/novo');
+  const input = screen.getByLabelText(/^Competências necessárias/);
+  await userEvent.type(input, 'SQL,sql{Enter}Python{Enter}');
+  expect(screen.getAllByText(/^(SQL|Python)$/)).toHaveLength(2);
+  await userEvent.click(screen.getByRole('button', { name: 'Remover SQL' }));
+  expect(screen.queryByText('SQL')).not.toBeInTheDocument();
 });

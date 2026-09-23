@@ -13,8 +13,6 @@
   "src/features/interviews/new/UploadAudioPage.jsx",
   "src/features/interviews/results/ResultsPage.css",
   "src/features/interviews/results/ResultsPage.jsx",
-  "src/features/positions/JobEditorPage.css",
-  "src/features/positions/JobsPage.css",
   "src/features/profile/ProfilePage.css",
   "src/features/profile/ProfilePage.jsx",
   "src/features/questions/QuestionsPage.jsx",
