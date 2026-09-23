@@ -3,8 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../auth/AuthContext';
-import { fakeAuthValue, fakeUser, LayoutOutlet } from '../../test/render';
+import { TestProviders, fakeAuthValue, fakeUser, LayoutOutlet } from '../../test/render';
 import { apiUrl } from '../../api/client';
 import ProfilePage from './ProfilePage';
 
@@ -33,7 +32,7 @@ function renderProfile(initialUser = user) {
     const [currentUser, setCurrentUser] = useState(initialUser);
     const handleSetUser = (updated) => { setUser(updated); setCurrentUser(updated); };
     return (
-      <AuthContext.Provider value={fakeAuthValue({ user: currentUser, setUser: handleSetUser })}>
+      <TestProviders auth={fakeAuthValue({ user: currentUser, setUser: handleSetUser })}>
         <MemoryRouter initialEntries={['/perfil']}>
           <Routes>
             <Route element={<LayoutOutlet />}>
@@ -41,7 +40,7 @@ function renderProfile(initialUser = user) {
             </Route>
           </Routes>
         </MemoryRouter>
-      </AuthContext.Provider>
+      </TestProviders>
     );
   }
   const view = render(<Harness />);

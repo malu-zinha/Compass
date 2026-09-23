@@ -2,8 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../../auth/AuthContext';
-import { fakeAuthValue, LayoutOutlet } from '../../../test/render';
+import { TestProviders, fakeAuthValue, LayoutOutlet } from '../../../test/render';
 import { listInterviews } from '../../../api/interviews';
 import { getPosition } from '../../../api/positions';
 import ResultsPage from './ResultsPage';
@@ -54,9 +53,9 @@ function renderResults(path) {
     },
   ], { initialEntries: [path] });
   const view = render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders auth={fakeAuthValue()}>
       <RouterProvider router={router} />
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return { router, ...view };
 }

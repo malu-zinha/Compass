@@ -2,8 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { renderWithLayout, LayoutOutlet, fakeAuthValue } from '../../test/render';
-import { AuthContext } from '../../auth/AuthContext';
+import { TestProviders, renderWithLayout, LayoutOutlet, fakeAuthValue } from '../../test/render';
 import JobEditorPage from './JobEditorPage';
 
 vi.mock('../../api/positions', () => ({
@@ -47,7 +46,7 @@ test('carrega o perfil ideal ao editar um cargo existente', async () => {
   });
 
   render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders auth={fakeAuthValue()}>
       <MemoryRouter initialEntries={['/cargos/editar/5']}>
         <Routes>
           <Route element={<LayoutOutlet />}>
@@ -55,7 +54,7 @@ test('carrega o perfil ideal ao editar um cargo existente', async () => {
           </Route>
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
 
   expect(await screen.findByDisplayValue('Proativo')).toBeInTheDocument();

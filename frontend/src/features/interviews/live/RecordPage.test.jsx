@@ -2,8 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../../auth/AuthContext';
-import { fakeAuthValue } from '../../../test/render';
+import { TestProviders, fakeAuthValue } from '../../../test/render';
 import {
   getInterview, listInterviewQuestions, setQuestionAsked, updateInterview,
 } from '../../../api/interviews';
@@ -38,9 +37,9 @@ function renderRecordPage() {
     { initialEntries: ['/gravar/7'] },
   );
   render(
-    <AuthContext.Provider value={auth}>
+    <TestProviders auth={auth}>
       <RouterProvider router={router} />
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return router;
 }
