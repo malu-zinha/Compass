@@ -1,0 +1,54 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--header-height);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.logo {
+  display: inline-flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+}
+
+.title { min-width: 0; }
+
+.actions,
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* No celular o botão fica só com o ícone, mas o nome continua para leitor de tela. */
+@media (max-width: 640px) {
+  .newLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header { padding: 0 var(--space-8); }
+  .start { display: none; }
+  .header { grid-template-columns: minmax(0, 1fr) auto; }
+}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
+import { PageHeader } from '../../../components/layout';
 import { listPositions } from '../../../api/positions';
 import './RankingSelectPage.css';
 import { useToast } from '../../../components/ui';
@@ -9,7 +8,6 @@ import { useToast } from '../../../components/ui';
 function RankingSelectPage() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { openSidebar } = useLayout();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,10 +38,7 @@ function RankingSelectPage() {
 
   return (
     <div className="ranking-select-page">
-      <Header
-        title="Selecionar Ranking"
-        onMenuClick={openSidebar}
-      />
+      <PageHeader title="Selecionar Ranking" />
 
       <div className="ranking-select-content">
         <div className="ranking-select-header">

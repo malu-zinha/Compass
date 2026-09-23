@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Header } from '../../components/layout';
-import { useLayout } from '../../app/AppLayout';
+import { PageHeader } from '../../components/layout';
 import { useUserSettings } from '../../auth/SettingsContext';
 import './SettingsPage.css';
 import { useToast } from '../../components/ui';
@@ -14,7 +13,6 @@ const LANGUAGE_OPTIONS = [
 
 export default function SettingsPage() {
   const toast = useToast();
-  const { openSidebar } = useLayout();
   const { settings, saveSettings } = useUserSettings();
   const [form, setForm] = useState(settings);
   const [saved, setSaved] = useState(false);
@@ -37,9 +35,9 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <Header title="Configurações" onMenuClick={openSidebar} />
+      <PageHeader title="Configurações" />
 
-      <main className="settings-content">
+      <div className="settings-content">
         <div className="settings-container">
 
           <div className="settings-section">
@@ -155,7 +153,7 @@ export default function SettingsPage() {
           </div>
           {saved && <p className="setting-description">Configurações salvas.</p>}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

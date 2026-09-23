@@ -15,7 +15,7 @@ export const fakeUser = {
 };
 
 export function LayoutOutlet() {
-  return <Outlet context={{ openSidebar: vi.fn() }} />;
+  return <Outlet />;
 }
 
 // Providers globais do app (os de main.jsx), com o AuthContext falso no lugar do real.
@@ -44,8 +44,8 @@ export function fakeAuthValue(overrides = {}) {
   };
 }
 
-// Renders `ui` inside a fake AuthContext and a layout route that supplies
-// `context={{ openSidebar }}` via an <Outlet>, so useLayout() works.
+// Renders `ui` inside the app providers and a layout route (<Outlet>), without
+// the real AppLayout: PageHeader falls back to rendering inline.
 export function renderWithLayout(ui, path = '/') {
   return render(
     <TestProviders>

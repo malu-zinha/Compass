@@ -1,0 +1,118 @@
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  max-width: 85vw;
+  border-right: 1px solid var(--color-border);
+  background: var(--surface);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition:
+    transform var(--duration-slow) var(--ease-out),
+    visibility 0s linear var(--duration-slow);
+}
+
+.open {
+  transform: none;
+  visibility: visible;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-drawer) - 1);
+  background: var(--overlay-bg);
+  animation: fade var(--duration-fast) var(--ease-out);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  padding: 0 var(--space-5);
+}
+
+.brandLink {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.nav {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  overflow-y: auto;
+}
+
+.nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.item:hover {
+  background: var(--surface-hover);
+  color: var(--color-text);
+}
+
+/* NavLink aplica .active e aria-current="page" na rota atual. */
+.item:global(.active) {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-fg);
+}
+
+.item:global(.active)::before {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  left: calc(var(--space-3) * -1);
+  width: 3px;
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  background: var(--color-primary);
+}
+
+.footer {
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@media (min-width: 1024px) {
+  .sidebar,
+  .open {
+    transform: none;
+    visibility: visible;
+    box-shadow: none;
+    transition: none;
+  }
+  .overlay { display: none; }
+}

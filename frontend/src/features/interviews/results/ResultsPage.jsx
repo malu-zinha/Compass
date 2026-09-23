@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
+import { PageHeader } from '../../../components/layout';
 import CalendarIcon from '../../../components/icons/CalendarIcon';
 import ClockIcon from '../../../components/icons/ClockIcon';
 import { listInterviews } from '../../../api/interviews';
@@ -10,7 +9,8 @@ import { useUserSettings } from '../../../auth/SettingsContext';
 import { formatDate, formatDuration, scoreToPercent } from '../../../lib/format';
 import { PROCESSING_STATUSES } from '../../../lib/transcript';
 import './ResultsPage.css';
-import { useToast } from '../../../components/ui';
+import { Button, useToast } from '../../../components/ui';
+import { CompareIcon } from '../../../components/icons';
 
 const PER_PAGE = 20;
 const RANKING_SIZE = 5;
@@ -44,7 +44,6 @@ function ResultsPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { positionId } = useParams();
-  const { openSidebar } = useLayout();
   const { settings } = useUserSettings();
   const positionFilter = positionId ? Number(positionId) : undefined;
   const [position, setPosition] = useState(null);
@@ -155,12 +154,17 @@ function ResultsPage() {
 
   return (
     <div className="results-page">
-      <Header
+      <PageHeader
         title={selectedPosition ? `Ranking - ${selectedPosition.name}` : "Análise de candidatos"}
-        showComparar={true}
-        compareLabel={selecting ? 'Cancelar' : 'Comparar'}
-        onCompareClick={handleToggleSelecting}
-        onMenuClick={openSidebar}
+        actions={
+          <Button
+            variant={selecting ? 'ghost' : 'secondary'}
+            icon={<CompareIcon size={16} />}
+            onClick={handleToggleSelecting}
+          >
+            {selecting ? 'Cancelar' : 'Comparar'}
+          </Button>
+        }
       />
       
       {selectedPosition && (

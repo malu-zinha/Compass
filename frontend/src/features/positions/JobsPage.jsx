@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components/layout';
-import { useLayout } from '../../app/AppLayout';
+import { PageHeader } from '../../components/layout';
 import { listPositions, deletePosition } from '../../api/positions';
 import './JobsPage.css';
 import { useToast, useConfirm } from '../../components/ui';
@@ -9,7 +8,6 @@ import { useToast, useConfirm } from '../../components/ui';
 function JobsPage() {
   const toast = useToast();
   const confirm = useConfirm();
-  const { openSidebar } = useLayout();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -59,10 +57,7 @@ function JobsPage() {
 
   return (
     <div className="jobs-page">
-      <Header
-        title="Cargos"
-        onMenuClick={openSidebar}
-      />
+      <PageHeader title="Cargos" />
       <div className="jobs-content">
         <div className="jobs-section">
           <div className="jobs-header">

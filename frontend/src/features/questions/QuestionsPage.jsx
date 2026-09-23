@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Header } from '../../components/layout';
-import { useLayout } from '../../app/AppLayout';
+import { PageHeader } from '../../components/layout';
 import { listQuestions, createQuestion, deleteQuestion, updateQuestion } from '../../api/questions';
 import { listPositions } from '../../api/positions';
 import styles from '../../styles/questions.module.css';
@@ -18,7 +17,6 @@ const questionInputStyle = {
 
 export default function QuestionsPage() {
   const toast = useToast();
-  const { openSidebar } = useLayout();
 
   // Estado de seleção de tipo
   const [questionType, setQuestionType] = useState(null); // null, 'general', 'position'
@@ -164,12 +162,9 @@ export default function QuestionsPage() {
   if (!questionType) {
     return (
       <div className={styles.wrapper}>
-        <Header
-          title="Perguntas"
-          onMenuClick={openSidebar}
-        />
+        <PageHeader title="Perguntas" />
 
-        <main className={styles.main}>
+        <div className={styles.main}>
           <div className={styles.contentCard}>
             <div className={styles.titleRow}>
               <h2 className={styles.title}>Selecione o tipo de pergunta</h2>
@@ -237,7 +232,7 @@ export default function QuestionsPage() {
               </button>
             </section>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -246,12 +241,9 @@ export default function QuestionsPage() {
   if (questionType === 'position' && !selectedPositionId) {
     return (
       <div className={styles.wrapper}>
-        <Header
-          title="Perguntas por Cargo"
-          onMenuClick={openSidebar}
-        />
+        <PageHeader title="Perguntas por Cargo" />
 
-        <main className={styles.main}>
+        <div className={styles.main}>
           <div className={styles.contentCard}>
             <div className={styles.titleRow}>
               <h2 className={styles.title}>Selecione o cargo</h2>
@@ -309,7 +301,7 @@ export default function QuestionsPage() {
               )}
             </section>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -322,12 +314,9 @@ export default function QuestionsPage() {
 
   return (
     <div className={styles.wrapper}>
-      <Header
-        title={pageTitle}
-        onMenuClick={openSidebar}
-      />
+      <PageHeader title={pageTitle} />
 
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className={styles.contentCard}>
           <div className={styles.titleRow}>
             <h2 className={styles.title}>Lista de perguntas</h2>
@@ -430,7 +419,7 @@ export default function QuestionsPage() {
             )}
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

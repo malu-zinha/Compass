@@ -5,8 +5,8 @@ import * as icons from './index';
 const entries = Object.entries(icons);
 
 describe('ícones', () => {
-  it('exporta os 25 ícones', () => {
-    expect(entries).toHaveLength(25);
+  it('exporta os 28 ícones', () => {
+    expect(entries).toHaveLength(28);
   });
 
   describe.each(entries)('%s', (_name, Icon) => {

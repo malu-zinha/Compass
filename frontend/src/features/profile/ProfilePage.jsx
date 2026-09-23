@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components/layout';
-import { useLayout } from '../../app/AppLayout';
+import { PageHeader } from '../../components/layout';
 import { useAuth } from '../../auth/AuthContext';
 import { apiUrl } from '../../api/client';
 import { updateMe, uploadAvatar } from '../../api/users';
@@ -33,7 +32,6 @@ function initialsOf(name) {
 
 export default function ProfilePage() {
   const toast = useToast();
-  const { openSidebar } = useLayout();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
   const fileInputRef = useRef(null);
@@ -89,9 +87,9 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <Header title="Perfil" onMenuClick={openSidebar} />
+      <PageHeader title="Perfil" />
 
-      <main className="profile-content">
+      <div className="profile-content">
         <div className="profile-container">
           <div className="profile-header">
             <div className="profile-avatar-section">
@@ -213,7 +211,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

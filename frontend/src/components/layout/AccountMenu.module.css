@@ -1,0 +1,103 @@
+.root { position: relative; }
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  background: var(--surface-hover);
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name,
+.role,
+.email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.name { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.role,
+.email { font-size: var(--text-xs); color: var(--text-muted); }
+
+.chevron,
+.chevronOpen {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transform: rotate(180deg);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.chevronOpen { transform: rotate(0deg); }
+
+.panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-lg);
+  animation: pop var(--duration-fast) var(--ease-out);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.theme { width: 100%; }
+
+.links { display: flex; flex-direction: column; }
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+}
+.link:hover { background: var(--surface-hover); }
+.link:global(.active) { color: var(--color-primary-fg); }
+
+.logout {
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  color: var(--color-danger-fg);
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: translateY(4px); }
+}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
+import { PageHeader } from '../../../components/layout';
 import { InfoModal } from '../../../components/common';
 import { deleteInterview, reprocessInterview, updateInterview } from '../../../api/interviews';
 import { useUserSettings } from '../../../auth/SettingsContext';
@@ -13,7 +12,8 @@ import AnalysisSections from './AnalysisSections';
 import TranscriptView from './TranscriptView';
 import AudioPlayer from './AudioPlayer';
 import './InterviewDetailPage.css';
-import { useToast, useConfirm } from '../../../components/ui';
+import { Button, useToast, useConfirm } from '../../../components/ui';
+import { InfoIcon } from '../../../components/icons';
 
 const INITIAL_SECTIONS = {
   habilidades: true,
@@ -42,7 +42,6 @@ function InterviewDetailPage() {
   const confirm = useConfirm();
   const { id } = useParams();
   const navigate = useNavigate();
-  const { openSidebar } = useLayout();
   const { settings } = useUserSettings();
   const { interview, questions, error, reload } = useInterview(id);
   const [showModal, setShowModal] = useState(false);
@@ -114,11 +113,8 @@ function InterviewDetailPage() {
   if (!interview) {
     return (
       <div className="interview-detail-page">
-        <Header 
-          title={error ? 'Entrevista não encontrada' : 'Carregando entrevista...'}
-          showInfo={false}
-          onMenuClick={openSidebar}
-        />
+        <PageHeader
+          title={error ? 'Entrevista não encontrada' : 'Carregando entrevista...'} />
         <div style={{padding: '2rem', textAlign: 'center'}}>
           {!error && <div className="spinner" style={{margin: '0 auto'}}></div>}
           <p style={{marginTop: '1rem', color: '#666'}}>
@@ -179,11 +175,13 @@ function InterviewDetailPage() {
 
   return (
     <div className="interview-detail-page">
-      <Header 
+      <PageHeader
         title={`${interview.candidate_name || 'Candidato sem nome'} - ${date}`}
-        showInfo={true}
-        onInfoClick={() => setShowModal(true)}
-        onMenuClick={openSidebar}
+        actions={
+          <Button variant="secondary" icon={<InfoIcon size={16} />} onClick={() => setShowModal(true)}>
+            Informações
+          </Button>
+        }
       />
       
       <div className="detail-container">

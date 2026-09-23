@@ -1,96 +1,63 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { NavLink } from 'react-router-dom';
 import { Logo } from '../brand';
-import { useAuth } from '../../auth/AuthContext';
-import HomeIcon from '../icons/HomeIcon';
-import InterviewsIcon from '../icons/InterviewsIcon';
-import JobsIcon from '../icons/JobsIcon';
-import QuestionsIcon from '../icons/QuestionsIcon';
-import SettingsIcon from '../icons/SettingsIcon';
-import UserIcon from '../icons/UserIcon';
-import LogoutIcon from '../icons/LogoutIcon';
-import './Sidebar.css';
+import { ChartIcon, HomeIcon, InterviewsIcon, JobsIcon, QuestionsIcon } from '../icons';
+import AccountMenu from './AccountMenu';
+import styles from './Sidebar.module.css';
 
-function Sidebar({ isOpen, onClose }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+const NAV = [
+  { to: '/inicio', label: 'Início', Icon: HomeIcon },
+  { to: '/entrevistas', label: 'Entrevistas', Icon: InterviewsIcon },
+  { to: '/ranking', label: 'Ranking', Icon: ChartIcon },
+  { to: '/cargos', label: 'Cargos', Icon: JobsIcon },
+  { to: '/perguntas', label: 'Perguntas', Icon: QuestionsIcon },
+];
 
-  const handleLinkClick = (path) => {
-    navigate(path);
-    onClose();
-  };
+/*
+ * Rail fixo a partir de 1024px; abaixo disso, gaveta com overlay. Aberta como
+ * gaveta, o foco vai para o primeiro link e Esc ou o overlay fecham
+ * (onDismiss devolve o foco ao botão de menu). Clicar num link só fecha.
+ */
+export default function Sidebar({ id, open = false, onDismiss, onNavigate }) {
+  const navRef = useRef(null);
 
-  const menuItems = [
-    { path: '/inicio', label: 'Início', icon: HomeIcon },
-    { path: '/entrevistas', label: 'Entrevistas', icon: InterviewsIcon },
-    { path: '/cargos', label: 'Cargos', icon: JobsIcon },
-    { path: '/perguntas', label: 'Perguntas', icon: QuestionsIcon },
-    { path: '/configuracoes', label: 'Configurações', icon: SettingsIcon }
-  ];
-
-  const handleLogoutClick = () => {
-    logout();
-    navigate('/');
-  };
+  useEffect(() => {
+    if (!open) return undefined;
+    navRef.current?.querySelector('a')?.focus();
+    const onKey = (event) => {
+      if (event.key === 'Escape') onDismiss?.();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onDismiss]);
 
   return (
     <>
-      {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
-      <div className={`sidebar ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
+      {open && <div className={styles.overlay} onClick={onDismiss} aria-hidden="true" />}
+      <aside id={id} className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Navegação principal">
+        <div className={styles.brand}>
+          <NavLink to="/inicio" className={styles.brandLink} onClick={onNavigate}>
             <Logo variant="full" />
-          </div>
+          </NavLink>
         </div>
 
-        <button
-          className="sidebar-user"
-          onClick={() => handleLinkClick('/perfil')}
-        >
-          <div className="user-icon">
-            <UserIcon size={24} />
-          </div>
-          <div className="user-info">
-            <div className="user-name">{user?.name}</div>
-            <div className="user-role">{user?.job_title}</div>
-          </div>
-        </button>
-
-        <nav className="sidebar-nav">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={item.path || item.label}
-                className={`sidebar-nav-item ${item.path && location.pathname === item.path ? 'active' : ''}`}
-                onClick={() => item.path ? handleLinkClick(item.path) : null}
-                disabled={!item.path}
-              >
-                <span className="nav-icon">
-                  <IconComponent size={20} color="#1a1a1a" />
-                </span>
-                <span className="nav-label">{item.label}</span>
-              </button>
-            );
-          })}
+        <nav ref={navRef} className={styles.nav}>
+          <ul>
+            {NAV.map(({ to, label, Icon }) => (
+              <li key={to}>
+                <NavLink to={to} className={styles.item} onClick={onNavigate}>
+                  <Icon size={20} />
+                  <span>{label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
         </nav>
 
-        <div className="sidebar-footer">
-          <button
-            className="sidebar-email"
-            style={{ border: 'none', width: '100%', cursor: 'pointer' }}
-            onClick={handleLogoutClick}
-          >
-            {user?.email}
-            <span className="email-arrow">
-              <LogoutIcon size={16} />
-            </span>
-          </button>
+        <div className={styles.footer}>
+          <AccountMenu onNavigate={onNavigate} />
         </div>
-      </div>
+      </aside>
     </>
   );
 }
-
-export default Sidebar;
