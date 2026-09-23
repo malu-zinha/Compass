@@ -1,0 +1,22 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.required { color: var(--color-danger-fg); }
+
+.hint,
+.error {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+}
+.hint { color: var(--text-muted); }
+.error { color: var(--color-danger-fg); }
