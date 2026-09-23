@@ -11,7 +11,9 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * faixa (lib/score.js). A faixa também vai em texto (aria-valuetext e rótulo
  * visível no anel), para que a cor nunca seja o único sinal.
  */
-export default function ScoreMeter({ score, label, variant = 'ring', size = 'md', showBand = true, className }) {
+export default function ScoreMeter({
+  score, label, variant = 'ring', size = 'md', showBand = true, showLabel = true, className,
+}) {
   const band = scoreBand(score);
   if (!band) {
     return (
@@ -34,7 +36,7 @@ export default function ScoreMeter({ score, label, variant = 'ring', size = 'md'
     return (
       <div className={cx(styles.bar, styles[band.tone], className)} {...meterProps}>
         <div className={styles.barHead}>
-          <span className={styles.barLabel}>{label}</span>
+          {showLabel && <span className={styles.barLabel}>{label}</span>}
           <span className={styles.value}>{percent}%</span>
         </div>
         <div className={styles.track}>

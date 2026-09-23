@@ -73,6 +73,7 @@
   font-size: var(--text-sm);
 }
 .barLabel { color: var(--text-muted); }
+.barHead:has(> :only-child) { justify-content: flex-end; }
 .track {
   height: 6px;
   overflow: hidden;
