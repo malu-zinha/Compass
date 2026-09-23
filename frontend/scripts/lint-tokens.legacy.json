@@ -1,7 +1,5 @@
 [
   "src/components/common/InfoModal.css",
-  "src/features/home/HomePage.css",
-  "src/features/home/HomePage.jsx",
   "src/features/interviews/detail/InterviewDetailPage.css",
   "src/features/interviews/detail/InterviewDetailPage.jsx",
   "src/features/interviews/detail/TranscriptView.jsx",
@@ -13,7 +11,6 @@
   "src/features/interviews/new/NewInterviewPage.css",
   "src/features/interviews/new/UploadAudioPage.css",
   "src/features/interviews/new/UploadAudioPage.jsx",
-  "src/features/interviews/results/RankingSelectPage.css",
   "src/features/interviews/results/ResultsPage.css",
   "src/features/interviews/results/ResultsPage.jsx",
   "src/features/positions/JobEditorPage.css",
