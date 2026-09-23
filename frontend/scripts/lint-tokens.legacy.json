@@ -15,7 +15,5 @@
   "src/features/interviews/results/ResultsPage.jsx",
   "src/features/profile/ProfilePage.css",
   "src/features/profile/ProfilePage.jsx",
-  "src/features/questions/QuestionsPage.jsx",
-  "src/features/settings/SettingsPage.css",
-  "src/styles/questions.module.css"
+  "src/features/settings/SettingsPage.css"
 ]

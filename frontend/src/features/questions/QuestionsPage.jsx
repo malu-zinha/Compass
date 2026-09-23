@@ -1,424 +1,164 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { PageHeader } from '../../components/layout';
-import { listQuestions, createQuestion, deleteQuestion, updateQuestion } from '../../api/questions';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { createQuestion, deleteQuestion, listQuestions, updateQuestion } from '../../api/questions';
 import { listPositions } from '../../api/positions';
-import styles from '../../styles/questions.module.css';
-import { useToast } from '../../components/ui';
+import { PageHeader } from '../../components/layout';
+import { Button, Card, EmptyState, Input, Select, Skeleton, useToast } from '../../components/ui';
+import { BriefcaseIcon, PlusIcon, QuestionsIcon } from '../../components/icons';
+import QuestionItem from './QuestionItem';
+import styles from './QuestionsPage.module.css';
 
-const questionInputStyle = {
-  flex: 1,
-  padding: '0.75rem',
-  border: '1px solid rgba(55, 28, 104, 0.2)',
-  borderRadius: '6px',
-  fontFamily: 'var(--font-body)',
-  fontSize: '0.9rem',
-  outline: 'none'
-};
-
+/*
+ * Banco de perguntas numa tela só: escopo (gerais ou um cargo) à esquerda,
+ * perguntas daquele escopo à direita. O escopo mora na URL (?cargo=3), então
+ * recarregar ou compartilhar o link mantém o contexto.
+ */
 export default function QuestionsPage() {
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const positionId = searchParams.get('cargo') ? Number(searchParams.get('cargo')) : null;
 
-  // Estado de seleção de tipo
-  const [questionType, setQuestionType] = useState(null); // null, 'general', 'position'
-  const [selectedPositionId, setSelectedPositionId] = useState(null);
   const [positions, setPositions] = useState([]);
-  const [loadingPositions, setLoadingPositions] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState('');
+  const [adding, setAdding] = useState(false);
 
-  // Estado de perguntas
-  const [perguntas, setPerguntas] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [newQuestionText, setNewQuestionText] = useState('');
-
-  // Selection mode
-  const [selectionMode] = useState(false);
-  const [selected, setSelected] = useState(new Set());
-
-  // Edição de pergunta (duplo clique)
-  const [editingId, setEditingId] = useState(null);
-  const [editingText, setEditingText] = useState('');
-  const editResolvedRef = useRef(true);
-
-  // Carregar cargos quando selecionar tipo "position"
   useEffect(() => {
-    if (questionType === 'position') {
-      loadPositions();
-    }
-  }, [questionType]);
+    listPositions()
+      .then((data) => setPositions(data.items))
+      .catch((error) => console.error('Erro ao carregar cargos:', error));
+  }, []);
 
-  // Carregar perguntas quando tipo ou cargo mudar
-  useEffect(() => {
-    if (questionType) {
-      loadQuestions();
-    }
-  }, [questionType, selectedPositionId]);
-
-  const loadPositions = async () => {
-    setLoadingPositions(true);
-    try {
-      const data = await listPositions();
-      setPositions(data.items);
-    } catch (error) {
-      console.error('Erro ao carregar cargos:', error);
-    } finally {
-      setLoadingPositions(false);
-    }
-  };
-
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     setLoading(true);
     try {
-      const positionId = questionType === 'position' ? selectedPositionId : null;
-      const questions = await listQuestions(positionId);
-      setPerguntas(questions);
+      setQuestions(await listQuestions(positionId));
     } catch (error) {
       console.error('Erro ao carregar perguntas:', error);
-      setPerguntas([]);
+      toast.error(error.detail || 'Não foi possível carregar as perguntas.');
+      setQuestions([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [positionId, toast]);
 
-  const handleAddFromInput = async () => {
-    const t = newQuestionText.trim();
-    if (!t) return;
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
 
+  const selectScope = (id) => setSearchParams(id ? { cargo: String(id) } : {}, { replace: true });
+
+  const handleAdd = async (event) => {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text) return;
+    setAdding(true);
     try {
-      const positionId = questionType === 'position' ? selectedPositionId : null;
-      await createQuestion(t, positionId);
-      setNewQuestionText('');
-      await loadQuestions(); // Recarregar perguntas
+      await createQuestion(text, positionId);
+      setDraft('');
+      await loadQuestions();
     } catch (error) {
       console.error('Erro ao criar pergunta:', error);
       toast.error(error.detail || 'Erro ao criar pergunta. Verifique se o backend está rodando.');
+    } finally {
+      setAdding(false);
     }
   };
 
-  const toggleSelect = (index) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
-  };
-
-  const handleDeleteQuestion = async (questionId) => {
+  const handleSave = async (id, text) => {
     try {
-      await deleteQuestion(questionId);
-      await loadQuestions(); // Recarregar perguntas
-    } catch (error) {
-      console.error('Erro ao deletar pergunta:', error);
-      toast.error(error.detail || 'Erro ao deletar pergunta. Verifique se o backend está rodando.');
-    }
-  };
-
-  const startEditing = (question) => {
-    if (selectionMode) return;
-    editResolvedRef.current = false;
-    setEditingId(question.id);
-    setEditingText(question.text);
-  };
-
-  const finishEditing = () => {
-    editResolvedRef.current = true;
-    setEditingId(null);
-    setEditingText('');
-  };
-
-  const commitEditing = async (questionId, text) => {
-    if (editResolvedRef.current) return;
-    const trimmed = text.trim();
-    if (!trimmed) {
-      finishEditing();
-      return;
-    }
-    finishEditing();
-    try {
-      const updated = await updateQuestion(questionId, trimmed);
-      setPerguntas((prev) => prev.map((q) => (
-        q.id === questionId ? { ...q, text: updated?.text ?? trimmed } : q
-      )));
+      const updated = await updateQuestion(id, text);
+      setQuestions((list) => list.map((q) => (q.id === id ? { ...q, text: updated?.text ?? text } : q)));
     } catch (error) {
       console.error('Erro ao editar pergunta:', error);
       toast.error(error.detail || 'Erro ao editar pergunta. Verifique se o backend está rodando.');
     }
   };
 
-  const handleEditKeyDown = (e, question) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      commitEditing(question.id, editingText);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      finishEditing();
+  const handleDelete = async (question) => {
+    try {
+      await deleteQuestion(question.id);
+      setQuestions((list) => list.filter((q) => q.id !== question.id));
+      toast.info('Pergunta removida.');
+    } catch (error) {
+      console.error('Erro ao deletar pergunta:', error);
+      toast.error(error.detail || 'Erro ao deletar pergunta. Verifique se o backend está rodando.');
     }
   };
 
-  const handleEditBlur = (question) => {
-    commitEditing(question.id, editingText);
-  };
-
-  // Tela de seleção de tipo
-  if (!questionType) {
-    return (
-      <div className={styles.wrapper}>
-        <PageHeader title="Perguntas" />
-
-        <div className={styles.main}>
-          <div className={styles.contentCard}>
-            <div className={styles.titleRow}>
-              <h2 className={styles.title}>Selecione o tipo de pergunta</h2>
-            </div>
-
-            <section style={{ padding: '3rem 2rem', display: 'flex', flexDirection: 'row', gap: '1.5rem', justifyContent: 'center' }}>
-              <button
-                onClick={() => setQuestionType('general')}
-                style={{
-                  padding: '2rem',
-                  background: '#EDE9FF',
-                  color: '#371C68',
-                  border: '1px solid rgba(55, 28, 104, 0.1)',
-                  borderRadius: '8px',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '1.25rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  textAlign: 'center',
-                  flex: '1',
-                  maxWidth: '600px',
-                  height: '250px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-                onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
-                onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
-              >
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas Gerais</div>
-                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'var(--font-body)' }}>
-                  Perguntas usadas para todas as entrevistas
-                </div>
-              </button>
-
-              <button
-                onClick={() => setQuestionType('position')}
-                style={{
-                  padding: '2rem',
-                  background: '#EDE9FF',
-                  color: '#371C68',
-                  border: '1px solid rgba(55, 28, 104, 0.1)',
-                  borderRadius: '8px',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '1.25rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  textAlign: 'center',
-                  flex: '1',
-                  maxWidth: '600px',
-                  height: '250px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-                onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
-                onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
-              >
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas por Cargo</div>
-                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'var(--font-body)' }}>
-                  Perguntas específicas para um cargo
-                </div>
-              </button>
-            </section>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela de seleção de cargo (se tipo for "position")
-  if (questionType === 'position' && !selectedPositionId) {
-    return (
-      <div className={styles.wrapper}>
-        <PageHeader title="Perguntas por Cargo" />
-
-        <div className={styles.main}>
-          <div className={styles.contentCard}>
-            <div className={styles.titleRow}>
-              <h2 className={styles.title}>Selecione o cargo</h2>
-              <button
-                onClick={() => setQuestionType(null)}
-                style={{
-                  padding: '0.65rem 1.25rem',
-                  background: 'transparent',
-                  color: '#371C68',
-                  border: '1px solid rgba(55, 28, 104, 0.2)',
-                  borderRadius: '8px',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Voltar
-              </button>
-            </div>
-
-            <section style={{ padding: '2rem' }}>
-              {loadingPositions ? (
-                <p style={{ fontFamily: 'var(--font-body)', textAlign: 'center', color: '#666' }}>
-                  Carregando cargos...
-                </p>
-              ) : positions.length === 0 ? (
-                <p style={{ fontFamily: 'var(--font-body)', textAlign: 'center', color: '#666' }}>
-                  Nenhum cargo cadastrado
-                </p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {positions.map((pos) => (
-                    <button
-                      key={pos.id}
-                      onClick={() => setSelectedPositionId(pos.id)}
-                      style={{
-                        padding: '1.5rem',
-                        background: '#EDE9FF',
-                        color: '#371C68',
-                        border: '1px solid rgba(55, 28, 104, 0.1)',
-                        borderRadius: '10px',
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        textAlign: 'left'
-                      }}
-                      onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
-                      onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
-                    >
-                      {pos.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela principal de perguntas
-  const selectedPosition = positions.find(p => p.id === selectedPositionId);
-  const pageTitle = questionType === 'general'
-    ? 'Perguntas Gerais'
-    : `Perguntas - ${selectedPosition?.name || 'Cargo'}`;
+  const scopes = [{ id: null, name: 'Perguntas gerais' }, ...positions];
+  const current = scopes.find((s) => s.id === positionId) ?? { id: positionId, name: 'Cargo' };
 
   return (
-    <div className={styles.wrapper}>
-      <PageHeader title={pageTitle} />
+    <div className={styles.page}>
+      <PageHeader title="Perguntas" />
 
-      <div className={styles.main}>
-        <div className={styles.contentCard}>
-          <div className={styles.titleRow}>
-            <h2 className={styles.title}>Lista de perguntas</h2>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <button
-                onClick={() => {
-                  setQuestionType(null);
-                  setSelectedPositionId(null);
-                  setPerguntas([]);
-                }}
-                style={{
-                  padding: '0.65rem 1.25rem',
-                  background: 'transparent',
-                  color: '#371C68',
-                  border: '1px solid rgba(55, 28, 104, 0.2)',
-                  borderRadius: '8px',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Trocar tipo
-              </button>
+      <div className={styles.layout}>
+        <nav aria-label="Escopo das perguntas" className={styles.scopes}>
+          <label className={styles.scopeSelect}>
+            <span className="sr-only">Escopo</span>
+            <Select value={positionId ?? ''} onChange={(e) => selectScope(e.target.value ? Number(e.target.value) : null)}>
+              {scopes.map((s) => <option key={s.id ?? 'geral'} value={s.id ?? ''}>{s.name}</option>)}
+            </Select>
+          </label>
+          <ul className={styles.scopeList}>
+            {scopes.map((s) => (
+              <li key={s.id ?? 'geral'}>
+                <button
+                  type="button"
+                  className={styles.scope}
+                  aria-current={s.id === positionId ? 'true' : undefined}
+                  onClick={() => selectScope(s.id)}
+                >
+                  {s.id ? <BriefcaseIcon size={16} /> : <QuestionsIcon size={16} />}
+                  <span>{s.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <Card padding="none" as="section" aria-labelledby="lista-titulo" className={styles.panel}>
+          <div className={styles.panelHead}>
+            <div>
+              <h2 id="lista-titulo" className={styles.panelTitle}>{current.name}</h2>
+              <p className={styles.panelHint}>
+                {positionId ? 'Aparecem nas entrevistas deste cargo.' : 'Aparecem em todas as entrevistas.'}
+              </p>
             </div>
           </div>
 
-          <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(0, 0, 0, 0.08)', display: 'flex', gap: '0.75rem' }}>
-            <input
-              type="text"
-              value={newQuestionText}
-              onChange={(e) => setNewQuestionText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddFromInput()}
-              placeholder="Digite uma nova pergunta e pressione Enter"
-              style={questionInputStyle}
+          <form className={styles.addForm} onSubmit={handleAdd}>
+            <Input
+              aria-label="Nova pergunta"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Escreva uma pergunta e pressione Enter"
             />
-            <button
-              className={styles.addQuestionBtn}
-              onClick={handleAddFromInput}
-              aria-label="Adiciona pergunta"
-            >
-              + Adicionar
-            </button>
-          </div>
+            <Button type="submit" variant="primary" icon={<PlusIcon size={16} />} loading={adding} disabled={!draft.trim()}>
+              Adicionar
+            </Button>
+          </form>
 
-          <section className={styles.board}>
-            {loading ? (
-              <p style={{
-                fontFamily: 'var(--font-body)',
-                textAlign: 'center',
-                color: '#666',
-                fontSize: '1rem',
-                padding: '3rem 1rem'
-              }}>
-                Carregando perguntas...
-              </p>
-            ) : perguntas.length === 0 ? (
-              <p style={{
-                fontFamily: 'var(--font-body)',
-                textAlign: 'center',
-                color: '#666',
-                fontSize: '1rem',
-                padding: '3rem 1rem'
-              }}>
-                Nenhuma pergunta cadastrada
-              </p>
-            ) : (
-              <ul className={styles.grid}>
-                {perguntas.map((q, i) => (
-                  <li
-                    key={q.id}
-                    className={`${styles.card} ${selectionMode && selected.has(i) ? styles.selected : ''}`}
-                    onClick={() => selectionMode && toggleSelect(i)}
-                  >
-                    {editingId === q.id ? (
-                      <input
-                        type="text"
-                        style={questionInputStyle}
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        onKeyDown={(e) => handleEditKeyDown(e, q)}
-                        onBlur={() => handleEditBlur(q)}
-                        autoFocus
-                      />
-                    ) : (
-                      <div className={styles.cardTitle} onDoubleClick={() => startEditing(q)}>{q.text}</div>
-                    )}
-                    <button
-                      className={styles.removeX}
-                      aria-label={`Remover ${q.text}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteQuestion(q.id);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
+          {loading ? (
+            <div className={styles.loading} aria-busy="true">
+              {[0, 1, 2].map((i) => <Skeleton key={i} variant="line" />)}
+            </div>
+          ) : questions.length === 0 ? (
+            <EmptyState
+              icon={<QuestionsIcon size={24} />}
+              title="Nenhuma pergunta aqui ainda"
+              description="Adicione acima as perguntas que você costuma fazer."
+            />
+          ) : (
+            <ol className={styles.list}>
+              {questions.map((q, i) => (
+                <QuestionItem key={q.id} question={q} index={i} onSave={handleSave} onDelete={handleDelete} />
+              ))}
+            </ol>
+          )}
+        </Card>
       </div>
     </div>
   );
