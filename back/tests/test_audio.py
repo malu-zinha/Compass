@@ -68,3 +68,12 @@ def test_audio_signature_invalidated_by_reupload(auth_client, position_id):
     assert auth_client.get(url).status_code == 200
     auth_client.post(f"/interviews/{iid}/audio", files={"file": ("b.mp3", MP3, "audio/mpeg")})
     assert auth_client.get(url).status_code == 403
+
+
+def test_audio_nonexistent_id_returns_same_response_as_bad_signature(auth_client):
+    expires = int(time.time()) + 3600
+    r_bad_sig = auth_client.get(f"/interviews/1/audio?expires={expires}&signature=abc")
+    r_missing_id = auth_client.get(f"/interviews/999999/audio?expires={expires}&signature=abc")
+    assert r_bad_sig.status_code == 403
+    assert r_missing_id.status_code == 403
+    assert r_bad_sig.json() == r_missing_id.json()

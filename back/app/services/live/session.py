@@ -35,7 +35,6 @@ INTERRUPTED_MESSAGE = "Transcrição ao vivo interrompida. O áudio continua sen
 @dataclass(frozen=True)
 class LiveContext:
     interview_id: int
-    language: str
     user_settings: LiveUserSettings
     state: Any
 
