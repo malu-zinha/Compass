@@ -2,7 +2,7 @@
 .landing-page {
   min-height: 100vh;
   background: #ffffff;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   overflow-x: hidden;
 }
 
@@ -40,7 +40,7 @@
   color: #602309;
   border: 1px solid rgba(96, 35, 9, 0.1);
   border-radius: 8px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: normal;
   cursor: pointer;
@@ -63,7 +63,7 @@
   color: #602309;
   border: 1px solid rgba(96, 35, 9, 0.1);
   border-radius: 8px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: normal;
   cursor: pointer;
@@ -98,7 +98,7 @@
 }
 
 .hero-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 3.5rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -107,7 +107,7 @@
 }
 
 .hero-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1.1rem;
   color: #666;
   line-height: 1.6;
@@ -126,7 +126,7 @@
   color: #371C68;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -145,7 +145,7 @@
   color: #1a1a1a;
   border: 2px solid rgba(0, 0, 0, 0.15);
   border-radius: 10px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -218,7 +218,7 @@
 }
 
 .card-text {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   color: #1a1a1a;
   white-space: nowrap;
@@ -233,7 +233,7 @@
 }
 
 .section-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -281,7 +281,7 @@
 }
 
 .feature-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -289,7 +289,7 @@
 }
 
 .feature-description {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   color: #666;
   line-height: 1.6;
@@ -326,14 +326,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   margin: 0 auto 1rem auto;
   box-shadow: 0 4px 12px rgba(55, 28, 104, 0.2);
 }
 
 .step-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -341,7 +341,7 @@
 }
 
 .step-description {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   color: #666;
   line-height: 1.6;
@@ -368,7 +368,7 @@
 }
 
 .cta-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -376,7 +376,7 @@
 }
 
 .cta-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1.25rem;
   color: #666;
   line-height: 1.6;
@@ -389,7 +389,7 @@
   color: #371C68;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 10px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -431,7 +431,7 @@
 }
 
 .footer-column h5 {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: normal;
   margin: 0 0 1rem 0;

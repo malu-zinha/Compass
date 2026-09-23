@@ -28,7 +28,7 @@
 }
 
 .upload-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: normal;
   color: #371C68;
@@ -37,7 +37,7 @@
 }
 
 .upload-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #666;
   margin-bottom: 2rem;
@@ -86,7 +86,7 @@
 }
 
 .upload-text {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1.25rem;
   color: #371C68;
   margin-bottom: 0.5rem;
@@ -94,20 +94,20 @@
 }
 
 .upload-subtext {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #666;
   margin-bottom: 0.5rem;
 }
 
 .upload-formats {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   color: #999;
 }
 
 .upload-filename {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1.25rem;
   color: #371C68;
   font-weight: 600;
@@ -116,7 +116,7 @@
 }
 
 .upload-filesize {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #666;
   margin-bottom: 1rem;
@@ -143,7 +143,7 @@
 }
 
 .notes-section label {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   display: block;
   font-size: 1rem;
   color: #371C68;
@@ -157,7 +157,7 @@
   border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 8px;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   resize: vertical;
   background: #f8f8f8;
   transition: border-color 0.2s;
@@ -175,7 +175,7 @@
   border: 1px solid rgba(55, 28, 104, 0.1) !important;
   padding: 1rem 2rem;
   border-radius: 10px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: normal;
   cursor: pointer;
@@ -200,7 +200,7 @@
 }
 
 .upload-info {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   text-align: center;
   color: #666;
   font-size: 0.95rem;

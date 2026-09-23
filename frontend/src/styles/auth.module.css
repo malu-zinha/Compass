@@ -71,7 +71,7 @@
   color: #371C68;
   border: 1px solid rgba(55, 28, 104, 0.1);
   border-radius: 8px;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: normal;
   cursor: pointer;

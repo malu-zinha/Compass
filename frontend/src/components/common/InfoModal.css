@@ -50,7 +50,7 @@
 }
 
 .modal-header h2 {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: normal;
   margin: 0;
@@ -88,7 +88,7 @@
 
 .modal-field label {
   display: block;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 600;
   color: #1a1a1a;
@@ -96,7 +96,7 @@
 }
 
 .field-value {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #333;
   padding: 0.75rem 0;
@@ -115,7 +115,7 @@
   color: white;
   border: none;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;

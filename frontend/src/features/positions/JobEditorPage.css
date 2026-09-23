@@ -18,7 +18,7 @@
 }
 
 .editor-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -45,7 +45,7 @@
 }
 
 .form-label {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   color: #1a1a1a;
   margin-bottom: 0.5rem;
@@ -63,7 +63,7 @@
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
@@ -79,7 +79,7 @@
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
@@ -126,7 +126,7 @@
   padding: 0.375rem 0.6rem;
   background: #D2EAFF;
   color: #092260;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 6px;
@@ -169,7 +169,7 @@
   padding: 0.375rem 0.6rem;
   background: #f5f5f5;
   color: #666;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   border-radius: 6px;
   border: 1px solid rgba(160, 160, 160, 0.3);
@@ -202,7 +202,7 @@
   min-width: 180px;
   max-width: 280px;
   padding: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   border: none;
@@ -246,7 +246,7 @@
   flex: 1;
   width: 100%;
   padding: 0.75rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   border: 1px solid rgba(55, 28, 104, 0.2);
   border-radius: 6px;
@@ -264,7 +264,7 @@
 .save-job-btn {
   width: 100%;
   padding: 1rem 2rem;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: normal;
   background: #FFDFCD;

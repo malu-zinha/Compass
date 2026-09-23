@@ -204,7 +204,7 @@ export default function ProfilePage() {
                   logout();
                   navigate('/');
                 }}
-                style={{ fontFamily: 'Inter, sans-serif', padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}
+                style={{ fontFamily: 'var(--font-body)', padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}
               >
                 Sair
               </button>
