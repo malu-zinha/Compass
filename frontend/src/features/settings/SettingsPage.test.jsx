@@ -61,3 +61,11 @@ test('erro ao salvar mostra o detail em toast', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Fuso horário inválido.');
 });
+
+test('seção Aparência troca o tema na hora, sem salvar', async () => {
+  renderWithLayout(<SettingsPage />, '/configuracoes');
+  expect(screen.getByRole('heading', { name: 'Aparência' })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('radio', { name: 'Escuro' }));
+  expect(document.documentElement.dataset.theme).toBe('dark');
+  expect(saveSettings).not.toHaveBeenCalled();
+});

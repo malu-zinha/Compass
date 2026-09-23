@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PageHeader } from '../../components/layout';
+import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import { useUserSettings } from '../../auth/SettingsContext';
 import './SettingsPage.css';
 import { useToast } from '../../components/ui';
@@ -39,6 +40,21 @@ export default function SettingsPage() {
 
       <div className="settings-content">
         <div className="settings-container">
+
+          <section className="settings-section" aria-labelledby="aparencia-titulo">
+            <h2 id="aparencia-titulo" className="section-title">Aparência</h2>
+            <div className="settings-grid">
+              <div className="setting-item">
+                <div className="setting-info">
+                  <div className="setting-label">Tema</div>
+                  <div className="setting-description">
+                    Vale na hora e fica salvo neste dispositivo. &quot;Sistema&quot; acompanha o claro ou escuro do seu computador.
+                  </div>
+                </div>
+                <ThemeSwitcher />
+              </div>
+            </div>
+          </section>
 
           <div className="settings-section">
             <h2 className="section-title">Configurações Gerais</h2>
