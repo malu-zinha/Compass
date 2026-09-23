@@ -34,6 +34,14 @@ def test_avatar_upload_and_signed_download(auth_client):
     assert auth_client.get(url.replace("signature=", "signature=x")).status_code == 403
 
 
+def test_avatar_signature_invalidated_by_reupload(auth_client):
+    r = auth_client.post("/users/me/avatar", files={"file": ("foto.png", PNG, "image/png")})
+    url = r.json()["avatar_url"]
+    assert auth_client.get(url).status_code == 200
+    auth_client.post("/users/me/avatar", files={"file": ("foto2.png", PNG, "image/png")})
+    assert auth_client.get(url).status_code == 403
+
+
 def test_avatar_rejects_non_ascii_signature(auth_client):
     r = auth_client.post("/users/me/avatar", files={"file": ("foto.png", PNG, "image/png")})
     user_id = r.json()["avatar_url"].split("/users/")[1].split("/avatar")[0]

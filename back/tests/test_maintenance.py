@@ -64,6 +64,19 @@ def test_retention_removes_old_audio(app, position_id, settings):
         assert db.get(Interview, iid).audio_filename is None
 
 
+def test_retention_removes_old_audio_of_failed_interviews(app, position_id, settings):
+    settings.audio_retention_days = 30
+    (settings.audio_dir / "old.mp3").write_bytes(b"x")
+    iid = _add(
+        app, position_id, status=InterviewStatus.error, audio_filename="old.mp3",
+        created_at=datetime.now(UTC) - timedelta(days=31),
+    )
+    maintenance.run_once(app.state, datetime.now(UTC))
+    assert not (settings.audio_dir / "old.mp3").exists()
+    with app.state.session_factory() as db:
+        assert db.get(Interview, iid).audio_filename is None
+
+
 def test_retention_disabled_keeps_old_audio(app, position_id, settings):
     settings.audio_retention_days = 0
     (settings.audio_dir / "old.mp3").write_bytes(b"x")
@@ -108,14 +121,25 @@ def test_active_or_recent_recordings_are_left_alone(app, position_id, settings):
         assert {db.get(Interview, i).status for i in (active, recent)} == {InterviewStatus.recording}
 
 
-def test_abandoned_recording_without_audio_is_marked_error(app, position_id):
+def test_abandoned_recording_without_audio_reverts_to_draft(app, position_id):
     iid = _add(app, position_id, status=InterviewStatus.recording,
                updated_at=datetime.now(UTC) - timedelta(minutes=30))
     jobs = maintenance.run_once(app.state, datetime.now(UTC))
     assert iid not in [job_id for job_id, _ in jobs]
     with app.state.session_factory() as db:
         i = db.get(Interview, iid)
-        assert i.status == InterviewStatus.error and i.error_message == "Nenhum áudio foi gravado."
+        assert i.status == InterviewStatus.draft and i.error_message is None
+
+
+def test_draft_from_empty_recording_is_deleted_by_the_draft_ttl(app, position_id):
+    old = datetime.now(UTC) - timedelta(hours=30)
+    iid = _add(app, position_id, status=InterviewStatus.recording, created_at=old, updated_at=old)
+    maintenance.run_once(app.state, datetime.now(UTC))  # finaliza sem áudio -> draft
+    with app.state.session_factory() as db:
+        assert db.get(Interview, iid).status == InterviewStatus.draft
+    maintenance.run_once(app.state, datetime.now(UTC))  # o TTL de rascunho apaga em seguida
+    with app.state.session_factory() as db:
+        assert db.get(Interview, iid) is None
 
 
 def test_pcm_is_kept_until_the_finalization_is_committed(app, position_id, settings, monkeypatch):

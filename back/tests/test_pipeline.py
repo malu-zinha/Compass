@@ -74,6 +74,17 @@ def test_same_interview_is_not_processed_twice_concurrently(app, auth_client, po
     assert pipeline.transcriber.calls == 0
 
 
+def test_already_done_interview_is_not_reprocessed(auth_client, app, position_id):
+    iid = create_interview(auth_client, position_id)
+    upload(auth_client, iid)
+    body = auth_client.get(f"/interviews/{iid}").json()
+    assert body["status"] == "done"
+    transcriber, analyzer = app.state.pipeline.transcriber, app.state.pipeline.analyzer
+    transcriber.calls = analyzer.calls = 0
+    app.state.pipeline.process(iid)
+    assert transcriber.calls == 0 and analyzer.calls == 0
+
+
 def test_reupload_invalidates_previous_results(auth_client, app, position_id):
     iid = create_interview(auth_client, position_id)
     assert upload(auth_client, iid).status_code == 202

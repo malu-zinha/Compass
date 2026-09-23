@@ -2,7 +2,7 @@ import logging
 import threading
 from typing import Literal
 
-from app.db.models import Interview, InterviewStatus
+from app.db.models import PROCESSING_STATUSES, Interview, InterviewStatus
 from app.services.analysis import AnalysisError, AnalysisInput
 from app.services.transcription import TranscriptionError
 
@@ -36,6 +36,9 @@ class Pipeline:
         with self.session_factory() as db:
             interview = db.get(Interview, interview_id)
             if interview is None:
+                return
+            if interview.status not in PROCESSING_STATUSES:
+                logger.info("Execução obsoleta ignorada para a entrevista %s", interview_id)
                 return
             try:
                 if step == "full":

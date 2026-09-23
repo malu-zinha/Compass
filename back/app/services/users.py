@@ -17,7 +17,7 @@ def get_or_create_settings(db: Session, user: User) -> UserSettings:
 def user_out(user: User, settings) -> UserOut:
     avatar_url = None
     if user.avatar_filename:
-        expires, signature = sign(f"avatar:{user.id}", settings)
+        expires, signature = sign(f"avatar:{user.id}:{user.avatar_filename}", settings)
         avatar_url = f"/users/{user.id}/avatar?expires={expires}&signature={signature}"
     return UserOut(
         id=user.id,

@@ -24,7 +24,7 @@ def app(settings):
     app.state.pipeline.transcriber = FakeTranscriber()
     app.state.pipeline.analyzer = FakeAnalyzer()
 
-    async def streaming_disabled(language):
+    async def streaming_disabled():
         raise OSError("streaming desabilitado nos testes")
 
     # Padrões seguros: nenhum teste abre conexão real com AssemblyAI/OpenAI.
