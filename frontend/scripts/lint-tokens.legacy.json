@@ -1,8 +1,5 @@
 [
   "src/components/common/InfoModal.css",
-  "src/components/layout/Header.css",
-  "src/components/layout/Sidebar.css",
-  "src/components/layout/Sidebar.jsx",
   "src/features/auth/AuthScreen.jsx",
   "src/features/home/HomePage.css",
   "src/features/home/HomePage.jsx",

@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../../components/layout';
-import { useLayout } from '../../app/AppLayout';
+import { PageHeader } from '../../components/layout';
 import { createPosition, getPosition, updatePosition } from '../../api/positions';
 import './JobEditorPage.css';
 import { useToast } from '../../components/ui';
 
 function JobEditorPage() {
   const toast = useToast();
-  const { openSidebar } = useLayout();
   const [jobName, setJobName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobVacancies, setJobVacancies] = useState('');
@@ -134,10 +132,7 @@ function JobEditorPage() {
 
   return (
     <div className="job-editor-page">
-      <Header
-        title={isEditing ? "Editar cargo" : "Novo cargo"}
-        onMenuClick={openSidebar}
-      />
+      <PageHeader title={isEditing ? "Editar cargo" : "Novo cargo"} />
       <div className="job-editor-content">
         <div className="editor-container">
           <h2 className="editor-title">{isEditing ? "Editar cargo" : "Novo cargo"}</h2>

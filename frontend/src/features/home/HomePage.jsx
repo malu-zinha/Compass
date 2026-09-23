@@ -1,20 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components/layout';
+import { PageHeader } from '../../components/layout';
 import { MicrophoneIcon, ChartIcon, BriefcaseIcon, FileTextIcon } from '../../components/icons';
 import { useAuth } from '../../auth/AuthContext';
-import { useLayout } from '../../app/AppLayout';
 import './HomePage.css';
 
 function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { openSidebar } = useLayout();
   const userFirstName = user?.name ? user.name.split(' ')[0] : '';
 
   return (
     <div className="home-page">
-      <Header title="Início" onMenuClick={openSidebar} />
+      <PageHeader title="Início" />
       <div className="home-content">
         <div className="welcome-section">
           <h1 className="welcome-title">

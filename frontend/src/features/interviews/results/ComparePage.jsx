@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
+import { PageHeader } from '../../../components/layout';
 import { getInterview } from '../../../api/interviews';
 import { compareInterviews } from '../../../api/comparisons';
 import { scoreToPercent } from '../../../lib/format';
@@ -64,7 +63,6 @@ function ComparePage() {
   const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { openSidebar } = useLayout();
   const idsParam = searchParams.get('ids');
   const ids = useMemo(() => parseIds(idsParam), [idsParam]);
   const validIds = ids.length >= MIN_COMPARE && ids.length <= MAX_COMPARE;
@@ -121,7 +119,7 @@ function ComparePage() {
 
   return (
     <div className="results-page">
-      <Header title="Comparar candidatos" onMenuClick={openSidebar} />
+      <PageHeader title="Comparar candidatos" />
 
       <div className="results-container" style={{ gridTemplateColumns: '1fr' }}>
         <div
