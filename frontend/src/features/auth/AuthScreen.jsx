@@ -1,257 +1,151 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import styles from '../../styles/auth.module.css';
-import { Logo } from '../../components/brand';
+import { useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { Logo } from '../../components/brand';
+import { Button, Field, Input, useToast } from '../../components/ui';
+import { ChartIcon, MicrophoneIcon, QuestionsIcon } from '../../components/icons';
+import styles from './AuthScreen.module.css';
 
-const AuthScreen = () => {
-  const [searchParams] = useSearchParams();
-  const initialScreen = searchParams.get('mode') === 'register' ? 'register' : 'login';
-  const [currentScreen, setCurrentScreen] = useState(initialScreen);
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    usuario: '',
-    senha: ''
-  });
+const EMPTY = { nome: '', email: '', usuario: '', senha: '' };
+
+function validate(mode, form) {
+  const errors = {};
+  if (mode === 'register') {
+    if (!form.nome.trim()) errors.nome = 'Informe seu nome.';
+    if (!form.email.trim()) errors.email = 'Informe seu e-mail.';
+    else if (!/^\S+@\S+\.\S+$/.test(form.email)) errors.email = 'E-mail inválido.';
+  }
+  if (!form.usuario.trim()) errors.usuario = 'Informe o usuário.';
+  if (!form.senha.trim()) errors.senha = 'Informe a senha.';
+  return errors;
+}
+
+const HIGHLIGHTS = [
+  { Icon: MicrophoneIcon, text: 'Transcrição ao vivo, com perguntas sugeridas durante a conversa' },
+  { Icon: ChartIcon, text: 'Pontuação por competência e ranking por cargo' },
+  { Icon: QuestionsIcon, text: 'Banco de perguntas organizado por cargo' },
+];
+
+export default function AuthScreen() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode = searchParams.get('mode') === 'register' ? 'register' : 'login';
+  const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
   const { login, register, user } = useAuth();
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  if (user) return <Navigate to="/inicio" replace />;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // reset errors
+  const isLogin = mode === 'login';
+
+  const switchMode = (next) => {
     setErrors({});
+    setSearchParams(next === 'register' ? { mode: 'register' } : {}, { replace: true, state: location.state });
+  };
 
-    if (currentScreen === 'login') {
-      const newErrors = {};
-      if (!formData.usuario || formData.usuario.trim() === '') newErrors.usuario = 'Por favor, insira o usuário.';
-      if (!formData.senha || formData.senha.trim() === '') newErrors.senha = 'Por favor, insira a senha.';
-      if (Object.keys(newErrors).length) {
-        setErrors(newErrors);
-        return;
-      }
+  const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
-      try {
-        await login(formData.usuario, formData.senha);
-        setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const found = validate(mode, form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
+
+    setSubmitting(true);
+    try {
+      if (isLogin) {
+        await login(form.usuario, form.senha);
         navigate(location.state?.from ?? '/inicio', { replace: true });
-      } catch (error) {
-        setErrors({ general: error.detail });
-      }
-    } else {
-      const newErrors = {};
-      if (!formData.nome || formData.nome.trim() === '') newErrors.nome = 'Por favor insira o nome.';
-      if (!formData.email || formData.email.trim() === '') newErrors.email = 'Por favor insira o e-mail.';
-      else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'E-mail inválido.';
-      if (!formData.usuario || formData.usuario.trim() === '') newErrors.usuario = 'Por favor insira o usuário.';
-      if (!formData.senha || formData.senha.trim() === '') newErrors.senha = 'Por favor insira a senha.';
-      if (Object.keys(newErrors).length) {
-        setErrors(newErrors);
         return;
       }
-
-      try {
-        await register({
-          name: formData.nome,
-          email: formData.email,
-          username: formData.usuario,
-          password: formData.senha,
-        });
-        setNotification({ type: 'success', message: 'Cadastro realizado com sucesso!' });
-        setTimeout(() => {
-          setCurrentScreen('login');
-          setFormData({ nome: '', email: '', usuario: '', senha: '' });
-        }, 1000);
-      } catch (error) {
-        setErrors({ general: error.detail });
-      }
+      await register({ name: form.nome, email: form.email, username: form.usuario, password: form.senha });
+      toast.success('Conta criada. Entre com seu usuário e senha.');
+      setForm({ ...EMPTY, usuario: form.usuario });
+      switchMode('login');
+    } catch (error) {
+      setErrors({ general: error.detail || 'Não foi possível concluir. Tente novamente.' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    const mode = searchParams.get('mode');
-    if (mode === 'register') {
-      setCurrentScreen('register');
-    } else {
-      setCurrentScreen('login');
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (notification) {
-      const t = setTimeout(() => setNotification(null), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [notification]);
-
-  if (user) {
-    return <Navigate to="/inicio" replace />;
-  }
-
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal} role="dialog" aria-modal="true">
-        <button
-          className={styles.closeButton}
-          aria-label="Voltar"
-          onClick={() => navigate('/')}
-        >
-          &times;
-        </button>
+    <div className={styles.page}>
+      <aside className={styles.brandPanel}>
+        <Link to="/" className={styles.brandLink} aria-label="Compass — página inicial">
+          <Logo variant="full" decorative />
+        </Link>
+        <div className={styles.pitch}>
+          <h2 className={styles.pitchTitle}>Entrevistas que viram decisões.</h2>
+          <ul className={styles.highlights}>
+            {HIGHLIGHTS.map(({ Icon, text }) => (
+              <li key={text}>
+                <span className={styles.highlightIcon}><Icon size={18} /></span>
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
 
-        {currentScreen === 'login' ? (
-          <LoginScreen
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            switchToRegister={() => setCurrentScreen('register')}
-            errors={errors}
-            notification={notification}
-          />
-        ) : (
-          <RegisterScreen
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            switchToLogin={() => setCurrentScreen('login')}
-            errors={errors}
-            notification={notification}
-          />
-        )}
-      </div>
+      <main className={styles.formSide}>
+        <Link to="/" className={styles.back}>← Voltar ao site</Link>
+
+        <div className={styles.formWrap}>
+          <div className={styles.mobileLogo}>
+            <Logo variant="lockup" />
+          </div>
+          <h1 className={styles.title}>{isLogin ? 'Entrar no Compass' : 'Criar sua conta'}</h1>
+          <p className={styles.subtitle}>
+            {isLogin ? 'Bem-vindo de volta.' : 'Leva menos de um minuto.'}
+          </p>
+
+          {errors.general && (
+            <div className={styles.errorBanner} role="alert">
+              {errors.general}
+            </div>
+          )}
+
+          <form className={styles.form} onSubmit={handleSubmit} noValidate>
+            {!isLogin && (
+              <>
+                <Field label="Nome" error={errors.nome}>
+                  <Input name="nome" value={form.nome} onChange={change} autoComplete="name" />
+                </Field>
+                <Field label="E-mail" error={errors.email}>
+                  <Input name="email" type="email" value={form.email} onChange={change} autoComplete="email" />
+                </Field>
+              </>
+            )}
+            <Field label="Usuário" error={errors.usuario}>
+              <Input name="usuario" value={form.usuario} onChange={change} autoComplete="username" />
+            </Field>
+            <Field label="Senha" error={errors.senha}>
+              <Input
+                name="senha"
+                type="password"
+                value={form.senha}
+                onChange={change}
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
+              />
+            </Field>
+            <Button type="submit" variant="primary" size="lg" loading={submitting} className={styles.submit}>
+              {isLogin ? 'Entrar' : 'Criar conta'}
+            </Button>
+          </form>
+
+          <p className={styles.switch}>
+            {isLogin ? 'Ainda não tem conta?' : 'Já tem conta?'}{' '}
+            <button type="button" className={styles.switchButton} onClick={() => switchMode(isLogin ? 'register' : 'login')}>
+              {isLogin ? 'Criar conta' : 'Entrar'}
+            </button>
+          </p>
+        </div>
+      </main>
     </div>
   );
-};
-
-const LoginScreen = ({ formData, handleInputChange, handleSubmit, switchToRegister, errors = {}, notification = null }) => {
-  return (
-    <div className={styles.card}>
-      {notification && (
-        <div className={styles.notification} role="status" aria-live="polite">
-          <span className={styles.sticker} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 9v4" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 17h.01" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          {notification.message}
-        </div>
-      )}
-      {errors && errors.general && (
-        <div className={styles.errorBanner} role="alert">
-          <span className={styles.sticker} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 9v4" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 17h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          {errors.general}
-        </div>
-      )}
-      <div className={styles.logoContainer}>
-        <Logo variant="lockup" />
-      </div>
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <input
-          className={styles.input}
-          type="text"
-          name="usuario"
-          placeholder="Usuário"
-          value={formData.usuario}
-          onChange={handleInputChange}
-        />
-        {errors.usuario && <div className={styles.errorText}>{errors.usuario}</div>}
-
-        <input
-          className={styles.input}
-          type="password"
-          name="senha"
-          placeholder="Senha"
-          value={formData.senha}
-          onChange={handleInputChange}
-        />
-        {errors.senha && <div className={styles.errorText}>{errors.senha}</div>}
-
-        <button className={styles.button} type="submit">Entrar</button>
-      </form>
-
-      <p className={styles.smallText}>
-        Não possui uma conta?{' '}
-        <button onClick={switchToRegister} className={styles.linkButton}>Cadastre-se</button>
-      </p>
-    </div>
-  );
-};
-
-const RegisterScreen = ({ formData, handleInputChange, handleSubmit, switchToLogin, errors = {}, notification = null }) => {
-  return (
-    <div className={styles.card}>
-      {notification && (
-        <div className={styles.notification} role="status" aria-live="polite">
-          <span className={styles.sticker} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 9v4" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 17h.01" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          {notification.message}
-        </div>
-      )}
-      {errors && errors.general && (
-        <div className={styles.errorBanner} role="alert">
-          <span className={styles.sticker} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 9v4" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 17h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          {errors.general}
-        </div>
-      )}
-      <div className={styles.logoContainer}>
-        <Logo variant="lockup" />
-      </div>
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <input
-          className={styles.input}
-          type="text"
-          name="nome"
-          placeholder="Nome"
-          value={formData.nome}
-          onChange={handleInputChange}
-        />
-        {errors.nome && <div className={styles.errorText}>{errors.nome}</div>}
-
-        <input
-          className={styles.input}
-          type="email"
-          name="email"
-          placeholder="E-mail"
-          value={formData.email}
-          onChange={handleInputChange}
-        />
-        {errors.email && <div className={styles.errorText}>{errors.email}</div>}
-
-        <input
-          className={styles.input}
-          type="text"
-          name="usuario"
-          placeholder="Usuário"
-          value={formData.usuario}
-          onChange={handleInputChange}
-        />
-        {errors.usuario && <div className={styles.errorText}>{errors.usuario}</div>}
-
-        <input
-          className={styles.input}
-          type="password"
-          name="senha"
-          placeholder="Senha"
-          value={formData.senha}
-          onChange={handleInputChange}
-        />
-        {errors.senha && <div className={styles.errorText}>{errors.senha}</div>}
-
-        <button className={styles.button} type="submit">Cadastrar</button>
-      </form>
-
-      <p className={styles.smallText}>
-        Já possui conta?{' '}
-        <button onClick={switchToLogin} className={styles.linkButton}>Entrar</button>
-      </p>
-    </div>
-  );
-};
-
-export default AuthScreen;
+}

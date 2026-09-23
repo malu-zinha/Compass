@@ -10,8 +10,8 @@ import { TestProviders } from '../../test/render';
 test('login inválido mostra a mensagem da API', async () => {
   const login = vi.fn().mockRejectedValue(new ApiError(401, 'Usuário ou senha incorretos.'));
   render(<TestProviders auth={{ login, register: vi.fn(), user: null }}><MemoryRouter><AuthScreen /></MemoryRouter></TestProviders>);
-  await userEvent.type(screen.getByPlaceholderText('Usuário'), 'ana');
-  await userEvent.type(screen.getByPlaceholderText('Senha'), 'errada');
+  await userEvent.type(screen.getByLabelText('Usuário'), 'ana');
+  await userEvent.type(screen.getByLabelText('Senha'), 'errada');
   await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Usuário ou senha incorretos.');
   expect(login).toHaveBeenCalledWith('ana', 'errada');
@@ -39,8 +39,8 @@ test('login bem-sucedido navega uma única vez para a rota de origem, sem timer 
     </TestProviders>
   );
 
-  await userEvent.type(screen.getByPlaceholderText('Usuário'), 'ana');
-  await userEvent.type(screen.getByPlaceholderText('Senha'), 'senha-forte-123');
+  await userEvent.type(screen.getByLabelText('Usuário'), 'ana');
+  await userEvent.type(screen.getByLabelText('Senha'), 'senha-forte-123');
   await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
   await waitFor(() => expect(screen.getByText('Entrevista 7')).toBeInTheDocument());
@@ -54,4 +54,35 @@ test('login bem-sucedido navega uma única vez para a rota de origem, sem timer 
 
   expect(transitions).toEqual(['/login', '/entrevista/7']);
   expect(screen.getByText('Entrevista 7')).toBeInTheDocument();
+});
+
+test('cadastro válido avisa por toast e volta para o login com o usuário preenchido', async () => {
+  const register = vi.fn().mockResolvedValue();
+  render(
+    <TestProviders auth={{ login: vi.fn(), register, user: null }}>
+      <MemoryRouter initialEntries={['/login?mode=register']}>
+        <Routes><Route path="/login" element={<AuthScreen />} /></Routes>
+      </MemoryRouter>
+    </TestProviders>,
+  );
+  expect(screen.getByRole('heading', { name: 'Criar sua conta' })).toBeInTheDocument();
+  await userEvent.type(screen.getByLabelText('Nome'), 'Ana Souza');
+  await userEvent.type(screen.getByLabelText('E-mail'), 'ana@x.com');
+  await userEvent.type(screen.getByLabelText('Usuário'), 'ana');
+  await userEvent.type(screen.getByLabelText('Senha'), 'segredo-123');
+  await userEvent.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+  expect(register).toHaveBeenCalledWith({ name: 'Ana Souza', email: 'ana@x.com', username: 'ana', password: 'segredo-123' });
+  expect(await screen.findByRole('status')).toHaveTextContent('Conta criada');
+  expect(screen.getByRole('heading', { name: 'Entrar no Compass' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Usuário')).toHaveValue('ana');
+});
+
+test('campos vazios mostram erro ligado ao campo, sem chamar a API', async () => {
+  const login = vi.fn();
+  render(<TestProviders auth={{ login, register: vi.fn(), user: null }}><MemoryRouter><AuthScreen /></MemoryRouter></TestProviders>);
+  await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(screen.getByLabelText('Usuário')).toHaveAccessibleDescription('Informe o usuário.');
+  expect(screen.getByLabelText('Senha')).toHaveAttribute('aria-invalid', 'true');
+  expect(login).not.toHaveBeenCalled();
 });

@@ -1,6 +1,5 @@
 [
   "src/components/common/InfoModal.css",
-  "src/features/auth/AuthScreen.jsx",
   "src/features/home/HomePage.css",
   "src/features/home/HomePage.jsx",
   "src/features/interviews/detail/InterviewDetailPage.css",
@@ -17,14 +16,11 @@
   "src/features/interviews/results/RankingSelectPage.css",
   "src/features/interviews/results/ResultsPage.css",
   "src/features/interviews/results/ResultsPage.jsx",
-  "src/features/landing/LandingPage.css",
-  "src/features/landing/LandingPage.jsx",
   "src/features/positions/JobEditorPage.css",
   "src/features/positions/JobsPage.css",
   "src/features/profile/ProfilePage.css",
   "src/features/profile/ProfilePage.jsx",
   "src/features/questions/QuestionsPage.jsx",
   "src/features/settings/SettingsPage.css",
-  "src/styles/auth.module.css",
   "src/styles/questions.module.css"
 ]
