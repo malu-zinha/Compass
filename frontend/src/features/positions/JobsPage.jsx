@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { deletePosition, listPositions } from '../../api/positions';
 import { PageHeader } from '../../components/layout';
-import { listPositions, deletePosition } from '../../api/positions';
-import './JobsPage.css';
-import { useToast, useConfirm } from '../../components/ui';
+import { Button, Card, Chip, EmptyState, Skeleton, useConfirm, useToast } from '../../components/ui';
+import { BriefcaseIcon, PlusIcon } from '../../components/icons';
+import { vacanciesLabel } from '../interviews/results/RankingSelectPage';
+import styles from './JobsPage.module.css';
 
-function JobsPage() {
+const MAX_SKILLS = 5;
+
+export default function JobsPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const loadJobs = useCallback(async () => {
     try {
@@ -29,83 +32,88 @@ function JobsPage() {
     loadJobs();
   }, [loadJobs]);
 
-  const handleEditJob = (jobId) => {
-    navigate(`/cargos/editar/${jobId}`);
-  };
-
-  const handleAddJob = () => {
-    navigate('/cargos/novo');
-  };
-
-  const handleDeleteJob = async (jobId) => {
+  const handleDeleteJob = async (job) => {
     const confirmed = await confirm({
       title: 'Excluir cargo',
       message: 'Excluir este cargo também exclui todas as entrevistas, gravações e perguntas vinculadas. Deseja continuar?',
       confirmLabel: 'Excluir',
       tone: 'danger',
     });
-    if (confirmed) {
-      try {
-        await deletePosition(jobId);
-        setJobs(jobs.filter(job => job.id !== jobId));
-      } catch (error) {
-        console.error('Erro ao deletar cargo:', error);
-        toast.error(error.detail || 'Erro ao deletar cargo');
-      }
+    if (!confirmed) return;
+    try {
+      await deletePosition(job.id);
+      setJobs((list) => list.filter((j) => j.id !== job.id));
+      toast.success(`Cargo "${job.name}" excluído.`);
+    } catch (error) {
+      console.error('Erro ao deletar cargo:', error);
+      toast.error(error.detail || 'Erro ao deletar cargo');
     }
   };
 
+  const newButton = (
+    <Button as={Link} to="/cargos/novo" variant="secondary" icon={<PlusIcon size={16} />}>
+      Novo cargo
+    </Button>
+  );
+
   return (
-    <div className="jobs-page">
-      <PageHeader title="Cargos" />
-      <div className="jobs-content">
-        <div className="jobs-section">
-          <div className="jobs-header">
-            <h2 className="section-title">Cargos</h2>
-            <button className="add-job-btn" onClick={handleAddJob}>
-              + Adicionar cargo
-            </button>
-          </div>
+    <div className={styles.page}>
+      <PageHeader title="Cargos" actions={newButton} />
 
-          <div className="jobs-grid">
-            {loading ? (
-              <div className="empty-message">
-                <p>Carregando cargos...</p>
-              </div>
-            ) : jobs.length === 0 ? (
-              <div className="empty-message">
-                <p>Nenhum cargo cadastrado ainda</p>
-              </div>
-            ) : jobs.map((job) => (
-              <div key={job.id} className="job-card">
-                <button
-                  className="delete-job-btn"
-                  onClick={() => handleDeleteJob(job.id)}
-                  aria-label="Excluir cargo"
-                >
-                  ×
-                </button>
-                <h3 className="job-card-title">{job.name}</h3>
-
-                <div className="job-vacancies-badge">
-                  {job.vacancies} {job.vacancies === 1 ? 'vaga disponível' : 'vagas disponíveis'}
-                </div>
-
-                <p className="job-card-description">{job.description}</p>
-
-                <button
-                  className="edit-job-btn"
-                  onClick={() => handleEditJob(job.id)}
-                >
-                  Editar cargo
-                </button>
-              </div>
-            ))}
-          </div>
+      {loading ? (
+        <div className={styles.grid} aria-busy="true">
+          {[0, 1, 2].map((i) => <Skeleton key={i} variant="block" className={styles.skeleton} />)}
         </div>
-      </div>
+      ) : jobs.length === 0 ? (
+        <EmptyState
+          icon={<BriefcaseIcon size={24} />}
+          title="Nenhum cargo cadastrado ainda"
+          description="Cargos agrupam as entrevistas e dizem à análise quais competências importam."
+          action={<Button as={Link} to="/cargos/novo" variant="primary">Criar o primeiro cargo</Button>}
+        />
+      ) : (
+        <ul className={styles.grid}>
+          {jobs.map((job) => {
+            const skills = job.skills ?? [];
+            return (
+              <li key={job.id}>
+                <Card as="article" className={styles.card} aria-labelledby={`cargo-${job.id}`}>
+                  <div className={styles.cardHead}>
+                    <h2 id={`cargo-${job.id}`} className={styles.title}>{job.name}</h2>
+                    <Chip tone={job.vacancies > 0 ? 'info' : 'neutral'}>
+                      {job.vacancies > 0 ? vacanciesLabel(job.vacancies) : 'Sem vagas abertas'}
+                    </Chip>
+                  </div>
+                  <p className={styles.description}>{job.description}</p>
+                  {skills.length > 0 && (
+                    <ul className={styles.skills} aria-label="Competências">
+                      {skills.slice(0, MAX_SKILLS).map((s) => <li key={s}><Chip>{s}</Chip></li>)}
+                      {skills.length > MAX_SKILLS && <li><Chip>+{skills.length - MAX_SKILLS}</Chip></li>}
+                    </ul>
+                  )}
+                  <div className={styles.actions}>
+                    <Button as={Link} to={`/cargos/editar/${job.id}`} variant="secondary" size="sm">
+                      Editar cargo
+                    </Button>
+                    <Button as={Link} to={`/entrevistas/${job.id}`} variant="ghost" size="sm">
+                      Ver ranking
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={styles.delete}
+                      onClick={() => handleDeleteJob(job)}
+                      aria-label="Excluir cargo"
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
-
-export default JobsPage;

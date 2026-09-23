@@ -1,120 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { PageHeader } from '../../components/layout';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { createPosition, getPosition, updatePosition } from '../../api/positions';
-import './JobEditorPage.css';
-import { useToast } from '../../components/ui';
+import { PageHeader } from '../../components/layout';
+import { Button, Card, Field, Input, Skeleton, Textarea, useToast } from '../../components/ui';
+import SkillsInput from './SkillsInput';
+import styles from './JobEditorPage.module.css';
 
-function JobEditorPage() {
+const EMPTY = { name: '', description: '', vacancies: '', skills: [], idealProfile: '' };
+
+function validate(form) {
+  const errors = {};
+  if (!form.name.trim()) errors.name = 'Dê um nome ao cargo.';
+  if (!form.description.trim()) errors.description = 'Descreva a vaga.';
+  if (form.skills.length === 0) errors.skills = 'Adicione pelo menos uma competência.';
+  return errors;
+}
+
+export default function JobEditorPage() {
   const toast = useToast();
-  const [jobName, setJobName] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [jobVacancies, setJobVacancies] = useState('');
-  const [skills, setSkills] = useState([]);
-  const [competencyInput, setCompetencyInput] = useState('');
-  const [isAddingCompetency, setIsAddingCompetency] = useState(false);
-  const [idealProfile, setIdealProfile] = useState('');
-  const inputRef = useRef(null);
-
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEditing = !!id;
+  const isEditing = Boolean(id);
+
+  const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(isEditing);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isEditing && id) {
-      loadPosition();
-    }
-  }, [id, isEditing]);
+    if (!isEditing) return undefined;
+    let active = true;
+    getPosition(id)
+      .then((position) => {
+        if (!active) return;
+        setForm({
+          name: position.name,
+          description: position.description,
+          vacancies: String(position.vacancies ?? ''),
+          skills: position.skills || [],
+          idealProfile: position.ideal_profile || '',
+        });
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar cargo:', error);
+        toast.error(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
+        navigate('/cargos');
+      });
+    return () => { active = false; };
+  }, [id, isEditing, navigate, toast]);
 
-  useEffect(() => {
-    if (inputRef.current) {
-      const text = competencyInput || 'Digite a competência';
-      const measureElement = document.createElement('span');
-      measureElement.style.visibility = 'hidden';
-      measureElement.style.position = 'absolute';
-      measureElement.style.whiteSpace = 'pre-wrap';
-      measureElement.style.fontFamily = 'Inter, sans-serif';
-      measureElement.style.fontSize = '0.75rem';
-      measureElement.style.fontWeight = '600';
-      measureElement.style.padding = '0';
-      measureElement.textContent = text;
-      document.body.appendChild(measureElement);
+  const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
+  const onText = (key) => (event) => set(key)(event.target.value);
 
-      const width = measureElement.offsetWidth;
-      const maxWidth = 280;
-      const minWidth = 180;
-      const padding = 40;
-      const newWidth = Math.min(Math.max(width + padding, minWidth), maxWidth);
-
-      inputRef.current.style.width = `${newWidth}px`;
-      inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-
-      document.body.removeChild(measureElement);
-    }
-  }, [competencyInput, isAddingCompetency]);
-
-  const loadPosition = async () => {
-    try {
-      const position = await getPosition(id);
-      setJobName(position.name);
-      setJobDescription(position.description);
-      setJobVacancies(position.vacancies.toString());
-      setSkills(position.skills || []);
-      setIdealProfile(position.ideal_profile || '');
-    } catch (error) {
-      console.error('Erro ao carregar cargo:', error);
-      toast.error(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
-      navigate('/cargos');
-    }
-  };
-
-  const handleAddCompetency = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && competencyInput && competencyInput.trim()) {
-      e.preventDefault();
-      if (!skills.includes(competencyInput.trim())) {
-        setSkills([...skills, competencyInput.trim()]);
-      }
-      setCompetencyInput('');
-      setIsAddingCompetency(false);
-    }
-    if (e.key === 'Escape') {
-      setCompetencyInput('');
-      setIsAddingCompetency(false);
-    }
-  };
-
-  const handleAddCompetencyClick = () => {
-    setIsAddingCompetency(true);
-    setCompetencyInput('');
-  };
-
-  const handleCompetencyInputBlur = () => {
-    if (competencyInput && competencyInput.trim() && !skills.includes(competencyInput.trim())) {
-      setSkills([...skills, competencyInput.trim()]);
-    }
-    setCompetencyInput('');
-    setIsAddingCompetency(false);
-  };
-
-  const handleRemoveCompetency = (index) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    if (!jobName || !jobDescription || skills.length === 0) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const found = validate(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
 
     const payload = {
-      name: jobName,
-      skills,
-      description: jobDescription,
-      ideal_profile: idealProfile,
-      vacancies: parseInt(jobVacancies) || 0,
+      name: form.name.trim(),
+      skills: form.skills,
+      description: form.description.trim(),
+      ideal_profile: form.idealProfile,
+      vacancies: Math.max(0, parseInt(form.vacancies, 10) || 0),
     };
 
+    setSaving(true);
     try {
       if (isEditing) {
         await updatePosition(id, payload);
@@ -127,133 +80,69 @@ function JobEditorPage() {
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
       toast.error(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
+      setSaving(false);
     }
   };
 
-  return (
-    <div className="job-editor-page">
-      <PageHeader title={isEditing ? "Editar cargo" : "Novo cargo"} />
-      <div className="job-editor-content">
-        <div className="editor-container">
-          <h2 className="editor-title">{isEditing ? "Editar cargo" : "Novo cargo"}</h2>
+  const title = isEditing ? 'Editar cargo' : 'Novo cargo';
 
-          <div className="editor-grid">
-            <div className="editor-left">
-              <div className="form-section">
-                <div className="form-input-wrapper">
-                  <label className="form-label">Nome</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={jobName}
-                    onChange={(e) => setJobName(e.target.value)}
-                    placeholder="Nome do cargo"
-                  />
-                </div>
-              </div>
-
-              <div className="form-section">
-                <div className="form-input-wrapper">
-                  <label className="form-label">Descrição da vaga</label>
-                  <textarea
-                    className="form-textarea"
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    placeholder="Descrição da vaga"
-                    rows="4"
-                  />
-                </div>
-              </div>
-
-              <div className="form-section">
-                <div className="competencies-section">
-                  <label className="form-label">Competências necessárias</label>
-                  <div className="competency-input-wrapper">
-                    <div className="competencies-tags">
-                      {skills.map((comp, index) => (
-                        <div key={index} className="competency-tag">
-                          <span>{comp}</span>
-                          <button
-                            className="remove-tag-btn"
-                            onClick={() => handleRemoveCompetency(index)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      {isAddingCompetency && (
-                        <div className="competency-tag editing">
-                          <textarea
-                            ref={inputRef}
-                            className="competency-tag-input"
-                            value={competencyInput}
-                            onChange={(e) => setCompetencyInput(e.target.value)}
-                            onKeyDown={handleAddCompetency}
-                            onBlur={handleCompetencyInputBlur}
-                            autoFocus
-                            placeholder="Digite a competência"
-                            rows={1}
-                          />
-                        </div>
-                      )}
-                      <button
-                        className="add-competency-btn"
-                        onClick={handleAddCompetencyClick}
-                      >
-                        Adicionar competência
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <div className="form-input-wrapper">
-                  <label className="form-label">Número de vagas disponíveis</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={jobVacancies}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || (parseInt(value) >= 0 && !isNaN(value))) {
-                        setJobVacancies(value);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
-                        e.preventDefault();
-                      }
-                    }}
-                    min="0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="editor-right">
-              <div className="ideal-profile-section">
-                <label className="form-label">
-                  Descreva com suas palavras o "Perfil Ideal" para esta vaga:
-                </label>
-                <textarea
-                  className="ideal-profile-textarea"
-                  value={idealProfile}
-                  onChange={(e) => setIdealProfile(e.target.value)}
-                  placeholder="Descreva o perfil ideal..."
-                />
-              </div>
-            </div>
-          </div>
-
-          <button className="save-job-btn" onClick={handleSave}>
-            Salvar cargo
-          </button>
-        </div>
+  if (loading) {
+    return (
+      <div className={styles.page} aria-busy="true">
+        <PageHeader title={title} />
+        <Skeleton variant="block" className={styles.skeleton} />
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <form className={styles.page} onSubmit={handleSubmit} noValidate>
+      <PageHeader title={title} />
+
+      <div className={styles.grid}>
+        <Card className={styles.section}>
+          <h2 className={styles.sectionTitle}>A vaga</h2>
+          <Field label="Nome" required error={errors.name}>
+            <Input value={form.name} onChange={onText('name')} placeholder="Ex.: Desenvolvedora Frontend" />
+          </Field>
+          <Field label="Descrição da vaga" required error={errors.description}>
+            <Textarea value={form.description} onChange={onText('description')} rows={5} />
+          </Field>
+          <Field
+            label="Competências necessárias"
+            required
+            error={errors.skills}
+            hint="Usadas pela análise para pontuar cada entrevista."
+          >
+            <SkillsInput value={form.skills} onChange={set('skills')} />
+          </Field>
+          <Field label="Vagas disponíveis" className={styles.narrow}>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={form.vacancies}
+              onChange={onText('vacancies')}
+              placeholder="0"
+            />
+          </Field>
+        </Card>
+
+        <Card className={styles.section}>
+          <h2 className={styles.sectionTitle}>Para a análise</h2>
+          <Field
+            label="Perfil ideal"
+            hint="Descreva com suas palavras quem se sairia bem nesta vaga. A análise compara cada candidato com este texto."
+          >
+            <Textarea value={form.idealProfile} onChange={onText('idealProfile')} rows={12} className={styles.tall} />
+          </Field>
+        </Card>
+      </div>
+
+      <div className={styles.footer}>
+        <Button as={Link} to="/cargos" variant="ghost">Cancelar</Button>
+        <Button type="submit" variant="primary" loading={saving}>Salvar cargo</Button>
+      </div>
+    </form>
   );
 }
-
-export default JobEditorPage;
