@@ -164,7 +164,7 @@ function UploadAudioPage() {
           {!audioFile ? (
             <>
               <div className="upload-icon">
-                <FolderIcon size={64} color="#371C68" />
+                <FolderIcon size={64} />
               </div>
               <p className="upload-text">Arraste o arquivo de áudio aqui</p>
               <p className="upload-subtext">ou clique para selecionar</p>
@@ -173,7 +173,7 @@ function UploadAudioPage() {
           ) : (
             <>
               <div className="upload-icon success">
-                <CheckIcon size={48} color="#16a34a" />
+                <CheckIcon size={48} />
               </div>
               <p className="upload-filename">{audioFile.name}</p>
               <p className="upload-filesize">{formatFileSize(audioFile.size)}</p>

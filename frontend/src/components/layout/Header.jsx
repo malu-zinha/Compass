@@ -18,7 +18,7 @@ function Header({
       <div className="header-left">
         {showMenu && (
           <button className="menu-button" onClick={onMenuClick}>
-            <MenuIcon size={24} color="#1a1a1a" />
+            <MenuIcon size={24} />
           </button>
         )}
         <div className="header-logo">
@@ -33,14 +33,14 @@ function Header({
       <div className="header-actions">
         {showComparar && (
           <button className="header-btn btn-comparar" onClick={onCompareClick}>
-            <CompareIcon size={16} color="#371C68" />
+            <CompareIcon size={16} />
             <span>{compareLabel}</span>
           </button>
         )}
         
         {showInfo && (
           <button className="header-btn btn-info" onClick={onInfoClick}>
-            <InfoIcon size={16} color="#371C68" />
+            <InfoIcon size={16} />
             <span>Informações</span>
           </button>
         )}
@@ -49,7 +49,7 @@ function Header({
           className="header-btn btn-nova-entrevista"
           onClick={() => navigate('/nova-entrevista')}
         >
-          <PlusIcon size={16} color="#371C68" />
+          <PlusIcon size={16} />
           <span>Nova entrevista</span>
         </button>
       </div>

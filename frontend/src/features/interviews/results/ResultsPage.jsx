@@ -283,11 +283,11 @@ function ResultsPage() {
                   
                   <div className="ranking-meta">
                     <span className="ranking-meta-item">
-                      <CalendarIcon size={16} color="#666" />
+                      <CalendarIcon size={16} />
                       <span>{interview.date}</span>
                     </span>
                     <span className="ranking-meta-item">
-                      <ClockIcon size={16} color="#666" />
+                      <ClockIcon size={16} />
                       <span>{interview.duration}</span>
                     </span>
                   </div>

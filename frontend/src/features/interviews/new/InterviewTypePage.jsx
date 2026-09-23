@@ -77,7 +77,7 @@ function InterviewTypePage() {
             onClick={() => !isCreating && handleSelectType('live')}
           >
             <div className="type-card-icon">
-              <MicrophoneIcon size={48} color="#371C68" />
+              <MicrophoneIcon size={48} />
             </div>
             <h2 className="type-card-title">Entrevista ao vivo</h2>
             <p className="type-card-description">
@@ -90,7 +90,7 @@ function InterviewTypePage() {
             onClick={() => !isCreating && handleSelectType('upload')}
           >
             <div className="type-card-icon">
-              <UploadIcon size={48} color="#371C68" />
+              <UploadIcon size={48} />
             </div>
             <h2 className="type-card-title">Upload de Áudio</h2>
             <p className="type-card-description">

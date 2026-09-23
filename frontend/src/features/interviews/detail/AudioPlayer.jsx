@@ -50,12 +50,12 @@ function AudioPlayer({ player }) {
               {isPlaying ? (
                 <span style={{ fontSize: '20px' }}>⏸</span>
               ) : (
-                <PlayIcon size={20} color="#1a1a1a" />
+                <PlayIcon size={20} />
               )}
             </button>
           </div>
           <button className="volume-btn">
-            <VolumeIcon size={20} color="#1a1a1a" />
+            <VolumeIcon size={20} />
           </button>
         </div>
       </div>

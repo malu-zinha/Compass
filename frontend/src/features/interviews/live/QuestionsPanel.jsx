@@ -30,12 +30,12 @@ function QuestionsPanel({ questions, onToggleAsked, loading = false, isLive = fa
                 <span className="question-number">
                   {question.source === 'ai' ? (
                     <>
-                      <InfoIcon size={16} color="#371C68" />
+                      <InfoIcon size={16} />
                       IA
                     </>
                   ) : (
                     <>
-                      <FileTextIcon size={16} color="#371C68" />
+                      <FileTextIcon size={16} />
                       Cadastrada
                     </>
                   )}

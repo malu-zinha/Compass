@@ -49,7 +49,7 @@ function Sidebar({ isOpen, onClose }) {
           onClick={() => handleLinkClick('/perfil')}
         >
           <div className="user-icon">
-            <UserIcon size={24} color="#1a1a1a" />
+            <UserIcon size={24} />
           </div>
           <div className="user-info">
             <div className="user-name">{user?.name}</div>
@@ -84,7 +84,7 @@ function Sidebar({ isOpen, onClose }) {
           >
             {user?.email}
             <span className="email-arrow">
-              <LogoutIcon size={16} color="#1a1a1a" />
+              <LogoutIcon size={16} />
             </span>
           </button>
         </div>
