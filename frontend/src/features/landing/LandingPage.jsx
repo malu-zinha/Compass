@@ -57,19 +57,19 @@ export default function LandingPage() {
         <div className="hero-visual">
           <div className="visual-card visual-card-1">
             <div className="card-icon">
-              <FileTextIcon size={32} color="#371C68" />
+              <FileTextIcon size={32} />
             </div>
             <div className="card-text">Resumo estruturado</div>
           </div>
           <div className="visual-card visual-card-2">
             <div className="card-icon">
-              <ChartIcon size={32} color="#371C68" />
+              <ChartIcon size={32} />
             </div>
             <div className="card-text">Análise inteligente</div>
           </div>
           <div className="visual-card visual-card-3">
             <div className="card-icon">
-              <QuestionsIcon size={32} color="#371C68" />
+              <QuestionsIcon size={32} />
             </div>
             <div className="card-text">Sugestão de perguntas</div>
           </div>
@@ -82,7 +82,7 @@ export default function LandingPage() {
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <ChartIcon size={32} color="#371C68" />
+              <ChartIcon size={32} />
             </div>
             <h4 className="feature-title">Análise Inteligente</h4>
             <p className="feature-description">
@@ -92,7 +92,7 @@ export default function LandingPage() {
 
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <ClockIcon size={32} color="#371C68" />
+              <ClockIcon size={32} />
             </div>
             <h4 className="feature-title">Tempo Real</h4>
             <p className="feature-description">
@@ -102,7 +102,7 @@ export default function LandingPage() {
 
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <ChartIcon size={32} color="#371C68" />
+              <ChartIcon size={32} />
             </div>
             <h4 className="feature-title">Ranking de candidatos</h4>
             <p className="feature-description">
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <FileTextIcon size={32} color="#371C68" />
+              <FileTextIcon size={32} />
             </div>
             <h4 className="feature-title">Resumo estruturado</h4>
             <p className="feature-description">
@@ -122,7 +122,7 @@ export default function LandingPage() {
 
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <BriefcaseIcon size={32} color="#371C68" />
+              <BriefcaseIcon size={32} />
             </div>
             <h4 className="feature-title">Gestão de Cargos</h4>
             <p className="feature-description">
@@ -132,7 +132,7 @@ export default function LandingPage() {
 
           <div className="feature-card">
             <div className="feature-icon" style={{ background: '#EDE9FF', color: '#371C68' }}>
-              <FileTextIcon size={32} color="#371C68" />
+              <FileTextIcon size={32} />
             </div>
             <h4 className="feature-title">Banco de Perguntas</h4>
             <p className="feature-description">

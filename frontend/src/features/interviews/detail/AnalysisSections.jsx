@@ -6,9 +6,9 @@ function AccordionIcon({ open }) {
   return (
     <span className="accordion-icon">
       {open ? (
-        <ChevronDownIcon size={16} color="#1a1a1a" />
+        <ChevronDownIcon size={16} />
       ) : (
-        <ChevronRightIcon size={16} color="#1a1a1a" />
+        <ChevronRightIcon size={16} />
       )}
     </span>
   );
