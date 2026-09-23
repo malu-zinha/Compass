@@ -10,6 +10,7 @@ import { useUserSettings } from '../../../auth/SettingsContext';
 import { formatDate, formatDuration, scoreToPercent } from '../../../lib/format';
 import { PROCESSING_STATUSES } from '../../../lib/transcript';
 import './ResultsPage.css';
+import { useToast } from '../../../components/ui';
 
 const PER_PAGE = 20;
 const RANKING_SIZE = 5;
@@ -40,6 +41,7 @@ function toCard(interview, settings) {
 }
 
 function ResultsPage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { positionId } = useParams();
   const { openSidebar } = useLayout();
@@ -70,7 +72,7 @@ function ResultsPage() {
       .catch((error) => {
         if (!active) return;
         console.error('Erro ao carregar entrevistas:', error);
-        alert(error.detail || 'Erro ao carregar entrevistas. Verifique se o backend está rodando.');
+        toast.error(error.detail || 'Erro ao carregar entrevistas. Verifique se o backend está rodando.');
         setList({ items: [], page: 1, pages: 1 });
         setRanking([]);
       })
@@ -78,7 +80,7 @@ function ResultsPage() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [positionFilter]);
+  }, [positionFilter, toast]);
 
   useEffect(() => {
     if (!positionFilter) return undefined;
@@ -92,7 +94,7 @@ function ResultsPage() {
         console.error('Erro ao carregar cargo:', error);
       });
     return () => { active = false; };
-  }, [positionFilter]);
+  }, [positionFilter, toast]);
 
   const selectedPosition = positionFilter && position?.id === positionFilter ? position : null;
 
@@ -110,7 +112,7 @@ function ResultsPage() {
       });
     } catch (error) {
       console.error('Erro ao carregar mais entrevistas:', error);
-      alert(error.detail || 'Erro ao carregar mais entrevistas. Tente novamente.');
+      toast.error(error.detail || 'Erro ao carregar mais entrevistas. Tente novamente.');
     } finally {
       setLoadingMore(false);
     }

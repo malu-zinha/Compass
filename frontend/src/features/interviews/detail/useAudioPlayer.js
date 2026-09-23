@@ -18,7 +18,7 @@ function findActiveIndex(transcript, currentTimeMs) {
 // índice da mensagem ativa (para o auto-scroll da transcrição) e duração
 // (com fallback para audio_duration_seconds quando o áudio ainda não
 // reportou a própria duração).
-export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration) {
+export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration, { onError } = {}) {
   const audioRef = useRef(null);
   const hasRetriedRef = useRef(false);
   const [url, setUrl] = useState(null);
@@ -93,7 +93,7 @@ export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration) {
         await audio.play();
       }
     } catch {
-      alert('Não foi possível reproduzir o áudio.');
+      onError?.('Não foi possível reproduzir o áudio.');
     }
   };
 

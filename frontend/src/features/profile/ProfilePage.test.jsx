@@ -49,7 +49,6 @@ function renderProfile(initialUser = user) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
 });
 
 test('(a) os campos começam com os valores de useAuth().user, sem dado fixo', () => {
@@ -119,7 +118,7 @@ test('(d) escolher arquivo em Alterar foto chama uploadAvatar e renderiza a img'
   expect(setUser).toHaveBeenCalledWith(updated);
 });
 
-test('erro no upload da foto mostra o detail em alert', async () => {
+test('erro no upload da foto mostra o detail em toast', async () => {
   const { uploadAvatar } = await import('../../api/users');
   uploadAvatar.mockRejectedValue({ detail: 'O arquivo excede o limite de 2 MB.' });
 
@@ -128,5 +127,5 @@ test('erro no upload da foto mostra o detail em alert', async () => {
   const file = new File(['x'], 'foto.png', { type: 'image/png' });
   await userEvent.upload(document.querySelector('input[type=file]'), file);
 
-  expect(window.alert).toHaveBeenCalledWith('O arquivo excede o limite de 2 MB.');
+  expect(await screen.findByRole('alert')).toHaveTextContent('O arquivo excede o limite de 2 MB.');
 });

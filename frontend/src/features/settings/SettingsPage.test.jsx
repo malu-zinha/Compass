@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { renderWithLayout } from '../../test/render';
@@ -21,7 +21,6 @@ vi.mock('../../auth/SettingsContext', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
   saveSettings.mockResolvedValue(settings);
 });
 
@@ -54,11 +53,11 @@ test('(b) mudar intervalo para 60 e salvar chama saveSettings com suggestion_int
   expect(await screen.findByText('Configurações salvas.')).toBeInTheDocument();
 });
 
-test('erro ao salvar mostra o detail em alert', async () => {
+test('erro ao salvar mostra o detail em toast', async () => {
   saveSettings.mockRejectedValue({ detail: 'Fuso horário inválido.' });
   renderWithLayout(<SettingsPage />, '/configuracoes');
 
   await userEvent.click(screen.getByRole('button', { name: 'Salvar Configurações' }));
 
-  await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Fuso horário inválido.'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Fuso horário inválido.');
 });

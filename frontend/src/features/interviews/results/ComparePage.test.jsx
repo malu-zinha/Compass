@@ -48,7 +48,6 @@ function renderCompare(path) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
   getInterview.mockImplementation((id) => Promise.resolve(detail(id)));
 });
 
@@ -86,13 +85,13 @@ test('renderiza uma coluna por id e gera o parecer da IA', async () => {
   expect(screen.getByText('3. Candidato 3 — Pouca vivência')).toBeInTheDocument();
 });
 
-test('erro ao gerar o parecer mostra o detail em alert', async () => {
+test('erro ao gerar o parecer mostra o detail em toast', async () => {
   compareInterviews.mockRejectedValue({ detail: 'Selecione entrevistas do mesmo cargo.' });
   renderCompare('/comparar?ids=1,2');
 
   await userEvent.click(await screen.findByRole('button', { name: 'Gerar parecer da IA' }));
 
-  await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Selecione entrevistas do mesmo cargo.'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Selecione entrevistas do mesmo cargo.');
   expect(screen.getByRole('button', { name: 'Gerar parecer da IA' })).toBeEnabled();
 });
 

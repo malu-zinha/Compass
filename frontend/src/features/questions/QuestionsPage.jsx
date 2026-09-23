@@ -4,6 +4,7 @@ import { useLayout } from '../../app/AppLayout';
 import { listQuestions, createQuestion, deleteQuestion, updateQuestion } from '../../api/questions';
 import { listPositions } from '../../api/positions';
 import styles from '../../styles/questions.module.css';
+import { useToast } from '../../components/ui';
 
 const questionInputStyle = {
   flex: 1,
@@ -16,6 +17,7 @@ const questionInputStyle = {
 };
 
 export default function QuestionsPage() {
+  const toast = useToast();
   const { openSidebar } = useLayout();
 
   // Estado de seleção de tipo
@@ -89,7 +91,7 @@ export default function QuestionsPage() {
       await loadQuestions(); // Recarregar perguntas
     } catch (error) {
       console.error('Erro ao criar pergunta:', error);
-      alert(error.detail || 'Erro ao criar pergunta. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao criar pergunta. Verifique se o backend está rodando.');
     }
   };
 
@@ -108,7 +110,7 @@ export default function QuestionsPage() {
       await loadQuestions(); // Recarregar perguntas
     } catch (error) {
       console.error('Erro ao deletar pergunta:', error);
-      alert(error.detail || 'Erro ao deletar pergunta. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao deletar pergunta. Verifique se o backend está rodando.');
     }
   };
 
@@ -140,7 +142,7 @@ export default function QuestionsPage() {
       )));
     } catch (error) {
       console.error('Erro ao editar pergunta:', error);
-      alert(error.detail || 'Erro ao editar pergunta. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao editar pergunta. Verifique se o backend está rodando.');
     }
   };
 

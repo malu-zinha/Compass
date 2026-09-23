@@ -3,6 +3,7 @@ import { Header } from '../../components/layout';
 import { useLayout } from '../../app/AppLayout';
 import { useUserSettings } from '../../auth/SettingsContext';
 import './SettingsPage.css';
+import { useToast } from '../../components/ui';
 
 const INTERVAL_OPTIONS = [20, 40, 60, 90, 120];
 const LANGUAGE_OPTIONS = [
@@ -12,6 +13,7 @@ const LANGUAGE_OPTIONS = [
 ];
 
 export default function SettingsPage() {
+  const toast = useToast();
   const { openSidebar } = useLayout();
   const { settings, saveSettings } = useUserSettings();
   const [form, setForm] = useState(settings);
@@ -29,7 +31,7 @@ export default function SettingsPage() {
       await saveSettings(form);
       setSaved(true);
     } catch (error) {
-      alert(error.detail || 'Não foi possível salvar as configurações.');
+      toast.error(error.detail || 'Não foi possível salvar as configurações.');
     }
   };
 

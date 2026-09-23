@@ -62,7 +62,6 @@ function renderResults(path) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
   getPosition.mockResolvedValue({ id: 3, name: 'Dev Backend', vacancies: 2 });
 });
 

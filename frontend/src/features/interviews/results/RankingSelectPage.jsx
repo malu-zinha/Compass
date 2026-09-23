@@ -1,32 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../../components/layout';
 import { useLayout } from '../../../app/AppLayout';
 import { listPositions } from '../../../api/positions';
 import './RankingSelectPage.css';
+import { useToast } from '../../../components/ui';
 
 function RankingSelectPage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { openSidebar } = useLayout();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPositions();
-  }, []);
-
-  const loadPositions = async () => {
+  const loadPositions = useCallback(async () => {
     try {
       setLoading(true);
       const data = await listPositions();
       setPositions(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadPositions();
+  }, [loadPositions]);
 
   const handleSelectPosition = (positionId) => {
     navigate(`/entrevistas/${positionId}`);

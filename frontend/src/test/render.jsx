@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes, Outlet, createMemoryRouter, RouterProvider
 import { vi } from 'vitest';
 import { AuthContext } from '../auth/AuthContext';
 import { ThemeProvider } from '../theme/ThemeProvider';
+import { ConfirmProvider, ToastProvider } from '../components/ui';
 
 export const fakeUser = {
   id: 1,
@@ -21,7 +22,11 @@ export function LayoutOutlet() {
 export function TestProviders({ auth = fakeAuthValue(), children }) {
   return (
     <ThemeProvider>
-      <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+        </ConfirmProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

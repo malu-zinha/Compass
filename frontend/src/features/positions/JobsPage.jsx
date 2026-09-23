@@ -1,32 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/layout';
 import { useLayout } from '../../app/AppLayout';
 import { listPositions, deletePosition } from '../../api/positions';
 import './JobsPage.css';
+import { useToast, useConfirm } from '../../components/ui';
 
 function JobsPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const { openSidebar } = useLayout();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     try {
       setLoading(true);
       const data = await listPositions();
       setJobs(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const handleEditJob = (jobId) => {
     navigate(`/cargos/editar/${jobId}`);
@@ -37,13 +40,19 @@ function JobsPage() {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm('Excluir este cargo também exclui todas as entrevistas, gravações e perguntas vinculadas. Deseja continuar?')) {
+    const confirmed = await confirm({
+      title: 'Excluir cargo',
+      message: 'Excluir este cargo também exclui todas as entrevistas, gravações e perguntas vinculadas. Deseja continuar?',
+      confirmLabel: 'Excluir',
+      tone: 'danger',
+    });
+    if (confirmed) {
       try {
         await deletePosition(jobId);
         setJobs(jobs.filter(job => job.id !== jobId));
       } catch (error) {
         console.error('Erro ao deletar cargo:', error);
-        alert(error.detail || 'Erro ao deletar cargo');
+        toast.error(error.detail || 'Erro ao deletar cargo');
       }
     }
   };

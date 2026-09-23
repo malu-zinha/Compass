@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { apiUrl } from '../../api/client';
 import { updateMe, uploadAvatar } from '../../api/users';
 import './ProfilePage.css';
+import { useToast } from '../../components/ui';
 
 const AVATAR_ACCEPT = 'image/png,image/jpeg,image/webp';
 
@@ -31,6 +32,7 @@ function initialsOf(name) {
 }
 
 export default function ProfilePage() {
+  const toast = useToast();
   const { openSidebar } = useLayout();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
@@ -65,7 +67,7 @@ export default function ProfilePage() {
       setUser(updated);
       setIsEditing(false);
     } catch (error) {
-      alert(error.detail || 'Não foi possível salvar o perfil.');
+      toast.error(error.detail || 'Não foi possível salvar o perfil.');
     }
   };
 
@@ -81,7 +83,7 @@ export default function ProfilePage() {
       const updated = await uploadAvatar(file);
       setUser(updated);
     } catch (error) {
-      alert(error.detail || 'Não foi possível atualizar a foto.');
+      toast.error(error.detail || 'Não foi possível atualizar a foto.');
     }
   };
 

@@ -4,8 +4,10 @@ import { createInterview } from '../../../api/interviews';
 import { MicrophoneIcon, UploadIcon } from '../../../components/icons';
 import { useInterviewDraft } from './useInterviewDraft';
 import './InterviewTypePage.css';
+import { useToast } from '../../../components/ui';
 
 function InterviewTypePage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { draft, clearDraft } = useInterviewDraft();
   const [isCreating, setIsCreating] = useState(false);
@@ -44,7 +46,7 @@ function InterviewTypePage() {
       navigate(`/gravar/${result.id}`);
     } catch (error) {
       console.error('Erro ao criar entrevista:', error);
-      alert(error.detail || 'Erro ao criar entrevista. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao criar entrevista. Verifique se o backend está rodando.');
       setIsCreating(false);
     }
   };

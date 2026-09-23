@@ -13,6 +13,7 @@ import AnalysisSections from './AnalysisSections';
 import TranscriptView from './TranscriptView';
 import AudioPlayer from './AudioPlayer';
 import './InterviewDetailPage.css';
+import { useToast, useConfirm } from '../../../components/ui';
 
 const INITIAL_SECTIONS = {
   habilidades: true,
@@ -37,6 +38,8 @@ const STATUS_TEXT_STYLE = {
 const DELETE_CONFIRMATION = 'Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.';
 
 function InterviewDetailPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const { id } = useParams();
   const navigate = useNavigate();
   const { openSidebar } = useLayout();
@@ -50,6 +53,7 @@ function InterviewDetailPage() {
     Boolean(interview?.has_audio),
     interview?.transcript,
     interview?.audio_duration_seconds,
+    { onError: toast.error },
   );
 
   const hasTranscript = interview?.transcript?.length > 0;
@@ -65,7 +69,7 @@ function InterviewDetailPage() {
       reload();
       return true;
     } catch (err) {
-      alert(err?.detail || 'Não foi possível reprocessar a entrevista.');
+      toast.error(err?.detail || 'Não foi possível reprocessar a entrevista.');
       return false;
     }
   };
@@ -81,12 +85,18 @@ function InterviewDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(DELETE_CONFIRMATION)) return;
+    const confirmed = await confirm({
+      title: 'Excluir entrevista',
+      message: DELETE_CONFIRMATION,
+      confirmLabel: 'Excluir',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await deleteInterview(id);
       navigate('/entrevistas');
     } catch (err) {
-      alert(err?.detail || 'Não foi possível excluir a entrevista.');
+      toast.error(err?.detail || 'Não foi possível excluir a entrevista.');
     }
   };
 
@@ -96,7 +106,7 @@ function InterviewDetailPage() {
       await updateInterview(id, data);
       reload();
     } catch (err) {
-      alert(err?.detail || 'Não foi possível salvar os dados do candidato.');
+      toast.error(err?.detail || 'Não foi possível salvar os dados do candidato.');
       throw err;
     }
   };

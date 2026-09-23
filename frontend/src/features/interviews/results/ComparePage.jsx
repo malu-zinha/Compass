@@ -8,6 +8,7 @@ import { scoreToPercent } from '../../../lib/format';
 // Mesmas classes de cartão do ranking; importado aqui para funcionar mesmo
 // quando esta é a primeira página carregada.
 import './ResultsPage.css';
+import { useToast } from '../../../components/ui';
 
 const MIN_COMPARE = 2;
 const MAX_COMPARE = 3;
@@ -60,6 +61,7 @@ function CompareCard({ interview }) {
 }
 
 function ComparePage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { openSidebar } = useLayout();
@@ -86,14 +88,14 @@ function ComparePage() {
       .catch((error) => {
         if (!active) return;
         console.error('Erro ao carregar entrevistas para comparar:', error);
-        alert(error.detail || 'Erro ao carregar as entrevistas. Tente novamente.');
+        toast.error(error.detail || 'Erro ao carregar as entrevistas. Tente novamente.');
         navigate('/ranking', { replace: true });
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [ids, validIds, navigate]);
+  }, [ids, validIds, navigate, toast]);
 
   const handleGenerate = async () => {
     try {
@@ -101,7 +103,7 @@ function ComparePage() {
       setComparison(await compareInterviews(ids));
     } catch (error) {
       console.error('Erro ao gerar parecer da IA:', error);
-      alert(error.detail || 'Erro ao gerar o parecer da IA. Tente novamente.');
+      toast.error(error.detail || 'Erro ao gerar o parecer da IA. Tente novamente.');
     } finally {
       setGenerating(false);
     }
