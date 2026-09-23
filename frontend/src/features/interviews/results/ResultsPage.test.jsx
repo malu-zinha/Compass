@@ -69,7 +69,7 @@ test('(a) busca a primeira página e o top 5 do cargo, e usa o nome do cargo no 
   mockList([[item(1)]], [item(1)]);
   renderResults('/entrevistas/3');
 
-  expect(await screen.findByRole('heading', { name: 'Ranking - Dev Backend' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Ranking — Dev Backend' })).toBeInTheDocument();
   expect(await screen.findByRole('heading', { name: 'Candidato 1' })).toBeInTheDocument();
   expect(getPosition).toHaveBeenCalledWith(3);
   expect(listInterviews).toHaveBeenCalledWith({ positionId: 3, sort: '-created_at', page: 1, perPage: 20 });
@@ -82,8 +82,8 @@ test('(b) mostra a duração vinda do servidor sem instanciar Audio', async () =
   renderResults('/entrevistas/3');
 
   expect(await screen.findByText('3m 20s')).toBeInTheDocument();
-  expect(screen.getByText('01/03/2026')).toBeInTheDocument();
-  expect(screen.getByText('80% match')).toBeInTheDocument();
+  expect(screen.getAllByText('01/03/2026').length).toBeGreaterThan(0);
+  expect(screen.getAllByRole('meter', { name: 'Pontuação de Candidato 1' })[0]).toHaveAttribute('aria-valuenow', '80');
   expect(audioSpy).not.toHaveBeenCalled();
   audioSpy.mockRestore();
 });
@@ -108,7 +108,7 @@ test('(d) no modo comparar, 3 selecionados desabilitam o 4º e o botão navega p
   expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
 
   await userEvent.click(screen.getByRole('checkbox', { name: 'Selecionar Candidato 1' }));
-  expect(screen.queryByRole('button', { name: /Comparar selecionados/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Comparar selecionados/ })).toBeDisabled();
   await userEvent.click(screen.getByRole('checkbox', { name: 'Selecionar Candidato 2' }));
   await userEvent.click(screen.getByRole('checkbox', { name: 'Selecionar Candidato 3' }));
 
@@ -129,11 +129,11 @@ test('(e) em /entrevistas só deixa selecionar o mesmo cargo e mostra o status d
   ]]);
   renderResults('/entrevistas');
 
-  expect(await screen.findByRole('heading', { name: 'Análise de candidatos' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Entrevistas' })).toBeInTheDocument();
   expect(getPosition).not.toHaveBeenCalled();
   expect(listInterviews).toHaveBeenCalledWith({ sort: '-created_at', page: 1, perPage: 20 });
-  expect(screen.getAllByText('[Aguardando análise]')).toHaveLength(2);
-  expect(screen.getAllByText('[Falha no processamento]')).toHaveLength(2);
+  expect(screen.getByText('Aguardando análise')).toBeInTheDocument();
+  expect(screen.getByText('Falha no processamento')).toBeInTheDocument();
 
   await userEvent.click(screen.getByRole('button', { name: 'Comparar' }));
   expect(screen.getAllByRole('checkbox')).toHaveLength(3);
