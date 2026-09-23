@@ -41,6 +41,7 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true });
   vi.stubGlobal('AudioContext', FakeAudioContext);
   vi.stubGlobal('AudioWorkletNode', FakeAudioWorkletNode);
+  window.alert = vi.fn();
 });
 
 afterEach(() => {
@@ -118,4 +119,6 @@ test('guarda o erro quando não há permissão de microfone', async () => {
   expect(result.current.error).toBe('Erro ao acessar o microfone. Verifique as permissões.');
   expect(context).toBeNull();
   expect(consoleError).toHaveBeenCalled();
+  expect(window.alert).toHaveBeenCalledTimes(1);
+  expect(window.alert).toHaveBeenCalledWith('Erro ao acessar o microfone. Verifique as permissões.');
 });

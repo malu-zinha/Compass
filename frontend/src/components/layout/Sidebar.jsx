@@ -79,7 +79,7 @@ function Sidebar({ isOpen, onClose }) {
         <div className="sidebar-footer">
           <button
             className="sidebar-email"
-            style={{ border: 'none' }}
+            style={{ border: 'none', width: '100%', cursor: 'pointer' }}
             onClick={handleLogoutClick}
           >
             {user?.email}

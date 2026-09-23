@@ -45,9 +45,7 @@ const AuthScreen = () => {
       try {
         await login(formData.usuario, formData.senha);
         setNotification({ type: 'success', message: 'Login realizado com sucesso!' });
-        setTimeout(() => {
-          navigate(location.state?.from ?? '/inicio');
-        }, 1000);
+        navigate(location.state?.from ?? '/inicio', { replace: true });
       } catch (error) {
         setErrors({ general: error.detail });
       }
