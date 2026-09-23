@@ -25,6 +25,7 @@ back/venv/
 .env
 .env.*.local
 .env.local
+frontend/.env
 
 # --- Build / output ---
 dist/
@@ -38,7 +39,7 @@ __pycache__/
 /.nuxt/
 /.vercel/
 /.turbo/
-back/uploads/
+back/data/
 
 # Temporary files
 tmp/
