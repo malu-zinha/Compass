@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import logo from '../../logo.svg';
+import { Logo } from '../brand';
 import { useAuth } from '../../auth/AuthContext';
 import HomeIcon from '../icons/HomeIcon';
 import InterviewsIcon from '../icons/InterviewsIcon';
@@ -40,7 +40,7 @@ function Sidebar({ isOpen, onClose }) {
       <div className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <img src={logo} alt="Compass" className="logo-image" />
+            <Logo variant="full" />
           </div>
         </div>
 

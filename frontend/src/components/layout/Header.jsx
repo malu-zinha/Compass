@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../logo.svg';
+import { Logo } from '../brand';
 import MenuIcon from '../icons/MenuIcon';
 import CompareIcon from '../icons/CompareIcon';
 import InfoIcon from '../icons/InfoIcon';
@@ -22,7 +22,7 @@ function Header({
           </button>
         )}
         <div className="header-logo">
-          <img src={logo} alt="Compass" className="logo-image" />
+          <Logo variant="full" />
         </div>
       </div>
       

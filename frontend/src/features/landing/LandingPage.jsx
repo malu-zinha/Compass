@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
-import logo from '../../logo.svg';
+import { Logo } from '../../components/brand';
 import { ChartIcon, ClockIcon, BriefcaseIcon, InfoIcon, JobsIcon, FileTextIcon, MicrophoneIcon, QuestionsIcon } from '../../components/icons';
 
 export default function LandingPage() {
@@ -23,7 +23,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="landing-header">
         <div className="landing-brand">
-          <img src={logo} alt="Compass" className="brand-logo" />
+          <Logo variant="full" className="brand-logo" />
         </div>
         <nav className="landing-nav">
           <button onClick={() => navigate('/login')} className="nav-btn-login">
