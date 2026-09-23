@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
-from app.core.errors import Conflict, NotFound, PayloadTooLarge, Unprocessable
+from app.core.errors import Conflict, Forbidden, PayloadTooLarge, Unprocessable
 from app.core.signing import verify_signature
 from app.db.models import User
 from app.db.session import get_db
@@ -106,10 +106,10 @@ def get_avatar(
     settings = request.app.state.settings
     target = db.get(User, user_id)
     if target is None or not target.avatar_filename:
-        raise NotFound("Foto de perfil não encontrada.")
+        raise Forbidden("Link expirado ou inválido.")
     verify_signature(f"avatar:{target.id}:{target.avatar_filename}", expires, signature, settings)
     storage: Storage = request.app.state.storage
     path = storage.avatar_path(target.avatar_filename)
     if not path.exists():
-        raise NotFound("Foto de perfil não encontrada.")
+        raise Forbidden("Link expirado ou inválido.")
     return FileResponse(path)

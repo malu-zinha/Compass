@@ -19,7 +19,6 @@ LIVE_STATUSES = (InterviewStatus.draft, InterviewStatus.recording)
 @dataclass(frozen=True)
 class LiveTarget:
     status: InterviewStatus
-    language: str
 
 
 @dataclass(frozen=True)
@@ -38,7 +37,7 @@ def load_live_target(
         if interview is None or user is None:
             return None, None
         user_settings = get_or_create_settings(db, user)
-        target = LiveTarget(interview.status, interview.language)
+        target = LiveTarget(interview.status)
         snapshot = LiveUserSettings(
             user_settings.suggest_questions, user_settings.suggestion_interval_seconds
         )

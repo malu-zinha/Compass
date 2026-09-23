@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from app.api.deps import get_current_user
-from app.core.errors import Conflict, NotFound, PayloadTooLarge, Unprocessable
+from app.core.errors import Conflict, Forbidden, NotFound, PayloadTooLarge, Unprocessable
 from app.core.signing import sign, verify_signature
 from app.db.base import utcnow
 from app.db.models import PROCESSING_STATUSES, Interview, InterviewQuestion, InterviewStatus, Position, User
@@ -199,12 +199,12 @@ def get_audio(
     settings = request.app.state.settings
     interview = db.get(Interview, interview_id)
     if interview is None or not interview.audio_filename:
-        raise NotFound("Esta entrevista não possui áudio.")
+        raise Forbidden("Link expirado ou inválido.")
     verify_signature(f"audio:{interview.id}:{interview.audio_filename}", expires, signature, settings)
     storage: Storage = request.app.state.storage
     path = storage.audio_path(interview.audio_filename)
     if not path.exists():
-        raise NotFound("Esta entrevista não possui áudio.")
+        raise Forbidden("Link expirado ou inválido.")
     media_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
     return FileResponse(path, media_type=media_type)
 

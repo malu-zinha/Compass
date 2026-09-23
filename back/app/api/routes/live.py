@@ -57,6 +57,6 @@ async def live(ws: WebSocket, interview_id: int) -> None:
             await _close(ws, 4404 if status is None else 4409)
             return
         logger.info("Sessão ao vivo da entrevista %s iniciada pelo usuário %s", interview_id, user.id)
-        await run_live_session(ws, LiveContext(interview_id, target.language, user_settings, state))
+        await run_live_session(ws, LiveContext(interview_id, user_settings, state))
     finally:
         state.live_registry.release(interview_id, ws)

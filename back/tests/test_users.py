@@ -76,3 +76,13 @@ def test_update_settings_ignores_explicit_nulls(auth_client):
     assert body["suggest_questions"] is True
     assert body["timezone"] == "America/Sao_Paulo"
     assert body["transcription_language"] == "en"
+
+
+def test_avatar_nonexistent_id_returns_same_response_as_bad_signature(auth_client):
+    import time
+    expires = int(time.time()) + 3600
+    r_bad_sig = auth_client.get(f"/users/1/avatar?expires={expires}&signature=abc")
+    r_missing_id = auth_client.get(f"/users/999999/avatar?expires={expires}&signature=abc")
+    assert r_bad_sig.status_code == 403
+    assert r_missing_id.status_code == 403
+    assert r_bad_sig.json() == r_missing_id.json()

@@ -60,7 +60,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.live_registry = LiveRegistry()
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                        allow_methods=["*"], allow_headers=["*"])
-    app.add_middleware(MaxBodySizeMiddleware, max_upload_mb=settings.max_upload_mb)
+    app.add_middleware(MaxBodySizeMiddleware, max_upload_mb=settings.max_upload_mb,
+                       max_avatar_mb=settings.max_avatar_mb)
     register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(auth.router)

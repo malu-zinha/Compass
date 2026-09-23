@@ -15,15 +15,21 @@ class MaxBodySizeMiddleware:
     disco. Este middleware roda antes disso, olhando só o cabeçalho.
     """
 
-    def __init__(self, app: ASGIApp, max_upload_mb: int) -> None:
+    def __init__(self, app: ASGIApp, max_upload_mb: int, max_avatar_mb: int) -> None:
         self.app = app
         self.max_upload_mb = max_upload_mb
+        self.max_avatar_mb = max_avatar_mb
         self.max_bytes = max_upload_mb * 1024 * 1024 + 1024 * 1024
+        self.max_avatar_bytes = max_avatar_mb * 1024 * 1024 + 1024 * 1024
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
+        path = scope.get("path", "")
+        is_avatar_upload = path == "/users/me/avatar"
+        max_bytes = self.max_avatar_bytes if is_avatar_upload else self.max_bytes
+        limit_mb = self.max_avatar_mb if is_avatar_upload else self.max_upload_mb
         content_length = next(
             (value for key, value in scope.get("headers") or [] if key == b"content-length"), None
         )
@@ -32,8 +38,8 @@ class MaxBodySizeMiddleware:
                 length = int(content_length)
             except ValueError:
                 length = None
-            if length is not None and length > self.max_bytes:
-                detail = f"O arquivo excede o limite de {self.max_upload_mb} MB."
+            if length is not None and length > max_bytes:
+                detail = f"O arquivo excede o limite de {limit_mb} MB."
                 body = json.dumps({"detail": detail}).encode()
                 await send(
                     {
