@@ -18,6 +18,7 @@ import ProfilePage from '../features/profile/ProfilePage';
 import SettingsPage from '../features/settings/SettingsPage';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
+import FlowLayout from './FlowLayout';
 
 export const ROUTES = {
   home: '/',
@@ -61,10 +62,12 @@ function App() {
             <Route path={ROUTES.perfil} element={<ProfilePage />} />
             <Route path={ROUTES.configuracoes} element={<SettingsPage />} />
           </Route>
-          <Route path={ROUTES.novaEntrevista} element={<NewInterviewPage />} />
-          <Route path={ROUTES.tipoEntrevista} element={<InterviewTypePage />} />
-          <Route path={ROUTES.upload} element={<UploadAudioPage />} />
-          <Route path={ROUTES.gravar} element={<RecordPage />} />
+          <Route element={<FlowLayout />}>
+            <Route path={ROUTES.novaEntrevista} element={<NewInterviewPage />} />
+            <Route path={ROUTES.tipoEntrevista} element={<InterviewTypePage />} />
+            <Route path={ROUTES.upload} element={<UploadAudioPage />} />
+            <Route path={ROUTES.gravar} element={<RecordPage />} />
+          </Route>
         </Route>
       </Routes>
     </Router>
