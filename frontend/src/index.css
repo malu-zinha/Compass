@@ -7,6 +7,7 @@
   src: url('./fonts/coolvetica.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 * {
