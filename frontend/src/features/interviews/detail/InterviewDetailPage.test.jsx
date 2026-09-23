@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -62,8 +62,6 @@ function renderDetail(path = '/entrevista/1') {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
-  window.confirm = vi.fn().mockReturnValue(true);
 });
 
 test('(a) done com analysis.qa_pairs mostra o acordeão e, ao expandir, a pergunta', async () => {
@@ -156,7 +154,9 @@ test('(c) Excluir entrevista com confirm true chama deleteInterview e navega par
   await userEvent.click(screen.getByRole('button', { name: 'Informações' }));
   await userEvent.click(screen.getByRole('button', { name: 'Excluir entrevista' }));
 
-  expect(window.confirm).toHaveBeenCalledWith('Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.');
+  const dialog = screen.getByRole('alertdialog', { name: 'Excluir entrevista' });
+  expect(dialog).toHaveTextContent('Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.');
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Excluir' }));
   await waitFor(() => expect(deleteInterview).toHaveBeenCalledWith('1'));
   await waitFor(() => expect(router.state.location.pathname).toBe('/entrevistas'));
 });

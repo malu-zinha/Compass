@@ -29,7 +29,6 @@ beforeEach(() => {
 test('falha no upload apaga a entrevista criada', async () => {
   const api = await import('../../../api/interviews');
   api.uploadInterviewAudio.mockRejectedValueOnce(new ApiError(413, 'O arquivo excede o limite de 200 MB.'));
-  window.alert = vi.fn();
 
   renderWithRouter(<UploadAudioPage />, '/upload');
 
@@ -38,7 +37,7 @@ test('falha no upload apaga a entrevista criada', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Enviar e Processar' }));
 
   await waitFor(() => expect(api.deleteInterview).toHaveBeenCalledWith(9));
-  expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('200 MB'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('200 MB');
 });
 
 test('sucesso cria a entrevista, envia o áudio, limpa o rascunho e navega', async () => {

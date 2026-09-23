@@ -4,8 +4,10 @@ import { Header } from '../../components/layout';
 import { useLayout } from '../../app/AppLayout';
 import { createPosition, getPosition, updatePosition } from '../../api/positions';
 import './JobEditorPage.css';
+import { useToast } from '../../components/ui';
 
 function JobEditorPage() {
+  const toast = useToast();
   const { openSidebar } = useLayout();
   const [jobName, setJobName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -64,7 +66,7 @@ function JobEditorPage() {
       setIdealProfile(position.ideal_profile || '');
     } catch (error) {
       console.error('Erro ao carregar cargo:', error);
-      alert(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
       navigate('/cargos');
     }
   };
@@ -103,7 +105,7 @@ function JobEditorPage() {
 
   const handleSave = async () => {
     if (!jobName || !jobDescription || skills.length === 0) {
-      alert('Preencha todos os campos obrigatórios');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
@@ -118,15 +120,15 @@ function JobEditorPage() {
     try {
       if (isEditing) {
         await updatePosition(id, payload);
-        alert('Cargo atualizado com sucesso!');
+        toast.success('Cargo atualizado com sucesso!');
       } else {
         await createPosition(payload);
-        alert('Cargo salvo com sucesso!');
+        toast.success('Cargo salvo com sucesso!');
       }
       navigate('/cargos');
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
-      alert(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
     }
   };
 

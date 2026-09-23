@@ -17,7 +17,6 @@ beforeEach(() => {
 
 test('salva o perfil ideal junto com o cargo', async () => {
   const { createPosition } = await import('../../api/positions');
-  window.alert = vi.fn();
   renderWithLayout(<JobEditorPage />, '/cargos/novo');
 
   await userEvent.type(screen.getByPlaceholderText('Nome do cargo'), 'Dev Python');

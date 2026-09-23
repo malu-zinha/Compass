@@ -10,6 +10,7 @@ import { useMicrophonePcm } from './useMicrophonePcm';
 import TranscriptPanel from './TranscriptPanel';
 import QuestionsPanel from './QuestionsPanel';
 import './RecordPage.css';
+import { useToast } from '../../../components/ui';
 
 const RECORDABLE_STATUSES = ['draft', 'recording'];
 const AUTOSAVE_DELAY_MS = 2000;
@@ -30,6 +31,7 @@ function uniqueById(questions) {
 }
 
 function RecordPage() {
+  const toast = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const { token, logout } = useAuth();
@@ -40,13 +42,16 @@ function RecordPage() {
   // Sessão recusada (4404/4409) ou assumida por outra aba (4000): vai para o detalhe;
   // ao desmontar, o microfone é liberado.
   const handleRejected = useCallback((code) => {
-    if (code === 4000) alert('Esta entrevista foi aberta em outra aba ou janela.');
+    if (code === 4000) toast.error('Esta entrevista foi aberta em outra aba ou janela.');
     goToDetail();
-  }, [goToDetail]);
+  }, [goToDetail, toast]);
 
   // Sessão ao vivo: o áudio vai só pelo WebSocket e o servidor grava o WAV final.
   const session = useLiveSession(id, token, { onUnauthorized: logout, onRejected: handleRejected });
-  const { start: startMic, stop: stopMic, error: micError } = useMicrophonePcm({ onChunk: session.sendAudio });
+  const { start: startMic, stop: stopMic, error: micError } = useMicrophonePcm({
+    onChunk: session.sendAudio,
+    onError: toast.error,
+  });
 
   // Gravação
   const [isRecording, setIsRecording] = useState(false);
@@ -151,7 +156,7 @@ function RecordPage() {
       await updateInterview(id, { notes });
     } catch (error) {
       console.error('Erro ao salvar as anotações:', error);
-      alert(error.detail || 'A gravação foi encerrada, mas não foi possível salvar as anotações.');
+      toast.error(error.detail || 'A gravação foi encerrada, mas não foi possível salvar as anotações.');
     }
     navigate(`/entrevista/${id}`, { replace: true });
   };

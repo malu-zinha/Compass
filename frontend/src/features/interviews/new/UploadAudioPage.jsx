@@ -4,8 +4,10 @@ import { createInterview, deleteInterview, uploadInterviewAudio } from '../../..
 import { FolderIcon, CheckIcon } from '../../../components/icons';
 import { useInterviewDraft } from './useInterviewDraft';
 import './UploadAudioPage.css';
+import { useToast } from '../../../components/ui';
 
 function UploadAudioPage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const { draft, clearDraft } = useInterviewDraft();
@@ -52,7 +54,7 @@ function UploadAudioPage() {
     const isValidType = validTypes.includes(file.type) || validExtensions.includes(fileExtension);
 
     if (!isValidType) {
-      alert('Por favor, selecione um arquivo de áudio válido (.mp3, .wav, .m4a, .webm, .ogg)');
+      toast.error('Por favor, selecione um arquivo de áudio válido (.mp3, .wav, .m4a, .webm, .ogg)');
       return;
     }
 
@@ -78,12 +80,12 @@ function UploadAudioPage() {
 
   const handleUpload = async () => {
     if (!audioFile) {
-      alert('Por favor, selecione um arquivo de áudio');
+      toast.error('Por favor, selecione um arquivo de áudio');
       return;
     }
 
     if (!draft) {
-      alert('Dados da entrevista não encontrados!');
+      toast.error('Dados da entrevista não encontrados!');
       return;
     }
 
@@ -118,7 +120,7 @@ function UploadAudioPage() {
           // A entrevista órfã não pôde ser removida; nada mais a fazer aqui.
         }
       }
-      alert(error.detail || 'Erro ao processar o áudio. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao processar o áudio. Verifique se o backend está rodando.');
       setIsUploading(false);
       setUploadProgress('');
     }

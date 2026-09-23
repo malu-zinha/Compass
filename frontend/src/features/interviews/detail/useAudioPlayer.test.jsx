@@ -66,3 +66,20 @@ test('AudioPlayer usa a url assinada no <audio> e o botão chama play', async ()
   await userEvent.click(container.querySelector('.play-btn'));
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
 });
+
+test('falha ao reproduzir avisa por onError', async () => {
+  const { getAudioUrl } = await import('../../../api/interviews');
+  getAudioUrl.mockResolvedValue({ url: 'http://api/audio', expires_at: 123 });
+  HTMLMediaElement.prototype.play.mockRejectedValue(new Error('NotAllowedError'));
+  const onError = vi.fn();
+
+  function Harness() {
+    const player = useAudioPlayer(1, true, [], 90, { onError });
+    return <AudioPlayer player={player} />;
+  }
+  const { container } = render(<Harness />);
+  await waitFor(() => expect(container.querySelector('audio')).toHaveAttribute('src', 'http://api/audio'));
+
+  await userEvent.click(container.querySelector('.play-btn'));
+  await waitFor(() => expect(onError).toHaveBeenCalledWith('Não foi possível reproduzir o áudio.'));
+});

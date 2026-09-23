@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listPositions } from '../../../api/positions';
 import { useInterviewDraft } from './useInterviewDraft';
 import './NewInterviewPage.css';
+import { useToast } from '../../../components/ui';
 
 function NewInterviewPage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { saveDraft } = useInterviewDraft();
 
@@ -15,19 +17,19 @@ function NewInterviewPage() {
   const [recordingConsent, setRecordingConsent] = useState(false);
   const [availableJobs, setAvailableJobs] = useState([]);
 
-  useEffect(() => {
-    loadPositions();
-  }, []);
-
-  const loadPositions = async () => {
+  const loadPositions = useCallback(async () => {
     try {
       const data = await listPositions();
       setAvailableJobs(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
-      alert(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
+      toast.error(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadPositions();
+  }, [loadPositions]);
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,7 +47,7 @@ function NewInterviewPage() {
 
   const handleStartInterview = () => {
     if (!isFormValid()) {
-      alert('Por favor, preencha todos os campos corretamente!');
+      toast.error('Por favor, preencha todos os campos corretamente!');
       return;
     }
 
