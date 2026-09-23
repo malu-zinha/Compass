@@ -5,7 +5,7 @@ import App from './app/App';
 import { AuthProvider } from './auth/AuthContext';
 import { SettingsProvider } from './auth/SettingsContext';
 import { ThemeProvider } from './theme/ThemeProvider';
-import { ConfirmProvider, ToastProvider } from './components/ui';
+import { ConfirmProvider, ErrorBoundary, ToastProvider } from './components/ui';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -15,7 +15,9 @@ root.render(
         <ConfirmProvider>
           <AuthProvider>
             <SettingsProvider>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </SettingsProvider>
           </AuthProvider>
         </ConfirmProvider>

@@ -7,3 +7,5 @@ export { Input, Textarea, Select, Checkbox, Switch } from './controls';
 export { default as Modal } from './Modal';
 export { ConfirmProvider, useConfirm } from './ConfirmDialog';
 export { ToastProvider, useToast } from './Toast';
+export { Skeleton, Spinner, EmptyState, ErrorPanel, ErrorBoundary } from './feedback';
+export { default as ScoreMeter } from './ScoreMeter';
