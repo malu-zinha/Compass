@@ -9,3 +9,6 @@ export { ConfirmProvider, useConfirm } from './ConfirmDialog';
 export { ToastProvider, useToast } from './Toast';
 export { Skeleton, Spinner, EmptyState, ErrorPanel, ErrorBoundary } from './feedback';
 export { default as ScoreMeter } from './ScoreMeter';
+export { default as Tabs } from './Tabs';
+export { default as Accordion } from './Accordion';
+export { default as Avatar } from './Avatar';
