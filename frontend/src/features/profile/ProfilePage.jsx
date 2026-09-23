@@ -33,7 +33,7 @@ function initialsOf(name) {
 export default function ProfilePage() {
   const { openSidebar } = useLayout();
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState(() => toFormData(user));
@@ -200,7 +200,10 @@ export default function ProfilePage() {
             <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(0, 0, 0, 0.08)', display: 'flex', justifyContent: 'center' }}>
               <button
                 className="security-btn danger"
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
                 style={{ fontFamily: 'Inter, sans-serif', padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}
               >
                 Sair

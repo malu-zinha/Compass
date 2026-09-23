@@ -65,6 +65,9 @@ export function useMicrophonePcm({ onChunk } = {}) {
         console.error('Erro ao acessar o microfone:', err);
         graphRef.current = null;
         setError(MIC_ERROR);
+        // A mensagem inline pode passar despercebida numa gravação de até 40 minutos;
+        // o alert garante que o entrevistador perceba na hora que o microfone falhou.
+        alert(MIC_ERROR);
       }
       return false;
     }
