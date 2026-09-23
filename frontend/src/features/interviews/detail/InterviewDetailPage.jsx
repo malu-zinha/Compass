@@ -4,6 +4,8 @@ import { Header } from '../../../components/layout';
 import { useLayout } from '../../../app/AppLayout';
 import { InfoModal } from '../../../components/common';
 import { deleteInterview, reprocessInterview, updateInterview } from '../../../api/interviews';
+import { useUserSettings } from '../../../auth/SettingsContext';
+import { formatDate } from '../../../lib/format';
 import { PROCESSING_STATUSES, STATUS_MESSAGES } from '../../../lib/transcript';
 import { useInterview } from './useInterview';
 import { useAudioPlayer } from './useAudioPlayer';
@@ -38,6 +40,7 @@ function InterviewDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { openSidebar } = useLayout();
+  const { settings } = useUserSettings();
   const { interview, questions, error, reload } = useInterview(id);
   const [showModal, setShowModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState(INITIAL_SECTIONS);
@@ -121,9 +124,7 @@ function InterviewDetailPage() {
   const { status } = interview;
   const isProcessing = PROCESSING_STATUSES.includes(status);
   const statusMessage = isProcessing ? STATUS_MESSAGES[status] : null;
-  const date = interview.created_at
-    ? new Date(interview.created_at).toLocaleDateString('pt-BR')
-    : 'Data não disponível';
+  const date = formatDate(interview.created_at, settings);
   const candidateData = {
     candidateName: interview.candidate_name,
     candidateEmail: interview.candidate_email,

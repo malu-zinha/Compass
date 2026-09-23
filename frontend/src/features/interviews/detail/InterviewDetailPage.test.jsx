@@ -13,6 +13,9 @@ vi.mock('../../../api/interviews', () => ({
   updateInterview: vi.fn().mockResolvedValue(null),
   deleteInterview: vi.fn().mockResolvedValue(null),
 }));
+vi.mock('../../../auth/SettingsContext', () => ({
+  useUserSettings: () => ({ settings: { timezone: 'UTC', date_format: 'DD/MM/YYYY' } }),
+}));
 
 const baseInterview = {
   id: 1,
