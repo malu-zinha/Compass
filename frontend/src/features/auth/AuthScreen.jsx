@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../../styles/auth.module.css';
-import logo from '../../logo.svg';
+import { Logo } from '../../components/brand';
 import { useAuth } from '../../auth/AuthContext';
 
 const AuthScreen = () => {
@@ -150,7 +150,7 @@ const LoginScreen = ({ formData, handleInputChange, handleSubmit, switchToRegist
         </div>
       )}
       <div className={styles.logoContainer}>
-        <img src={logo} alt="Compass" className={styles.logo} />
+        <Logo variant="lockup" />
       </div>
       <form className={styles.form} onSubmit={handleSubmit}>
         <input
@@ -200,7 +200,7 @@ const RegisterScreen = ({ formData, handleInputChange, handleSubmit, switchToLog
         </div>
       )}
       <div className={styles.logoContainer}>
-        <img src={logo} alt="Compass" className={styles.logo} />
+        <Logo variant="lockup" />
       </div>
       <form className={styles.form} onSubmit={handleSubmit}>
         <input

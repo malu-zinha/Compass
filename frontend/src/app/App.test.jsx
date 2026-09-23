@@ -18,5 +18,5 @@ test('renderiza a landing page', () => {
       </SettingsProvider>
     </AuthProvider>,
   );
-  expect(screen.getAllByAltText('Compass').length).toBeGreaterThan(0);
+  expect(screen.getAllByRole('img', { name: 'Compass' }).length).toBeGreaterThan(0);
 });
