@@ -78,14 +78,14 @@
 }
 
 .user-name {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   color: #1a1a1a;
   margin-bottom: 0.2rem;
 }
 
 .user-role {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   color: #666;
 }
@@ -106,7 +106,7 @@
   background: none;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #1a1a1a;
   text-align: left;
@@ -158,7 +158,7 @@
 }
 
 .sidebar-email {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   color: #1a1a1a;
   display: flex;

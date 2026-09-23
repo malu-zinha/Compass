@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
 }
 
 .new-interview-content {
@@ -18,7 +18,7 @@
 }
 
 .new-interview-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: normal;
   margin: 0 0 0.3rem 0;
@@ -27,7 +27,7 @@
 }
 
 .new-interview-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   color: #666;
   text-align: center;
@@ -51,7 +51,7 @@
 
 .form-field label {
   display: block;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: normal;
   color: #1a1a1a;
@@ -62,7 +62,7 @@
 .form-field select {
   width: 100%;
   padding: 0.75rem 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -96,7 +96,7 @@
 .start-interview-btn {
   width: 100%;
   padding: 1rem 2rem;
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: normal;
   background: #FFDFCD;

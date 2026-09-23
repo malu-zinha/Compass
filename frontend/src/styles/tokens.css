@@ -1,0 +1,308 @@
+/*
+ * COMPASS — tokens de design
+ *
+ * Este é o ÚNICO arquivo do projeto autorizado a conter valores de cor literais,
+ * famílias de fonte e alfas. `npm run lint:tokens` falha se aparecerem em qualquer
+ * outro lugar.
+ *
+ * Duas camadas:
+ *   1. ESCALA BRUTA (--n-*, --blue-*, ...) — a paleta. Igual nos dois temas.
+ *      Componentes NUNCA usam esta camada.
+ *   2. SEMÂNTICA (--color-*, --surface, --text-*) — muda por tema.
+ *      É esta camada, e só ela, que os componentes consomem.
+ *
+ * Regra de significado: azul é a marca. Verde quer dizer "deu certo / é bom",
+ * vermelho quer dizer "erro / é ruim", âmbar quer dizer "em andamento / atenção".
+ * Nenhum dos três decora.
+ */
+
+:root {
+  /* ===================================================================
+   * CAMADA 1 — ESCALA BRUTA
+   * =================================================================== */
+
+  /* --- Neutros: uma rampa, percorrida em direções opostas pelos temas --- */
+  --n-0: #ffffff;
+  --n-50: #f7f8fa;
+  --n-100: #eff1f5;
+  --n-200: #e4e7ee;
+  --n-300: #d3d8e2;
+  --n-400: #a8b0bf;
+  /* n-450 existe por exigência de contraste: é o cinza mais claro que ainda
+   * alcança 3:1 sobre as superfícies claras, mínimo da WCAG 1.4.11 para o
+   * contorno de um controle de formulário. */
+  --n-450: #7e8695;
+  --n-500: #6b7385;
+  --n-600: #4a5162;
+  --n-700: #2e3440;
+  --n-800: #22262c;
+  --n-850: #1a1d22;
+  --n-900: #14171c;
+  --n-950: #0e1014;
+
+  /* --- Azul: marca --- */
+  --blue-50: #eff5ff;
+  --blue-100: #d9e6ff;
+  --blue-400: #5b96ff;
+  --blue-500: #2f7bff;
+  --blue-600: #1a5fe0;
+  --blue-700: #1247b0;
+  --blue-800: #1e3a6b;
+  --blue-900: #16233d;
+
+  /* --- Verde: sucesso --- */
+  --green-50: #e8faf0;
+  --green-100: #c6f2da;
+  --green-400: #3ddc84;
+  --green-500: #12b76a;
+  --green-600: #0a8f50;
+  --green-700: #0a7a46;
+  --green-800: #17523a;
+  --green-900: #0d2a1d;
+
+  /* --- Vermelho: erro e ação destrutiva --- */
+  --red-50: #fef0f0;
+  --red-100: #fbd8da;
+  --red-400: #ff6b70;
+  --red-500: #ef4d53;
+  --red-600: #d02a31;
+  --red-700: #b02a30;
+  --red-800: #6b2429;
+  --red-900: #351619;
+
+  /* --- Âmbar: em andamento e atenção --- */
+  --amber-50: #fff6e5;
+  --amber-100: #fde7bc;
+  --amber-400: #f5b544;
+  --amber-500: #db9412;
+  --amber-600: #96570b;
+  --amber-700: #8a4f0a;
+  --amber-800: #6b4a12;
+  --amber-900: #33240d;
+
+  /* ===================================================================
+   * ESCALAS NÃO-CROMÁTICAS — iguais nos dois temas
+   * =================================================================== */
+
+  /* --- Tipografia --- */
+  /*
+   * Os pacotes @fontsource-variable registram a família com o sufixo "Variable"
+   * (é o que distingue o arquivo variável do estático). O nome sem sufixo fica
+   * como reserva, para o caso de a fonte estar instalada no sistema.
+   */
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --text-xs: 0.75rem;    /* 12 — metadados, rótulo de chip */
+  --text-sm: 0.875rem;   /* 14 — texto secundário, tabela */
+  --text-base: 1rem;     /* 16 — corpo */
+  --text-lg: 1.125rem;   /* 18 — subtítulo, título de card */
+  --text-xl: 1.375rem;   /* 22 — título de seção */
+  --text-2xl: 1.75rem;   /* 28 — título de página */
+  --text-3xl: 2.25rem;   /* 36 — título de destaque */
+  --text-4xl: 3rem;      /* 48 — hero da landing */
+
+  --leading-tight: 1.15;   /* títulos */
+  --leading-normal: 1.5;   /* corpo */
+  --leading-relaxed: 1.65; /* transcrição: leitura longa */
+
+  --tracking-tight: -0.02em; /* títulos em Space Grotesk */
+  --tracking-wide: 0.04em;   /* rótulo em caixa alta */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- Espaçamento: escala de 4px --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* --- Forma --- */
+  --radius-sm: 6px;   /* input, chip */
+  --radius-md: 10px;  /* card, botão */
+  --radius-lg: 16px;  /* modal, painel */
+  --radius-full: 999px;
+
+  /* --- Movimento --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;  /* feedback: hover, pressionar */
+  --duration-slow: 220ms;  /* entrada: card, toast, modal */
+
+  /* --- Camadas --- */
+  --z-sticky: 10;
+  --z-drawer: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* --- Dimensões do shell --- */
+  --sidebar-width: 260px;
+  --sidebar-width-rail: 72px;
+  --header-height: 64px;
+  --content-max: 1280px;
+
+  /* --- Quebras (documentais: CSS não interpola var() em @media) --- */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+}
+
+/* =====================================================================
+ * CAMADA 2 — SEMÂNTICA, TEMA CLARO
+ *
+ * O tema claro é o padrão desta camada, então vale quando [data-theme="light"]
+ * e também quando nenhum tema foi resolvido ainda.
+ * ===================================================================== */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Superfícies, do fundo para a frente */
+  --color-bg: var(--n-50);
+  --surface: var(--n-0);
+  --surface-raised: var(--n-0);
+  --surface-sunken: var(--n-100);
+  --surface-hover: var(--n-100);
+  --surface-active: var(--n-200);
+
+  /* Texto: três níveis, não mais */
+  --color-text: var(--n-800);
+  --text-muted: var(--n-600);
+  --text-subtle: var(--n-500);
+  --text-on-accent: var(--n-0);
+
+  /*
+   * Bordas. A distinção é de acessibilidade, não de gosto:
+   *   --color-border / --border-strong  divisor e contorno de card. Decorativos:
+   *                                     a WCAG não exige contraste mínimo deles.
+   *   --border-control                  o limite de um controle de formulário.
+   *                                     Carrega significado (mostra onde o campo
+   *                                     começa), então precisa de 3:1 contra a
+   *                                     superfície — critério 1.4.11.
+   */
+  --color-border: var(--n-200);
+  --border-strong: var(--n-300);
+  --border-control: var(--n-450);
+  --border-control-hover: var(--n-500);
+
+  /* Marca */
+  --color-primary: var(--blue-600);
+  --color-primary-hover: var(--blue-700);
+  --color-primary-fg: var(--blue-700);
+  --color-primary-bg: var(--blue-50);
+  --color-primary-border: var(--blue-100);
+  --ring-primary: rgba(26, 95, 224, 0.3);
+
+  /* Sucesso */
+  --color-success: var(--green-600);
+  --color-success-fg: var(--green-700);
+  --color-success-bg: var(--green-50);
+  --color-success-border: var(--green-100);
+
+  /* Erro e destrutivo */
+  --color-danger: var(--red-600);
+  --color-danger-hover: var(--red-700);
+  --color-danger-fg: var(--red-700);
+  --color-danger-bg: var(--red-50);
+  --color-danger-border: var(--red-100);
+  --ring-danger: rgba(208, 42, 49, 0.3);
+
+  /* Em andamento e atenção */
+  --color-warning: var(--amber-600);
+  --color-warning-fg: var(--amber-700);
+  --color-warning-bg: var(--amber-50);
+  --color-warning-border: var(--amber-100);
+
+  /* Sombras: profundidade real no claro */
+  --shadow-sm: 0 1px 2px rgba(16, 20, 28, 0.06), 0 1px 3px rgba(16, 20, 28, 0.04);
+  --shadow-md: 0 2px 4px rgba(16, 20, 28, 0.06), 0 4px 12px rgba(16, 20, 28, 0.08);
+  --shadow-lg: 0 8px 24px rgba(16, 20, 28, 0.12), 0 2px 6px rgba(16, 20, 28, 0.08);
+
+  /* Véu de overlay */
+  --overlay-bg: rgba(20, 23, 28, 0.45);
+
+  /* Barra de rolagem */
+  --scrollbar-thumb: var(--n-300);
+  --scrollbar-thumb-hover: var(--n-400);
+}
+
+/* =====================================================================
+ * CAMADA 2 — SEMÂNTICA, TEMA ESCURO
+ *
+ * Aplicado só por atributo. O script anti-piscada do index.html resolve
+ * `system` para um valor concreto antes da primeira pintura, então não há
+ * regra @media aqui — o que evita o conflito clássico entre a preferência
+ * do sistema e a escolha explícita do usuário.
+ * ===================================================================== */
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: var(--n-900);
+  --surface: var(--n-850);
+  --surface-raised: var(--n-800);
+  --surface-sunken: var(--n-950);
+  --surface-hover: var(--n-800);
+  --surface-active: var(--n-700);
+
+  --color-text: var(--n-100);
+  --text-muted: var(--n-400);
+  --text-subtle: var(--n-500);
+  --text-on-accent: var(--n-950);
+
+  --color-border: var(--n-800);
+  --border-strong: var(--n-700);
+  --border-control: var(--n-500);
+  --border-control-hover: var(--n-400);
+
+  --color-primary: var(--blue-400);
+  --color-primary-hover: var(--blue-500);
+  --color-primary-fg: var(--blue-400);
+  --color-primary-bg: var(--blue-900);
+  --color-primary-border: var(--blue-800);
+  --ring-primary: rgba(91, 150, 255, 0.4);
+
+  --color-success: var(--green-400);
+  --color-success-fg: var(--green-400);
+  --color-success-bg: var(--green-900);
+  --color-success-border: var(--green-800);
+
+  --color-danger: var(--red-400);
+  --color-danger-hover: var(--red-500);
+  --color-danger-fg: var(--red-400);
+  --color-danger-bg: var(--red-900);
+  --color-danger-border: var(--red-800);
+  --ring-danger: rgba(255, 107, 112, 0.4);
+
+  --color-warning: var(--amber-400);
+  --color-warning-fg: var(--amber-400);
+  --color-warning-bg: var(--amber-900);
+  --color-warning-border: var(--amber-800);
+
+  /*
+   * No escuro, sombra preta sobre fundo preto não existe. A profundidade vem
+   * de uma borda superior clara (luz de cima) somada a uma sombra de sangria
+   * bem mais funda que no claro.
+   */
+  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);
+
+  --overlay-bg: rgba(0, 0, 0, 0.65);
+
+  --scrollbar-thumb: var(--n-700);
+  --scrollbar-thumb-hover: var(--n-600);
+}

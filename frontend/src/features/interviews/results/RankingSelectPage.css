@@ -18,7 +18,7 @@
 }
 
 .section-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: normal;
   margin: 0 0 0.5rem 0;
@@ -26,7 +26,7 @@
 }
 
 .section-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: #666;
   margin: 0;
@@ -74,7 +74,7 @@
 }
 
 .position-card-title {
-  font-family: 'Coolvetica', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: normal;
   margin: 0;
@@ -86,7 +86,7 @@
 }
 
 .position-card-description {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   color: #666;
   margin: 0;
@@ -99,7 +99,7 @@
 }
 
 .position-vacancies {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   color: #3b82f6;
   font-weight: 600;

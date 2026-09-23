@@ -10,7 +10,7 @@ const questionInputStyle = {
   padding: '0.75rem',
   border: '1px solid rgba(55, 28, 104, 0.2)',
   borderRadius: '6px',
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: 'var(--font-body)',
   fontSize: '0.9rem',
   outline: 'none'
 };
@@ -182,7 +182,7 @@ export default function QuestionsPage() {
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.1)',
                   borderRadius: '8px',
-                  fontFamily: 'Coolvetica, sans-serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '1.25rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -198,8 +198,8 @@ export default function QuestionsPage() {
                 onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
                 onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
               >
-                <div style={{ fontFamily: 'Coolvetica, sans-serif', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas Gerais</div>
-                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas Gerais</div>
+                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'var(--font-body)' }}>
                   Perguntas usadas para todas as entrevistas
                 </div>
               </button>
@@ -212,7 +212,7 @@ export default function QuestionsPage() {
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.1)',
                   borderRadius: '8px',
-                  fontFamily: 'Coolvetica, sans-serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '1.25rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -228,8 +228,8 @@ export default function QuestionsPage() {
                 onMouseEnter={(e) => e.target.style.background = '#ddd5ff'}
                 onMouseLeave={(e) => e.target.style.background = '#EDE9FF'}
               >
-                <div style={{ fontFamily: 'Coolvetica, sans-serif', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas por Cargo</div>
-                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'normal', marginBottom: '0.5rem' }}>Perguntas por Cargo</div>
+                <div style={{ fontSize: '0.9rem', color: '#666', fontFamily: 'var(--font-body)' }}>
                   Perguntas específicas para um cargo
                 </div>
               </button>
@@ -261,7 +261,7 @@ export default function QuestionsPage() {
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.2)',
                   borderRadius: '8px',
-                  fontFamily: 'Coolvetica, sans-serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '0.9rem',
                   cursor: 'pointer'
                 }}
@@ -272,11 +272,11 @@ export default function QuestionsPage() {
 
             <section style={{ padding: '2rem' }}>
               {loadingPositions ? (
-                <p style={{ fontFamily: 'Inter, sans-serif', textAlign: 'center', color: '#666' }}>
+                <p style={{ fontFamily: 'var(--font-body)', textAlign: 'center', color: '#666' }}>
                   Carregando cargos...
                 </p>
               ) : positions.length === 0 ? (
-                <p style={{ fontFamily: 'Inter, sans-serif', textAlign: 'center', color: '#666' }}>
+                <p style={{ fontFamily: 'var(--font-body)', textAlign: 'center', color: '#666' }}>
                   Nenhum cargo cadastrado
                 </p>
               ) : (
@@ -291,7 +291,7 @@ export default function QuestionsPage() {
                         color: '#371C68',
                         border: '1px solid rgba(55, 28, 104, 0.1)',
                         borderRadius: '10px',
-                        fontFamily: 'Coolvetica, sans-serif',
+                        fontFamily: 'var(--font-display)',
                         fontSize: '1rem',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
@@ -342,7 +342,7 @@ export default function QuestionsPage() {
                   color: '#371C68',
                   border: '1px solid rgba(55, 28, 104, 0.2)',
                   borderRadius: '8px',
-                  fontFamily: 'Coolvetica, sans-serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '0.9rem',
                   cursor: 'pointer'
                 }}
@@ -373,7 +373,7 @@ export default function QuestionsPage() {
           <section className={styles.board}>
             {loading ? (
               <p style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'var(--font-body)',
                 textAlign: 'center',
                 color: '#666',
                 fontSize: '1rem',
@@ -383,7 +383,7 @@ export default function QuestionsPage() {
               </p>
             ) : perguntas.length === 0 ? (
               <p style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'var(--font-body)',
                 textAlign: 'center',
                 color: '#666',
                 fontSize: '1rem',
