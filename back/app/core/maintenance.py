@@ -31,15 +31,18 @@ def run_once(state, now: datetime) -> list[tuple[int, str]]:
             db.commit()
             logger.info("Manutenção: %s rascunhos expirados removidos", len(expired_drafts))
 
-        # 2. retenção de áudio de entrevistas concluídas
+        # 2. retenção de áudio de entrevistas concluídas ou com falha
         if settings.audio_retention_days > 0:
             retention_cutoff = now - timedelta(days=settings.audio_retention_days)
-            done_with_audio = (
+            retainable_with_audio = (
                 db.query(Interview)
-                .filter(Interview.status == InterviewStatus.done, Interview.audio_filename.isnot(None))
+                .filter(
+                    Interview.status.in_((InterviewStatus.done, InterviewStatus.error)),
+                    Interview.audio_filename.isnot(None),
+                )
                 .all()
             )
-            expired_audio = [i for i in done_with_audio if _aware(i.created_at) < retention_cutoff]
+            expired_audio = [i for i in retainable_with_audio if _aware(i.created_at) < retention_cutoff]
             for interview in expired_audio:
                 storage.delete_file(settings.audio_dir, interview.audio_filename)
                 interview.audio_filename = None

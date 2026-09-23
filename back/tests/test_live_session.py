@@ -18,7 +18,7 @@ PCM = b"\x00\x01" * 1600  # 100 ms
 def live(app, auth_client, position_id):
     streaming = FakeStreaming()
 
-    async def factory(language):
+    async def factory():
         return streaming
 
     app.state.streaming_factory = factory
@@ -90,7 +90,7 @@ def test_full_session_records_transcribes_and_processes(auth_client, app, live, 
 def test_upstream_unavailable_still_records(auth_client, app, live):
     iid, token, _ = live
 
-    async def broken(language):
+    async def broken():
         raise OSError("sem rede")
 
     app.state.streaming_factory = broken
@@ -119,7 +119,7 @@ class HangingStreaming(FakeStreaming):
 
 
 def _use_streaming(app, streaming):
-    async def factory(language):
+    async def factory():
         return streaming
 
     app.state.streaming_factory = factory
@@ -258,7 +258,7 @@ def test_finalize_only_claims_interviews_still_recording(app, live, settings):
         assert db.get(Interview, iid).status == InterviewStatus.uploaded
 
 
-def test_stop_without_audio_marks_error(auth_client, app, live, settings):
+def test_stop_without_audio_reverts_to_draft(auth_client, app, live, settings):
     iid, token, _ = live
     with auth_client.websocket_connect(f"/interviews/{iid}/live") as ws:
         ws.send_json({"type": "auth", "token": token})
@@ -266,7 +266,7 @@ def test_stop_without_audio_marks_error(auth_client, app, live, settings):
         ws.send_json({"type": "stop"})
         assert ws.receive_json() == {"type": "session_ended"}
     body = auth_client.get(f"/interviews/{iid}").json()
-    assert body["status"] == "error" and body["error_message"] == "Nenhum áudio foi gravado."
+    assert body["status"] == "draft" and body["error_message"] is None
     assert app.state.pipeline.transcriber.calls == 0
     assert not settings.audio_dir.joinpath(f"interview_{iid}.pcm").exists()
 

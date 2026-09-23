@@ -66,6 +66,8 @@ uvicorn app.main:create_app --factory --reload
 
 A API estará em `http://localhost:8000`, com a documentação interativa em `http://localhost:8000/docs`.
 
+A API deve rodar como **processo único** (não use `uvicorn --workers N`): o controle de reprocessamento do pipeline e o registro de sessões ao vivo vivem na memória do processo.
+
 ### Frontend
 
 ```bash
@@ -85,7 +87,7 @@ Não existem credenciais fixas. Crie sua conta pela tela de login, em **"Cadastr
 
 ```bash
 cd back && pytest
-cd frontend && npm test
+cd ../frontend && npm test -- --run
 ```
 
 ---

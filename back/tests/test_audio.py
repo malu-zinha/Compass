@@ -59,3 +59,12 @@ def test_audio_signature_does_not_work_for_another_interview(auth_client, positi
     query = auth_client.get(f"/interviews/{iid_a}/audio-url").json()["url"].split("?", 1)[1]
     r = auth_client.get(f"/interviews/{iid_b}/audio?{query}")
     assert r.status_code == 403
+
+
+def test_audio_signature_invalidated_by_reupload(auth_client, position_id):
+    iid = create_interview(auth_client, position_id)
+    auth_client.post(f"/interviews/{iid}/audio", files={"file": ("a.mp3", MP3, "audio/mpeg")})
+    url = auth_client.get(f"/interviews/{iid}/audio-url").json()["url"]
+    assert auth_client.get(url).status_code == 200
+    auth_client.post(f"/interviews/{iid}/audio", files={"file": ("b.mp3", MP3, "audio/mpeg")})
+    assert auth_client.get(url).status_code == 403

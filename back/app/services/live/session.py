@@ -140,7 +140,7 @@ async def run_live_session(ws: WebSocket, ctx: LiveContext) -> None:
     try:
         await send({"type": "ready"})
         try:
-            upstream = await asyncio.wait_for(state.streaming_factory(ctx.language), CONNECT_TIMEOUT_SECONDS)
+            upstream = await asyncio.wait_for(state.streaming_factory(), CONNECT_TIMEOUT_SECONDS)
         except Exception as exc:
             logger.warning("Streaming indisponível para entrevista %s (%s)", iid, type(exc).__name__)
             await send({"type": "error", "message": UNAVAILABLE_MESSAGE})

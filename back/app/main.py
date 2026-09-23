@@ -9,6 +9,7 @@ from app.api.routes import auth, comparisons, health, interviews, live, position
 from app.core import maintenance
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
+from app.core.limits import MaxBodySizeMiddleware
 from app.core.logging import configure_logging
 from app.db.session import build_engine
 from app.services.analysis import OpenAIAnalyzer
@@ -48,7 +49,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         OpenAIAnalyzer(settings),
     )
     app.state.background: set[asyncio.Task] = set()
-    app.state.streaming_factory = lambda language: AssemblyAIStreamingTranscriber.connect(
+    # A Universal-Streaming v3 (modelo `universal-streaming-multilingual`) não aceita selecionar
+    # um idioma: ela faz code-switching nativo entre idiomas. `language_codes` existe na API, mas
+    # é exclusivo do modelo `universal-3-5-pro` (não usado aqui), então não há parâmetro a repassar.
+    app.state.streaming_factory = lambda: AssemblyAIStreamingTranscriber.connect(
         settings.assemblyai_api_key.get_secret_value(), settings.assemblyai_streaming_model
     )
     app.state.suggester = OpenAISuggester(settings)
@@ -56,6 +60,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.live_registry = LiveRegistry()
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                        allow_methods=["*"], allow_headers=["*"])
+    app.add_middleware(MaxBodySizeMiddleware, max_upload_mb=settings.max_upload_mb)
     register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(auth.router)

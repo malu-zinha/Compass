@@ -183,7 +183,7 @@ def get_audio_url(
     if not interview.audio_filename:
         raise NotFound("Esta entrevista não possui áudio.")
     settings = request.app.state.settings
-    expires, signature = sign(f"audio:{interview_id}", settings)
+    expires, signature = sign(f"audio:{interview.id}:{interview.audio_filename}", settings)
     url = f"/interviews/{interview_id}/audio?expires={expires}&signature={signature}"
     return AudioUrlOut(url=url, expires_at=expires)
 
@@ -197,10 +197,10 @@ def get_audio(
     db: Session = Depends(get_db),
 ) -> FileResponse:
     settings = request.app.state.settings
-    verify_signature(f"audio:{interview_id}", expires, signature, settings)
     interview = db.get(Interview, interview_id)
     if interview is None or not interview.audio_filename:
         raise NotFound("Esta entrevista não possui áudio.")
+    verify_signature(f"audio:{interview.id}:{interview.audio_filename}", expires, signature, settings)
     storage: Storage = request.app.state.storage
     path = storage.audio_path(interview.audio_filename)
     if not path.exists():

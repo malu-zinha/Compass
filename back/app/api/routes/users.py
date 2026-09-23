@@ -104,10 +104,10 @@ def get_avatar(
     db: Session = Depends(get_db),
 ) -> FileResponse:
     settings = request.app.state.settings
-    verify_signature(f"avatar:{user_id}", expires, signature, settings)
     target = db.get(User, user_id)
     if target is None or not target.avatar_filename:
         raise NotFound("Foto de perfil não encontrada.")
+    verify_signature(f"avatar:{target.id}:{target.avatar_filename}", expires, signature, settings)
     storage: Storage = request.app.state.storage
     path = storage.avatar_path(target.avatar_filename)
     if not path.exists():

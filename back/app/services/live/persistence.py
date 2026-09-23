@@ -14,7 +14,6 @@ from app.services.users import get_or_create_settings
 logger = logging.getLogger(__name__)
 
 LIVE_STATUSES = (InterviewStatus.draft, InterviewStatus.recording)
-NO_AUDIO_MESSAGE = "Nenhum áudio foi gravado."
 
 
 @dataclass(frozen=True)
@@ -92,7 +91,8 @@ def finalize_interview_recording(db: Session, storage, interview: Interview) -> 
     """Reivindica a finalização: só age se a entrevista ainda está em `recording` (relido do banco).
 
     Com áudio: gera o WAV, marca `uploaded` e devolve True (o chamador agenda o pipeline).
-    Sem áudio: marca `error`. Já finalizada por outra conexão/manutenção: não toca em nada.
+    Sem áudio: volta para `draft` (a manutenção apaga pelo TTL de rascunho). Já finalizada por
+    outra conexão/manutenção: não toca em nada.
     O `.pcm` só é apagado depois do commit, para uma falha permitir nova tentativa.
     """
     db.refresh(interview)
@@ -102,10 +102,10 @@ def finalize_interview_recording(db: Session, storage, interview: Interview) -> 
     pcm = storage.pcm_path(interview.id)
     size = pcm.stat().st_size if pcm.exists() else 0
     if size == 0:
-        interview.status, interview.error_message = InterviewStatus.error, NO_AUDIO_MESSAGE
+        interview.status = InterviewStatus.draft
         db.commit()
         pcm.unlink(missing_ok=True)
-        logger.info("Entrevista %s encerrada sem áudio gravado", interview.id)
+        logger.info("Entrevista %s encerrada sem áudio gravado; volta para rascunho", interview.id)
         return False
     name = f"interview_{interview.id}.wav"
     duration = write_wav(pcm, storage.audio_path(name))
