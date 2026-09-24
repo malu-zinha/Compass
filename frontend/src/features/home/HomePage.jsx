@@ -60,7 +60,7 @@ export default function HomePage() {
             ) : (
               <>
                 <Stat label="Concluídas" value={stats.done} tone="success" />
-                <Stat label="Em processamento" value={stats.processing} tone="warning" />
+                <Stat label="Em processamento" value={stats.processing} tone="info" />
                 <Stat label="Com falha" value={stats.failed} tone="danger" />
                 <Stat label="Cargos" value={stats.positions} />
               </>

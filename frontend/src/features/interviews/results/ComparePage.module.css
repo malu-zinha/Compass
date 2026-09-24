@@ -156,7 +156,7 @@
   height: 28px;
   border-radius: var(--radius-full);
   background: var(--surface-sunken);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
 }

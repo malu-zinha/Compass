@@ -1,16 +1,16 @@
 .success { --meter-color: var(--color-success); }
-.warning { --meter-color: var(--color-warning); }
+.info { --meter-color: var(--color-info); }
 .danger { --meter-color: var(--color-danger); }
 
 .value {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
 
 .empty {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   color: var(--text-subtle);
 }
 

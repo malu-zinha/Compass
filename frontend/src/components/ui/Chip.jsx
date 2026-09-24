@@ -2,7 +2,8 @@ import { cx } from './cx';
 import styles from './Chip.module.css';
 
 /*
- * tone: neutral | info | success | warning | danger
+ * tone: neutral | info | success | danger
+ * (info = azul: informação e "em andamento"; não há mais âmbar)
  * onRemove torna o chip removível, com um botão nomeado "Remover <texto>".
  */
 export default function Chip({ tone = 'neutral', icon, onRemove, removeLabel, className, children, ...rest }) {

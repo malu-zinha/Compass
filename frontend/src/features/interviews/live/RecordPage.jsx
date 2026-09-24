@@ -176,7 +176,7 @@ function RecordPage() {
       <div className={styles.bar}>
         <div className={styles.status}>
           {session.status === 'live' && (
-            <Chip tone="warning" icon={<span className={styles.pulse} aria-hidden="true" />}>Ao vivo</Chip>
+            <Chip tone="info" icon={<span className={styles.pulse} aria-hidden="true" />}>Ao vivo</Chip>
           )}
           {isConnecting && <Chip icon={<Spinner size="sm" label="Conectando" />}>Conectando...</Chip>}
           {errorMessage && <span className={styles.error} role="status">{errorMessage}</span>}

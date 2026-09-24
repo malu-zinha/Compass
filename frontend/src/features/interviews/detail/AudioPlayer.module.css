@@ -28,7 +28,7 @@
 .time {
   flex-shrink: 0;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
 }

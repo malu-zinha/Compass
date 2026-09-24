@@ -13,6 +13,6 @@ export const SUBSCORES = [
 export function scoreBand(score) {
   if (score === null || score === undefined) return null;
   if (score >= 700) return { band: 'strong', label: 'Forte', tone: 'success' };
-  if (score >= 400) return { band: 'medium', label: 'Médio', tone: 'warning' };
+  if (score >= 400) return { band: 'medium', label: 'Médio', tone: 'info' };
   return { band: 'weak', label: 'Fraco', tone: 'danger' };
 }

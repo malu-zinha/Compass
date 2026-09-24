@@ -13,9 +13,8 @@
 }
 
 .neutral { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--color-border); }
-.info { background: var(--color-primary-bg); color: var(--color-primary-fg); border-color: var(--color-primary-border); }
+.info { background: var(--color-info-bg); color: var(--color-info-fg); border-color: var(--color-info-border); }
 .success { background: var(--color-success-bg); color: var(--color-success-fg); border-color: var(--color-success-border); }
-.warning { background: var(--color-warning-bg); color: var(--color-warning-fg); border-color: var(--color-warning-border); }
 .danger { background: var(--color-danger-bg); color: var(--color-danger-fg); border-color: var(--color-danger-border); }
 
 .remove {

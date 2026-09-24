@@ -58,7 +58,7 @@
 .eyebrow {
   margin: 0 0 var(--space-4);
   color: var(--color-primary-fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
 }
@@ -127,7 +127,7 @@
 
 .previewRank {
   color: var(--text-subtle);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
 }
 
@@ -200,7 +200,7 @@
 
 .stepNumber {
   color: var(--color-primary-fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
 }

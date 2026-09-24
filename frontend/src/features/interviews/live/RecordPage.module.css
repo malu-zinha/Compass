@@ -44,7 +44,7 @@
 }
 
 .timer {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
