@@ -60,7 +60,7 @@ test('upload não cria entrevista antes do envio', async () => {
   const { createInterview } = await import('../../../api/interviews');
   const { router } = renderWithRouter(<InterviewTypePage />, '/tipo-entrevista', ['/upload']);
 
-  await userEvent.click(screen.getByText('Upload de Áudio'));
+  await userEvent.click(screen.getByText('Enviar áudio'));
 
   expect(createInterview).not.toHaveBeenCalled();
   expect(router.state.location.pathname).toBe('/upload');

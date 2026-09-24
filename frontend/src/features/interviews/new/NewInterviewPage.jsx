@@ -1,29 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { listPositions } from '../../../api/positions';
+import { Button, Card, Checkbox, Field, Input, Select, useToast } from '../../../components/ui';
 import { useInterviewDraft } from './useInterviewDraft';
-import './NewInterviewPage.css';
-import { useToast } from '../../../components/ui';
+import styles from './flow.module.css';
 
-function NewInterviewPage() {
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function NewInterviewPage() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { saveDraft } = useInterviewDraft();
+  const { draft, saveDraft } = useInterviewDraft();
 
-  const [candidateName, setCandidateName] = useState('');
-  const [candidateEmail, setCandidateEmail] = useState('');
-  const [candidatePhone, setCandidatePhone] = useState('');
-  const [candidatePositionId, setCandidatePositionId] = useState('');
-  const [recordingConsent, setRecordingConsent] = useState(false);
-  const [availableJobs, setAvailableJobs] = useState([]);
+  // Voltar do passo seguinte reabre o formulário preenchido.
+  const [form, setForm] = useState(() => ({
+    name: draft?.candidate_name ?? '',
+    email: draft?.candidate_email ?? '',
+    phone: draft?.candidate_phone ?? '',
+    positionId: draft?.position_id ? String(draft.position_id) : '',
+    consent: draft?.recording_consent ?? false,
+  }));
+  const [positions, setPositions] = useState(null);
+  const [touched, setTouched] = useState({});
 
   const loadPositions = useCallback(async () => {
     try {
       const data = await listPositions();
-      setAvailableJobs(data.items);
+      setPositions(data.items);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
       toast.error(error.detail || 'Erro ao carregar cargos. Verifique se o backend está rodando.');
+      setPositions([]);
     }
   }, [toast]);
 
@@ -31,137 +38,76 @@ function NewInterviewPage() {
     loadPositions();
   }, [loadPositions]);
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  const set = (key) => (event) => {
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    setForm((f) => ({ ...f, [key]: value }));
   };
+  const touch = (key) => () => setTouched((t) => ({ ...t, [key]: true }));
 
-  const isFormValid = () => {
-    return candidateName.trim() &&
-           candidateEmail.trim() &&
-           candidatePhone.trim() &&
-           candidatePositionId &&
-           recordingConsent &&
-           validateEmail(candidateEmail);
-  };
+  const emailError = touched.email && form.email && !EMAIL.test(form.email) ? 'E-mail inválido.' : undefined;
+  const valid = form.name.trim() && EMAIL.test(form.email.trim()) && form.phone.trim() && form.positionId && form.consent;
 
-  const handleStartInterview = () => {
-    if (!isFormValid()) {
-      toast.error('Por favor, preencha todos os campos corretamente!');
-      return;
-    }
-
-    const selectedJob = availableJobs.find((job) => job.id === parseInt(candidatePositionId, 10));
-
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!valid) return;
+    const position = positions?.find((p) => p.id === Number(form.positionId));
     saveDraft({
-      candidate_name: candidateName.trim(),
-      candidate_email: candidateEmail.trim(),
-      candidate_phone: candidatePhone.trim(),
-      position_id: parseInt(candidatePositionId, 10),
-      position_name: selectedJob ? selectedJob.name : '',
-      recording_consent: recordingConsent,
+      candidate_name: form.name.trim(),
+      candidate_email: form.email.trim(),
+      candidate_phone: form.phone.trim(),
+      position_id: Number(form.positionId),
+      position_name: position?.name ?? '',
+      recording_consent: form.consent,
     });
-
     navigate('/tipo-entrevista');
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && isFormValid()) {
-      handleStartInterview();
-    }
-  };
-
   return (
-    <div className="new-interview-container">
-      <div className="new-interview-content">
-        <h1 className="new-interview-title">Nova entrevista</h1>
-        <p className="new-interview-subtitle">
-          Preencha as informações para iniciar a gravação
-        </p>
-
-        <div className="form-grid">
-          <div className="form-field">
-            <label htmlFor="candidate-name">Nome do candidato</label>
-            <input
-              id="candidate-name"
-              type="text"
-              value={candidateName}
-              onChange={(e) => setCandidateName(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder=""
-              autoComplete="name"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="candidate-email">E-mail</label>
-            <input
-              id="candidate-email"
-              type="email"
-              value={candidateEmail}
-              onChange={(e) => setCandidateEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder=""
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="candidate-phone">Número</label>
-            <input
-              id="candidate-phone"
-              type="tel"
-              value={candidatePhone}
-              onChange={(e) => setCandidatePhone(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder=""
-              autoComplete="tel"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="candidate-position">Cargo</label>
-            <select
-              id="candidate-position"
-              value={candidatePositionId}
-              onChange={(e) => setCandidatePositionId(e.target.value)}
-              className="form-select"
-            >
-              <option value="">Selecione um cargo</option>
-              {availableJobs.map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label
-              htmlFor="recording-consent"
-              style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-            >
-              <input
-                id="recording-consent"
-                type="checkbox"
-                checked={recordingConsent}
-                onChange={(e) => setRecordingConsent(e.target.checked)}
-              />
-              Confirmo que o candidato autorizou a gravação e o processamento da entrevista.
-            </label>
-          </div>
+    <div className={styles.page}>
+      <div className={styles.wrap}>
+        <div className={styles.intro}>
+          <h1 className={styles.title}>Nova entrevista</h1>
+          <p className={styles.subtitle}>Quem você vai entrevistar e para qual cargo?</p>
         </div>
 
-        <button
-          className="start-interview-btn"
-          onClick={handleStartInterview}
-          disabled={!isFormValid()}
-        >
-          Continuar
-        </button>
+        <Card as="form" id="nova-entrevista" onSubmit={handleSubmit} noValidate>
+          <div className={styles.form}>
+            <Field label="Nome do candidato" required className={styles.full}>
+              <Input value={form.name} onChange={set('name')} autoComplete="name" />
+            </Field>
+            <Field label="E-mail" required error={emailError}>
+              <Input type="email" value={form.email} onChange={set('email')} onBlur={touch('email')} autoComplete="email" />
+            </Field>
+            <Field label="Telefone" required>
+              <Input type="tel" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+            </Field>
+            <Field label="Cargo" required className={styles.full}>
+              <Select value={form.positionId} onChange={set('positionId')} disabled={positions === null}>
+                <option value="">{positions === null ? 'Carregando cargos...' : 'Selecione um cargo'}</option>
+                {(positions ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </Select>
+            </Field>
+            {positions?.length === 0 && (
+              <p className={`${styles.hint} ${styles.full}`}>
+                Nenhum cargo cadastrado. <Link to="/cargos/novo">Crie um cargo</Link> para continuar.
+              </p>
+            )}
+            <div className={`${styles.consent} ${styles.full}`}>
+              <Checkbox
+                label="Confirmo que o candidato autorizou a gravação e o processamento da entrevista."
+                checked={form.consent}
+                onChange={set('consent')}
+              />
+            </div>
+          </div>
+        </Card>
+
+        <div className={styles.footer}>
+          <Button type="submit" form="nova-entrevista" variant="primary" size="lg" disabled={!valid}>
+            Continuar
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
-
-export default NewInterviewPage;
