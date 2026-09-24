@@ -1,125 +1,147 @@
 import { Link } from 'react-router-dom';
+import { paths } from '../../app/paths';
 import { useAuth } from '../../auth/AuthContext';
 import { useUserSettings } from '../../auth/SettingsContext';
 import { PageHeader } from '../../components/layout';
-import {
-  Button, Card, EmptyState, ErrorPanel, ScoreMeter, Skeleton, StatusBadge,
-} from '../../components/ui';
-import {
-  BriefcaseIcon, ChartIcon, ChevronRightIcon, InterviewsIcon, MicrophoneIcon, QuestionsIcon,
-} from '../../components/icons';
+import { Button, DataTable, EmptyState, ErrorPanel, ScoreMeter, Skeleton, StatusBadge } from '../../components/ui';
+import { ChevronRightIcon, InterviewsIcon, MicrophoneIcon } from '../../components/icons';
 import { formatDate } from '../../lib/format';
+import { useVagasResumo } from '../vagas/useVagasResumo';
 import { useHomeSummary } from './useHomeSummary';
 import styles from './HomePage.module.css';
-import { paths } from '../../app/paths';
 
-const SHORTCUTS = [
-  { to: paths.vagas, label: 'Ranking', text: 'Compare candidatos por cargo', Icon: ChartIcon },
-  { to: paths.vagas, label: 'Cargos', text: 'Vagas e competências', Icon: BriefcaseIcon },
-  { to: paths.perguntas, label: 'Perguntas', text: 'Banco por cargo', Icon: QuestionsIcon },
-];
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-function Stat({ label, value, tone }) {
+function AttentionRow({ interview, settings }) {
+  const failed = interview.status === 'error';
   return (
-    <Card className={styles.stat}>
-      <span className={styles.statLabel}>
-        {tone && <span className={`${styles.dot} ${styles[tone]}`} aria-hidden="true" />}
-        {label}
-      </span>
-      <span className={styles.statValue}>{value}</span>
-    </Card>
+    <li>
+      <Link to={paths.entrevista(interview.id)} className={styles.attention}>
+        <span className={`${styles.marker} ${failed ? styles.markerDanger : styles.markerInfo}`} aria-hidden="true" />
+        <span className={styles.who}>
+          <span className={styles.name}>{interview.candidate_name || 'Candidato sem nome'}</span>
+          <span className={styles.meta}>{interview.position_name} · {formatDate(interview.created_at, settings)}</span>
+        </span>
+        <StatusBadge status={interview.status} />
+        <span className={styles.action}>{failed ? 'Ver e reprocessar' : 'Acompanhar'}</span>
+        <ChevronRightIcon size={16} className={styles.chevron} />
+      </Link>
+    </li>
   );
 }
 
 export default function HomePage() {
   const { user } = useAuth();
   const { settings } = useUserSettings();
-  const { loading, error, stats, recent } = useHomeSummary();
+  const home = useHomeSummary();
+  const vagas = useVagasResumo();
   const firstName = user?.name?.split(' ')[0];
+  const today = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: settings.timezone }).format(new Date());
+
+  const attention = [...home.failed, ...home.processing];
+
+  const recentColumns = [
+    { key: 'nome', header: 'Candidata', render: (i) => i.candidate_name || 'Candidato sem nome' },
+    { key: 'vaga', header: 'Vaga', card: false, render: (i) => i.position_name },
+    { key: 'data', header: 'Data', render: (i) => formatDate(i.created_at, settings) },
+    {
+      key: 'pontuacao',
+      header: 'Pontuação',
+      width: '160px',
+      render: (i) => <ScoreMeter score={i.score} label={`Pontuação de ${i.candidate_name}`} variant="bar" showLabel={false} />,
+    },
+  ];
 
   return (
     <div className={styles.page}>
       <PageHeader title="Início" />
 
       <section className={styles.welcome}>
-        <div>
-          <h2 className={styles.greeting}>{firstName ? `Olá, ${firstName}` : 'Olá'}</h2>
-          <p className={styles.lead}>Aqui está o andamento das suas entrevistas.</p>
-        </div>
-        <Button as={Link} to={paths.novaEntrevista()} variant="primary" size="lg" icon={<MicrophoneIcon size={18} />}>
-          Começar entrevista
-        </Button>
+        <p className={styles.date}>{today}</p>
+        <h2 className={styles.greeting}>{firstName ? `Olá, ${firstName}.` : 'Olá.'}</h2>
+        {home.counts && (
+          <p className={styles.counts}>
+            {plural(home.counts.done, 'entrevista concluída', 'entrevistas concluídas')}
+            {' · '}{plural(home.counts.processing, 'em processamento', 'em processamento')}
+            {' · '}{plural(home.counts.failed, 'com falha', 'com falha')}
+          </p>
+        )}
       </section>
 
-      {error ? (
+      {home.error ? (
         <ErrorPanel message="Não foi possível carregar o painel." onRetry={() => window.location.reload()} />
       ) : (
-        <>
-          <section className={styles.stats} aria-label="Resumo" aria-busy={loading}>
-            {loading ? (
-              [0, 1, 2, 3].map((i) => <Skeleton key={i} variant="block" className={styles.statSkeleton} />)
-            ) : (
-              <>
-                <Stat label="Concluídas" value={stats.done} tone="success" />
-                <Stat label="Em processamento" value={stats.processing} tone="info" />
-                <Stat label="Com falha" value={stats.failed} tone="danger" />
-                <Stat label="Cargos" value={stats.positions} />
-              </>
-            )}
-          </section>
-
-          <div className={styles.columns}>
-            <Card padding="none" as="section" aria-labelledby="recentes" className={styles.recent}>
-              <div className={styles.recentHead}>
-                <h2 id="recentes" className={styles.sectionTitle}>Últimas entrevistas</h2>
-                <Link to={paths.entrevistas} className={styles.more}>Ver todas</Link>
-              </div>
-              {loading ? (
-                <div className={styles.recentLoading}>
-                  {[0, 1, 2].map((i) => <Skeleton key={i} variant="line" />)}
-                </div>
-              ) : recent.length === 0 ? (
-                <EmptyState
-                  icon={<InterviewsIcon size={24} />}
-                  title="Nenhuma entrevista ainda"
-                  description="Grave ao vivo ou envie um áudio para ver a análise aqui."
-                  action={<Button as={Link} to={paths.novaEntrevista()} variant="primary">Nova entrevista</Button>}
-                />
+        <div className={styles.columns}>
+          <div className={styles.main}>
+            <section aria-labelledby="atencao">
+              <h2 id="atencao" className={styles.sectionTitle}>Precisa de você</h2>
+              {home.loading ? (
+                <Skeleton variant="block" className={styles.skeleton} />
+              ) : attention.length === 0 ? (
+                <p className={styles.calm}>Nada pendente. Todas as entrevistas foram analisadas.</p>
               ) : (
-                <ul className={styles.list}>
-                  {recent.map((item) => (
-                    <li key={item.id}>
-                      <Link to={paths.entrevista(item.id)} className={styles.row}>
-                        <span className={styles.who}>
-                          <span className={styles.name}>{item.candidate_name || 'Candidato sem nome'}</span>
-                          <span className={styles.meta}>
-                            {item.position_name} · {formatDate(item.created_at, settings)}
-                          </span>
-                        </span>
-                        <StatusBadge status={item.status} className={item.status === 'done' ? styles.doneBadge : undefined} />
-                        <ScoreMeter score={item.score} label={`Pontuação de ${item.candidate_name}`} size="sm" />
-                        <ChevronRightIcon size={16} className={styles.chevron} />
-                      </Link>
-                    </li>
-                  ))}
+                <ul className={styles.attentionList}>
+                  {attention.map((i) => <AttentionRow key={i.id} interview={i} settings={settings} />)}
                 </ul>
               )}
-            </Card>
+            </section>
 
-            <nav aria-label="Atalhos" className={styles.shortcuts}>
-              {SHORTCUTS.map(({ to, label, text, Icon }) => (
-                <Card key={to} as={Link} to={to} variant="interactive" className={styles.shortcut}>
-                  <span className={styles.shortcutIcon}><Icon size={20} /></span>
-                  <span className={styles.who}>
-                    <span className={styles.name}>{label}</span>
-                    <span className={styles.meta}>{text}</span>
-                  </span>
-                  <ChevronRightIcon size={16} className={styles.chevron} />
-                </Card>
-              ))}
-            </nav>
+            <section aria-labelledby="recentes">
+              <div className={styles.sectionHead}>
+                <h2 id="recentes" className={styles.sectionTitle}>Concluídas recentemente</h2>
+                <Link to={paths.entrevistas} className={styles.more}>Ver todas</Link>
+              </div>
+              {home.loading ? (
+                <Skeleton variant="block" className={styles.skeleton} />
+              ) : (
+                <DataTable
+                  caption="Entrevistas concluídas recentemente"
+                  columns={recentColumns}
+                  rows={home.recent}
+                  getRowKey={(i) => i.id}
+                  rowHref={(i) => paths.entrevista(i.id)}
+                  empty={(
+                    <EmptyState
+                      icon={<InterviewsIcon size={24} />}
+                      title="Nenhuma entrevista ainda"
+                      description="Grave ao vivo ou envie um áudio para ver a análise aqui."
+                      action={<Button as={Link} to={paths.novaEntrevista()} variant="primary" icon={<MicrophoneIcon size={16} />}>Nova entrevista</Button>}
+                    />
+                  )}
+                />
+              )}
+            </section>
           </div>
-        </>
+
+          <aside aria-labelledby="vagas-titulo" className={styles.side}>
+            <div className={styles.sectionHead}>
+              <h2 id="vagas-titulo" className={styles.sectionTitle}>Vagas</h2>
+              <Link to={paths.vagas} className={styles.more}>Todas</Link>
+            </div>
+            {vagas.loading ? (
+              <Skeleton variant="block" className={styles.skeleton} />
+            ) : vagas.vagas.length === 0 ? (
+              <p className={styles.calm}>Nenhuma vaga ainda. <Link to={paths.novaVaga}>Criar vaga</Link></p>
+            ) : (
+              <ul className={styles.vagas}>
+                {vagas.vagas.map((v) => (
+                  <li key={v.id}>
+                    <Link to={paths.vaga(v.id)} className={styles.vaga}>
+                      <span className={styles.vagaName}>{v.name}</span>
+                      <span className={styles.meta}>{plural(v.entrevistas, 'entrevista', 'entrevistas')}</span>
+                      {v.melhor && (
+                        <span className={styles.leader}>
+                          <span className={styles.meta}>Melhor: {v.melhor.candidate_name}</span>
+                          <ScoreMeter score={v.melhor.score} label={`Melhor pontuação da vaga ${v.name}`} variant="bar" showLabel={false} />
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </aside>
+        </div>
       )}
     </div>
   );
