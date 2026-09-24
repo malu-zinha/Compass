@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createInterview, deleteInterview, uploadInterviewAudio } from '../../../api/interviews';
 import { Button, Card, Field, Textarea, useToast } from '../../../components/ui';
 import { CheckIcon, UploadIcon } from '../../../components/icons';
-import { useInterviewDraft } from './useInterviewDraft';
-import flow from './flow.module.css';
+import { useInterviewDraft } from '../nova/useInterviewDraft';
+import flow from '../nova/flow.module.css';
 import styles from './UploadAudioPage.module.css';
 import { paths } from '../../../app/paths';
 
@@ -159,7 +159,7 @@ export default function UploadAudioPage() {
         </Card>
 
         <div className={flow.footer}>
-          <Button variant="ghost" onClick={() => navigate(paths.tipoEntrevista)} disabled={uploading}>Voltar</Button>
+          <Button variant="ghost" onClick={() => navigate(paths.novaEntrevista())} disabled={uploading}>Voltar</Button>
           <Button variant="primary" size="lg" onClick={handleUpload} disabled={!file} loading={uploading}>
             {uploading ? progress || 'Processando...' : 'Enviar e Processar'}
           </Button>

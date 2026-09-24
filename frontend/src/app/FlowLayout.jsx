@@ -11,16 +11,15 @@ import { paths } from './paths';
  * controles de encerramento.
  */
 function stepsFor(pathname) {
-  if (pathname.startsWith('/gravar/')) return { current: 2, last: 'Gravar', exit: false };
-  if (pathname.startsWith(paths.enviar)) return { current: 2, last: 'Enviar', exit: true };
-  if (pathname.startsWith(paths.tipoEntrevista)) return { current: 1, last: 'Gravar ou enviar', exit: true };
+  if (pathname.startsWith('/gravar/')) return { current: 1, last: 'Gravar', exit: false };
+  if (pathname.startsWith(paths.enviar)) return { current: 1, last: 'Enviar', exit: true };
   return { current: 0, last: 'Gravar ou enviar', exit: true };
 }
 
 export default function FlowLayout() {
   const { pathname } = useLocation();
   const { current, last, exit } = stepsFor(pathname);
-  const steps = ['Candidato', 'Formato', last];
+  const steps = ['Candidato e formato', last];
 
   return (
     <div className={styles.flow}>

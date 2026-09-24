@@ -2,10 +2,9 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import LandingPage from '../features/landing/LandingPage';
 import HomePage from '../features/home/HomePage';
 import AuthScreen from '../features/auth/AuthScreen';
-import NewInterviewPage from '../features/interviews/new/NewInterviewPage';
-import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
-import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
-import RecordPage from '../features/interviews/live/RecordPage';
+import NovaEntrevistaPage from '../features/entrevistas/nova/NovaEntrevistaPage';
+import UploadAudioPage from '../features/entrevistas/enviar/UploadAudioPage';
+import RecordPage from '../features/entrevistas/gravar/RecordPage';
 import EntrevistasPage from '../features/entrevistas/lista/EntrevistasPage';
 import ComparePage from '../features/entrevistas/comparar/ComparePage';
 import InterviewDetailPage from '../features/entrevistas/detalhe/InterviewDetailPage';
@@ -42,8 +41,7 @@ export function AppRoutes() {
           <Route path={R.conta} element={<ContaPage />} />
         </Route>
         <Route element={<FlowLayout />}>
-          <Route path={R.novaEntrevista} element={<NewInterviewPage />} />
-          <Route path={R.tipoEntrevista} element={<InterviewTypePage />} />
+          <Route path={R.novaEntrevista} element={<NovaEntrevistaPage />} />
           <Route path={R.enviar} element={<UploadAudioPage />} />
           <Route path={R.gravar} element={<RecordPage />} />
         </Route>
@@ -58,6 +56,7 @@ export function AppRoutes() {
         <Route path="/perfil" element={<Navigate to={paths.conta()} replace />} />
         <Route path="/configuracoes" element={<Navigate to={paths.conta('preferencias')} replace />} />
         <Route path="/upload" element={<Navigate to={paths.enviar} replace />} />
+        <Route path="/tipo-entrevista" element={<Navigate to={paths.novaEntrevista()} replace />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

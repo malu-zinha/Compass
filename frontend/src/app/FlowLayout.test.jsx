@@ -11,7 +11,6 @@ function renderFlow(path) {
         <Routes>
           <Route element={<FlowLayout />}>
             <Route path="/nova-entrevista" element={<p>form</p>} />
-            <Route path="/tipo-entrevista" element={<p>tipo</p>} />
             <Route path="/enviar" element={<p>upload</p>} />
             <Route path="/gravar/:id" element={<p>gravando</p>} />
           </Route>
@@ -26,12 +25,13 @@ const current = () =>
 
 test('primeira etapa marcada e saída para o início', () => {
   renderFlow('/nova-entrevista');
-  expect(current()).toHaveTextContent('Candidato');
+  expect(current()).toHaveTextContent('Candidato e formato');
+  expect(screen.getAllByRole('listitem')).toHaveLength(2);
   expect(screen.getByRole('link', { name: 'Cancelar' })).toHaveAttribute('href', '/inicio');
   expect(screen.getByRole('main')).toHaveTextContent('form');
 });
 
-test('upload é a terceira etapa, "Enviar"', () => {
+test('envio é a segunda etapa, "Enviar"', () => {
   renderFlow('/enviar');
   expect(current()).toHaveTextContent('Enviar');
 });

@@ -32,7 +32,6 @@ export const paths = {
   conta: (aba) => `/conta${query({ aba: aba === 'perfil' ? undefined : aba })}`,
 
   novaEntrevista: (vagaId) => `/nova-entrevista${query({ vaga: vagaId })}`,
-  tipoEntrevista: '/tipo-entrevista',
   gravar: (id) => `/gravar/${id}`,
   enviar: '/enviar',
 };
@@ -51,7 +50,6 @@ export const ROUTE_PATTERNS = {
   perguntas: '/perguntas',
   conta: '/conta',
   novaEntrevista: '/nova-entrevista',
-  tipoEntrevista: '/tipo-entrevista',
   gravar: '/gravar/:id',
   enviar: '/enviar',
 };

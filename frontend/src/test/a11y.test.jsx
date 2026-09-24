@@ -108,7 +108,7 @@ const { default: ComparePage } = await import('../features/entrevistas/comparar/
 const { default: InterviewDetailPage } = await import('../features/entrevistas/detalhe/InterviewDetailPage');
 const { default: SettingsPage } = await import('../features/settings/SettingsPage');
 const { default: ProfilePage } = await import('../features/profile/ProfilePage');
-const { default: NewInterviewPage } = await import('../features/interviews/new/NewInterviewPage');
+const { default: NovaEntrevistaPage } = await import('../features/entrevistas/nova/NovaEntrevistaPage');
 const { default: NotFoundPage } = await import('../features/not-found/NotFoundPage');
 const { default: AppLayout } = await import('../app/AppLayout');
 
@@ -134,7 +134,7 @@ describe('acessibilidade das telas (axe)', () => {
     ['Entrevistas', () => renderWithLayout(<EntrevistasPage />, '/entrevistas'), 'Candidata 2'],
     ['Configurações', () => renderWithLayout(<SettingsPage />, '/configuracoes'), 'Fuso horário'],
     ['Perfil', () => renderWithLayout(<ProfilePage />, '/perfil'), 'Informações pessoais'],
-    ['Nova entrevista', () => renderWithLayout(<NewInterviewPage />, '/nova-entrevista'), 'Frontend'],
+    ['Nova entrevista', () => renderWithLayout(<NovaEntrevistaPage />, '/nova-entrevista'), 'Frontend'],
     ['404', () => renderWithRouter(<NotFoundPage />, '/x'), 'Esta página saiu do mapa'],
   ])('%s', async (_name, render, ready) => {
     const { container } = render();

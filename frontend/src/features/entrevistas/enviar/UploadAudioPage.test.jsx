@@ -30,7 +30,7 @@ test('falha no upload apaga a entrevista criada', async () => {
   const api = await import('../../../api/interviews');
   api.uploadInterviewAudio.mockRejectedValueOnce(new ApiError(413, 'O arquivo excede o limite de 200 MB.'));
 
-  renderWithRouter(<UploadAudioPage />, '/upload');
+  renderWithRouter(<UploadAudioPage />, '/enviar');
 
   const file = new File(['x'], 'e.mp3', { type: 'audio/mpeg' });
   await userEvent.upload(screen.getByLabelText('Arquivo de áudio'), file);
@@ -42,7 +42,7 @@ test('falha no upload apaga a entrevista criada', async () => {
 
 test('sucesso cria a entrevista, envia o áudio, limpa o rascunho e navega', async () => {
   const api = await import('../../../api/interviews');
-  const { router } = renderWithRouter(<UploadAudioPage />, '/upload', ['/entrevista/:id']);
+  const { router } = renderWithRouter(<UploadAudioPage />, '/enviar', ['/entrevista/:id']);
 
   await userEvent.type(screen.getByLabelText('Anotações (opcional)'), 'observação');
   const file = new File(['x'], 'e.mp3', { type: 'audio/mpeg' });
@@ -66,7 +66,7 @@ test('sucesso cria a entrevista, envia o áudio, limpa o rascunho e navega', asy
 
 test('sem rascunho redireciona para /nova-entrevista', async () => {
   sessionStorage.clear();
-  const { router } = renderWithRouter(<UploadAudioPage />, '/upload', ['/nova-entrevista']);
+  const { router } = renderWithRouter(<UploadAudioPage />, '/enviar', ['/nova-entrevista']);
 
   expect(await screen.findByText('/nova-entrevista')).toBeInTheDocument();
   expect(router.state.location.pathname).toBe('/nova-entrevista');
@@ -74,7 +74,7 @@ test('sem rascunho redireciona para /nova-entrevista', async () => {
 
 test('recusa no navegador arquivo acima do limite, sem criar entrevista', async () => {
   const api = await import('../../../api/interviews');
-  renderWithRouter(<UploadAudioPage />, '/upload');
+  renderWithRouter(<UploadAudioPage />, '/enviar');
   const big = new File(['x'], 'longa.mp3', { type: 'audio/mpeg' });
   Object.defineProperty(big, 'size', { value: 201 * 1024 * 1024 });
   await userEvent.upload(screen.getByLabelText('Arquivo de áudio'), big);
