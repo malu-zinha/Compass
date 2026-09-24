@@ -4,8 +4,7 @@
 components/
 ├── ui/       # Primitivas de interface — base de todas as telas
 ├── brand/    # Logo (mark, full, lockup)
-├── layout/   # Header, Sidebar
-├── common/   # InfoModal (a ser substituído pelo Modal de ui/)
+├── layout/   # AppHeader, Sidebar, AccountMenu, PageHeader
 ├── icons/    # Ícones SVG
 └── index.js
 ```

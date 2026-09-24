@@ -97,17 +97,14 @@ export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration, { onE
     }
   };
 
-  const handleProgressClick = (event) => {
-    const progressBar = event.currentTarget;
-    const clickX = event.clientX - progressBar.getBoundingClientRect().left;
-    const width = progressBar.offsetWidth;
+  // Pula para `seconds` (barra de progresso, timestamps da transcrição).
+  const seek = (seconds) => {
     const audio = audioRef.current;
-    if (audio && duration && width > 0) {
-      const percentage = Math.min(Math.max(clickX / width, 0), 1);
-      audio.currentTime = percentage * duration;
-      setCurrentTime(audio.currentTime);
-      setActiveMessageIndex(findActiveIndex(transcript, audio.currentTime * 1000));
-    }
+    if (!audio || !Number.isFinite(seconds)) return;
+    const target = Math.min(Math.max(seconds, 0), duration || seconds);
+    audio.currentTime = target;
+    setCurrentTime(target);
+    setActiveMessageIndex(findActiveIndex(transcript, target * 1000));
   };
 
   return {
@@ -119,7 +116,7 @@ export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration, { onE
     activeMessageIndex,
     audioError,
     togglePlayPause,
-    handleProgressClick,
+    seek,
     audioHandlers: {
       onTimeUpdate: handleTimeUpdate,
       onLoadedMetadata: handleLoadedMetadata,
