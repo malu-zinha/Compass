@@ -11,6 +11,7 @@ import ComparePage from '../features/interviews/results/ComparePage';
 import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
 import VagasPage from '../features/vagas/lista/VagasPage';
 import VagaEditorPage from '../features/vagas/editor/VagaEditorPage';
+import VagaPage from '../features/vagas/pagina/VagaPage';
 import PerguntasPage from '../features/perguntas/PerguntasPage';
 import ContaPage from '../features/conta/ContaPage';
 import NotFoundPage from '../features/not-found/NotFoundPage';
@@ -34,7 +35,7 @@ export function AppRoutes() {
           <Route path={R.entrevista} element={<InterviewDetailPage />} />
           <Route path={R.vagas} element={<VagasPage />} />
           <Route path={R.novaVaga} element={<VagaEditorPage />} />
-          <Route path={R.vaga} element={<ResultsPage />} />
+          <Route path={R.vaga} element={<VagaPage />} />
           <Route path={R.editarVaga} element={<VagaEditorPage />} />
           <Route path={R.comparar} element={<ComparePage />} />
           <Route path={R.perguntas} element={<PerguntasPage />} />
