@@ -21,6 +21,7 @@ const baseInterview = {
   candidate_name: 'Bruno Lima',
   candidate_email: 'bruno@example.com',
   candidate_phone: '11888887777',
+  position_id: 3,
   notes: '',
   status: 'done',
   error_message: null,
@@ -49,6 +50,7 @@ function renderDetail(path = '/entrevista/1') {
       children: [
         { path: '/entrevista/:id', element: <InterviewDetailPage /> },
         { path: '/entrevistas', element: <p>Lista de entrevistas</p> },
+        { path: '/vagas/:id', element: <p>Página da vaga</p> },
       ],
     },
   ], { initialEntries: [path] });
@@ -64,7 +66,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('(a) done com analysis.qa_pairs mostra as perguntas na aba Perguntas', async () => {
+test('(a) done: leitura contínua com índice e as perguntas visíveis', async () => {
   const { useInterview } = await import('./useInterview');
   useInterview.mockReturnValue({
     interview: {
@@ -82,9 +84,8 @@ test('(a) done com analysis.qa_pairs mostra as perguntas na aba Perguntas', asyn
 
   renderDetail();
 
-  expect(screen.getByRole('tab', { name: 'Resumo' })).toHaveAttribute('aria-selected', 'true');
-  expect(screen.queryByText('Qual sua experiência com Python?')).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('tab', { name: 'Perguntas' }));
+  expect(screen.getByRole('navigation', { name: 'Nesta página' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Perguntas' })).toHaveAttribute('href', '#perguntas');
   expect(screen.getByRole('heading', { name: 'Perguntas e respostas' })).toBeInTheDocument();
   expect(screen.getByText('Qual sua experiência com Python?')).toBeInTheDocument();
   expect(screen.getByText(/Cinco anos\./)).toBeInTheDocument();
@@ -139,7 +140,7 @@ test('(b) error sem transcrição chama reprocessInterview(id, "full")', async (
   await waitFor(() => expect(reprocessInterview).toHaveBeenCalledWith('1', 'full'));
 });
 
-test('(c) Excluir entrevista com confirm true chama deleteInterview e navega para /entrevistas', async () => {
+test('(c) Excluir entrevista pede confirmação e volta para a vaga', async () => {
   const { useInterview } = await import('./useInterview');
   const { deleteInterview } = await import('../../../api/interviews');
   useInterview.mockReturnValue({
@@ -158,7 +159,7 @@ test('(c) Excluir entrevista com confirm true chama deleteInterview e navega par
   expect(dialog).toHaveTextContent('Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.');
   await userEvent.click(within(dialog).getByRole('button', { name: 'Excluir' }));
   await waitFor(() => expect(deleteInterview).toHaveBeenCalledWith('1'));
-  await waitFor(() => expect(router.state.location.pathname).toBe('/entrevistas'));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/vagas/3'));
 });
 
 test('(d) transcribing mostra "Transcrevendo o áudio..."', async () => {
