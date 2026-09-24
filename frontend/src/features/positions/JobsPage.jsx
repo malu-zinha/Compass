@@ -4,8 +4,9 @@ import { deletePosition, listPositions } from '../../api/positions';
 import { PageHeader } from '../../components/layout';
 import { Button, Card, Chip, EmptyState, Skeleton, useConfirm, useToast } from '../../components/ui';
 import { BriefcaseIcon, PlusIcon } from '../../components/icons';
-import { vacanciesLabel } from '../interviews/results/RankingSelectPage';
+import { vacanciesLabel } from '../../lib/format';
 import styles from './JobsPage.module.css';
+import { paths } from '../../app/paths';
 
 const MAX_SKILLS = 5;
 
@@ -51,7 +52,7 @@ export default function JobsPage() {
   };
 
   const newButton = (
-    <Button as={Link} to="/cargos/novo" variant="secondary" icon={<PlusIcon size={16} />}>
+    <Button as={Link} to={paths.novaVaga} variant="secondary" icon={<PlusIcon size={16} />}>
       Novo cargo
     </Button>
   );
@@ -69,7 +70,7 @@ export default function JobsPage() {
           icon={<BriefcaseIcon size={24} />}
           title="Nenhum cargo cadastrado ainda"
           description="Cargos agrupam as entrevistas e dizem à análise quais competências importam."
-          action={<Button as={Link} to="/cargos/novo" variant="primary">Criar o primeiro cargo</Button>}
+          action={<Button as={Link} to={paths.novaVaga} variant="primary">Criar o primeiro cargo</Button>}
         />
       ) : (
         <ul className={styles.grid}>
@@ -92,10 +93,10 @@ export default function JobsPage() {
                     </ul>
                   )}
                   <div className={styles.actions}>
-                    <Button as={Link} to={`/cargos/editar/${job.id}`} variant="secondary" size="sm">
+                    <Button as={Link} to={paths.editarVaga(job.id)} variant="secondary" size="sm">
                       Editar cargo
                     </Button>
-                    <Button as={Link} to={`/entrevistas/${job.id}`} variant="ghost" size="sm">
+                    <Button as={Link} to={paths.vaga(job.id)} variant="ghost" size="sm">
                       Ver ranking
                     </Button>
                     <Button

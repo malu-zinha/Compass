@@ -6,6 +6,7 @@ import { CheckIcon, UploadIcon } from '../../../components/icons';
 import { useInterviewDraft } from './useInterviewDraft';
 import flow from './flow.module.css';
 import styles from './UploadAudioPage.module.css';
+import { paths } from '../../../app/paths';
 
 const VALID_TYPES = ['audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
 const VALID_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
@@ -47,7 +48,7 @@ export default function UploadAudioPage() {
   const [progress, setProgress] = useState('');
 
   useEffect(() => {
-    if (!draft && !leavingRef.current) navigate('/nova-entrevista');
+    if (!draft && !leavingRef.current) navigate(paths.novaEntrevista());
   }, [draft, navigate]);
 
   const selectFile = (candidate) => {
@@ -79,7 +80,7 @@ export default function UploadAudioPage() {
 
       leavingRef.current = true;
       clearDraft();
-      navigate(`/entrevista/${createdId}`);
+      navigate(paths.entrevista(createdId));
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       if (createdId != null) {
@@ -158,7 +159,7 @@ export default function UploadAudioPage() {
         </Card>
 
         <div className={flow.footer}>
-          <Button variant="ghost" onClick={() => navigate('/tipo-entrevista')} disabled={uploading}>Voltar</Button>
+          <Button variant="ghost" onClick={() => navigate(paths.tipoEntrevista)} disabled={uploading}>Voltar</Button>
           <Button variant="primary" size="lg" onClick={handleUpload} disabled={!file} loading={uploading}>
             {uploading ? progress || 'Processando...' : 'Enviar e Processar'}
           </Button>

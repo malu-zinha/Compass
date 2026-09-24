@@ -42,7 +42,10 @@ test('a página preenche título e ações do cabeçalho do layout', async () =>
   expect(await screen.findByRole('heading', { level: 1, name: 'Cargos' })).toBeInTheDocument();
   expect(banner).toContainElement(screen.getByRole('heading', { level: 1, name: 'Cargos' }));
   expect(banner).toContainElement(screen.getByRole('button', { name: 'Exportar' }));
-  expect(banner).toContainElement(screen.getByRole('link', { name: 'Nova entrevista' }));
+  expect(banner).not.toContainElement(screen.getByRole('link', { name: 'Nova entrevista' }));
+  expect(screen.getByRole('complementary', { name: 'Navegação principal' })).toContainElement(
+    screen.getByRole('link', { name: 'Nova entrevista' }),
+  );
   expect(document.title).toBe('Cargos · Compass');
 });
 

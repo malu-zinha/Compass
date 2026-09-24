@@ -4,6 +4,7 @@ import { listPositions } from '../../../api/positions';
 import { Button, Card, Checkbox, Field, Input, Select, useToast } from '../../../components/ui';
 import { useInterviewDraft } from './useInterviewDraft';
 import styles from './flow.module.css';
+import { paths } from '../../../app/paths';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,7 +60,7 @@ export default function NewInterviewPage() {
       position_name: position?.name ?? '',
       recording_consent: form.consent,
     });
-    navigate('/tipo-entrevista');
+    navigate(paths.tipoEntrevista);
   };
 
   return (
@@ -89,7 +90,7 @@ export default function NewInterviewPage() {
             </Field>
             {positions?.length === 0 && (
               <p className={`${styles.hint} ${styles.full}`}>
-                Nenhum cargo cadastrado. <Link to="/cargos/novo">Crie um cargo</Link> para continuar.
+                Nenhum cargo cadastrado. <Link to={paths.novaVaga}>Crie um cargo</Link> para continuar.
               </p>
             )}
             <div className={`${styles.consent} ${styles.full}`}>

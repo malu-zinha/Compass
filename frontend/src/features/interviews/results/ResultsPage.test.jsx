@@ -47,8 +47,8 @@ function renderResults(path) {
       element: <LayoutOutlet />,
       children: [
         { path: '/entrevistas', element: <ResultsPage /> },
-        { path: '/entrevistas/:positionId', element: <ResultsPage /> },
-        { path: '/comparar', element: <p>Página de comparação</p> },
+        { path: '/vagas/:id', element: <ResultsPage /> },
+        { path: '/vagas/:id/comparar', element: <p>Página de comparação</p> },
       ],
     },
   ], { initialEntries: [path] });
@@ -67,7 +67,7 @@ beforeEach(() => {
 
 test('(a) busca a primeira página e o top 5 do cargo, e usa o nome do cargo no título', async () => {
   mockList([[item(1)]], [item(1)]);
-  renderResults('/entrevistas/3');
+  renderResults('/vagas/3');
 
   expect(await screen.findByRole('heading', { name: 'Ranking — Dev Backend' })).toBeInTheDocument();
   expect(await screen.findByRole('heading', { name: 'Candidato 1' })).toBeInTheDocument();
@@ -79,7 +79,7 @@ test('(a) busca a primeira página e o top 5 do cargo, e usa o nome do cargo no 
 test('(b) mostra a duração vinda do servidor sem instanciar Audio', async () => {
   const audioSpy = vi.spyOn(window, 'Audio');
   mockList([[item(1)]], [item(1)]);
-  renderResults('/entrevistas/3');
+  renderResults('/vagas/3');
 
   expect(await screen.findByText('3m 20s')).toBeInTheDocument();
   expect(screen.getAllByText('01/03/2026').length).toBeGreaterThan(0);
@@ -90,7 +90,7 @@ test('(b) mostra a duração vinda do servidor sem instanciar Audio', async () =
 
 test('(c) "Carregar mais" busca a página 2 e concatena os itens', async () => {
   mockList([[item(1), item(2)], [item(3)]]);
-  renderResults('/entrevistas/3');
+  renderResults('/vagas/3');
 
   await userEvent.click(await screen.findByRole('button', { name: 'Carregar mais' }));
 
@@ -102,7 +102,7 @@ test('(c) "Carregar mais" busca a página 2 e concatena os itens', async () => {
 
 test('(d) no modo comparar, 3 selecionados desabilitam o 4º e o botão navega para /comparar', async () => {
   mockList([[item(1), item(2), item(3), item(4)]]);
-  const { router } = renderResults('/entrevistas/3');
+  const { router } = renderResults('/vagas/3');
 
   await userEvent.click(await screen.findByRole('button', { name: 'Comparar' }));
   expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
@@ -115,7 +115,7 @@ test('(d) no modo comparar, 3 selecionados desabilitam o 4º e o botão navega p
   expect(screen.getByRole('checkbox', { name: 'Selecionar Candidato 4' })).toBeDisabled();
   await userEvent.click(screen.getByRole('button', { name: 'Comparar selecionados (3)' }));
 
-  await waitFor(() => expect(router.state.location.pathname).toBe('/comparar'));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/vagas/3/comparar'));
   expect(router.state.location.search).toBe('?ids=1,2,3');
 });
 

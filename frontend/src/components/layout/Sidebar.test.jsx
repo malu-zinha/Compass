@@ -15,8 +15,9 @@ function renderSidebar({ logout = vi.fn(), path = '/inicio', ...props } = {}) {
         <Routes>
           <Route path="/" element={<p>landing</p>} />
           <Route path="/inicio" element={<p>tela inicial</p>} />
-          <Route path="/ranking" element={<p>tela ranking</p>} />
-          <Route path="/configuracoes" element={<p>tela configurações</p>} />
+          <Route path="/vagas" element={<p>tela vagas</p>} />
+          <Route path="/conta" element={<p>tela conta</p>} />
+          <Route path="/nova-entrevista" element={<p>tela nova entrevista</p>} />
         </Routes>
       </MemoryRouter>
     </TestProviders>,
@@ -28,18 +29,21 @@ test('navegação principal com links, e a rota atual marcada', () => {
   renderSidebar({ path: '/inicio' });
   expect(screen.getByRole('complementary', { name: 'Navegação principal' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
-  expect(screen.getByRole('link', { name: 'Ranking' })).not.toHaveAttribute('aria-current');
+  expect(screen.getByRole('link', { name: 'Vagas' })).not.toHaveAttribute('aria-current');
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(
+    expect.arrayContaining(['Início', 'Entrevistas', 'Vagas', 'Perguntas gerais']),
+  );
 });
 
-test('Ranking agora é alcançável pelo menu', async () => {
+test('Nova entrevista fica na sidebar e fecha a gaveta ao navegar', async () => {
   const onNavigate = vi.fn();
   renderSidebar({ onNavigate });
-  await userEvent.click(screen.getByRole('link', { name: 'Ranking' }));
-  expect(await screen.findByText('tela ranking')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('link', { name: 'Nova entrevista' }));
+  expect(await screen.findByText('tela nova entrevista')).toBeInTheDocument();
   expect(onNavigate).toHaveBeenCalled();
 });
 
-test('menu de conta mostra nome e cargo, e abre com Perfil, Configurações e Sair', async () => {
+test('menu de conta mostra nome e cargo, e abre com tema, Minha conta e Sair', async () => {
   renderSidebar();
   const trigger = screen.getByRole('button', { name: /Ana Souza/ });
   expect(trigger).toHaveTextContent('Recrutadora');
@@ -48,11 +52,11 @@ test('menu de conta mostra nome e cargo, e abre com Perfil, Configurações e Sa
   await userEvent.click(trigger);
   expect(trigger).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('ana@empresa.com')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Perfil' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Minha conta' })).toBeInTheDocument();
   expect(screen.getByRole('group', { name: 'Tema' })).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('link', { name: 'Configurações' }));
-  expect(await screen.findByText('tela configurações')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('link', { name: 'Minha conta' }));
+  expect(await screen.findByText('tela conta')).toBeInTheDocument();
   expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });
 

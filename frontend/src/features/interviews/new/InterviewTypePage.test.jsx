@@ -58,12 +58,12 @@ test('após criar ao vivo, remontar a página sem rascunho redireciona e não re
 
 test('upload não cria entrevista antes do envio', async () => {
   const { createInterview } = await import('../../../api/interviews');
-  const { router } = renderWithRouter(<InterviewTypePage />, '/tipo-entrevista', ['/upload']);
+  const { router } = renderWithRouter(<InterviewTypePage />, '/tipo-entrevista', ['/enviar']);
 
   await userEvent.click(screen.getByText('Enviar áudio'));
 
   expect(createInterview).not.toHaveBeenCalled();
-  expect(router.state.location.pathname).toBe('/upload');
+  expect(router.state.location.pathname).toBe('/enviar');
 });
 
 test('sem rascunho redireciona para /nova-entrevista', async () => {

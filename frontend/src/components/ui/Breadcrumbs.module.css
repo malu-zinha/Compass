@@ -1,0 +1,36 @@
+.nav { min-width: 0; }
+
+.list {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.link {
+  overflow: hidden;
+  max-width: 22ch;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  text-overflow: ellipsis;
+}
+.link:hover { color: var(--color-text); text-decoration: underline; }
+
+.sep {
+  margin: 0 var(--space-2);
+  color: var(--text-subtle);
+}
+
+/* No celular, só o nível de cima. */
+@media (max-width: 640px) {
+  .item:not(:last-child) { display: none; }
+}

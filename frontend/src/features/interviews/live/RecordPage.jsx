@@ -11,6 +11,7 @@ import TranscriptPanel from './TranscriptPanel';
 import QuestionsPanel from './QuestionsPanel';
 import { Button, Chip, Field, Modal, Spinner, Textarea, useToast } from '../../../components/ui';
 import styles from './RecordPage.module.css';
+import { paths } from '../../../app/paths';
 
 const RECORDABLE_STATUSES = ['draft', 'recording'];
 const AUTOSAVE_DELAY_MS = 2000;
@@ -37,7 +38,7 @@ function RecordPage() {
   const { token, logout } = useAuth();
   const { settings } = useUserSettings();
 
-  const goToDetail = useCallback(() => navigate(`/entrevista/${id}`, { replace: true }), [navigate, id]);
+  const goToDetail = useCallback(() => navigate(paths.entrevista(id), { replace: true }), [navigate, id]);
 
   // Sessão recusada (4404/4409) ou assumida por outra aba (4000): vai para o detalhe;
   // ao desmontar, o microfone é liberado.
@@ -158,7 +159,7 @@ function RecordPage() {
       console.error('Erro ao salvar as anotações:', error);
       toast.error(error.detail || 'A gravação foi encerrada, mas não foi possível salvar as anotações.');
     }
-    navigate(`/entrevista/${id}`, { replace: true });
+    navigate(paths.entrevista(id), { replace: true });
   };
 
   const questions = useMemo(

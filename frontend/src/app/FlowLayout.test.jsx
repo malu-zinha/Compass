@@ -12,7 +12,7 @@ function renderFlow(path) {
           <Route element={<FlowLayout />}>
             <Route path="/nova-entrevista" element={<p>form</p>} />
             <Route path="/tipo-entrevista" element={<p>tipo</p>} />
-            <Route path="/upload" element={<p>upload</p>} />
+            <Route path="/enviar" element={<p>upload</p>} />
             <Route path="/gravar/:id" element={<p>gravando</p>} />
           </Route>
         </Routes>
@@ -32,7 +32,7 @@ test('primeira etapa marcada e saída para o início', () => {
 });
 
 test('upload é a terceira etapa, "Enviar"', () => {
-  renderFlow('/upload');
+  renderFlow('/enviar');
   expect(current()).toHaveTextContent('Enviar');
 });
 

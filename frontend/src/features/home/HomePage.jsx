@@ -11,11 +11,12 @@ import {
 import { formatDate } from '../../lib/format';
 import { useHomeSummary } from './useHomeSummary';
 import styles from './HomePage.module.css';
+import { paths } from '../../app/paths';
 
 const SHORTCUTS = [
-  { to: '/ranking', label: 'Ranking', text: 'Compare candidatos por cargo', Icon: ChartIcon },
-  { to: '/cargos', label: 'Cargos', text: 'Vagas e competências', Icon: BriefcaseIcon },
-  { to: '/perguntas', label: 'Perguntas', text: 'Banco por cargo', Icon: QuestionsIcon },
+  { to: paths.vagas, label: 'Ranking', text: 'Compare candidatos por cargo', Icon: ChartIcon },
+  { to: paths.vagas, label: 'Cargos', text: 'Vagas e competências', Icon: BriefcaseIcon },
+  { to: paths.perguntas, label: 'Perguntas', text: 'Banco por cargo', Icon: QuestionsIcon },
 ];
 
 function Stat({ label, value, tone }) {
@@ -45,7 +46,7 @@ export default function HomePage() {
           <h2 className={styles.greeting}>{firstName ? `Olá, ${firstName}` : 'Olá'}</h2>
           <p className={styles.lead}>Aqui está o andamento das suas entrevistas.</p>
         </div>
-        <Button as={Link} to="/nova-entrevista" variant="primary" size="lg" icon={<MicrophoneIcon size={18} />}>
+        <Button as={Link} to={paths.novaEntrevista()} variant="primary" size="lg" icon={<MicrophoneIcon size={18} />}>
           Começar entrevista
         </Button>
       </section>
@@ -71,7 +72,7 @@ export default function HomePage() {
             <Card padding="none" as="section" aria-labelledby="recentes" className={styles.recent}>
               <div className={styles.recentHead}>
                 <h2 id="recentes" className={styles.sectionTitle}>Últimas entrevistas</h2>
-                <Link to="/entrevistas" className={styles.more}>Ver todas</Link>
+                <Link to={paths.entrevistas} className={styles.more}>Ver todas</Link>
               </div>
               {loading ? (
                 <div className={styles.recentLoading}>
@@ -82,13 +83,13 @@ export default function HomePage() {
                   icon={<InterviewsIcon size={24} />}
                   title="Nenhuma entrevista ainda"
                   description="Grave ao vivo ou envie um áudio para ver a análise aqui."
-                  action={<Button as={Link} to="/nova-entrevista" variant="primary">Nova entrevista</Button>}
+                  action={<Button as={Link} to={paths.novaEntrevista()} variant="primary">Nova entrevista</Button>}
                 />
               ) : (
                 <ul className={styles.list}>
                   {recent.map((item) => (
                     <li key={item.id}>
-                      <Link to={`/entrevista/${item.id}`} className={styles.row}>
+                      <Link to={paths.entrevista(item.id)} className={styles.row}>
                         <span className={styles.who}>
                           <span className={styles.name}>{item.candidate_name || 'Candidato sem nome'}</span>
                           <span className={styles.meta}>

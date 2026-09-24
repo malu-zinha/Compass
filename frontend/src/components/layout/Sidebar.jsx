@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Logo } from '../brand';
-import { ChartIcon, HomeIcon, InterviewsIcon, JobsIcon, QuestionsIcon } from '../icons';
+import { BriefcaseIcon, HomeIcon, InterviewsIcon, PlusIcon, QuestionsIcon } from '../icons';
+import { Button } from '../ui';
 import AccountMenu from './AccountMenu';
 import styles from './Sidebar.module.css';
+import { paths } from '../../app/paths';
 
 const NAV = [
-  { to: '/inicio', label: 'Início', Icon: HomeIcon },
-  { to: '/entrevistas', label: 'Entrevistas', Icon: InterviewsIcon },
-  { to: '/ranking', label: 'Ranking', Icon: ChartIcon },
-  { to: '/cargos', label: 'Cargos', Icon: JobsIcon },
-  { to: '/perguntas', label: 'Perguntas', Icon: QuestionsIcon },
+  { to: paths.inicio, label: 'Início', Icon: HomeIcon },
+  { to: paths.entrevistas, label: 'Entrevistas', Icon: InterviewsIcon },
+  { to: paths.vagas, label: 'Vagas', Icon: BriefcaseIcon },
+  { to: paths.perguntas, label: 'Perguntas gerais', Icon: QuestionsIcon },
 ];
 
 /*
@@ -36,7 +37,7 @@ export default function Sidebar({ id, open = false, onDismiss, onNavigate }) {
       {open && <div className={styles.overlay} onClick={onDismiss} aria-hidden="true" />}
       <aside id={id} className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Navegação principal">
         <div className={styles.brand}>
-          <NavLink to="/inicio" className={styles.brandLink} onClick={onNavigate}>
+          <NavLink to={paths.inicio} className={styles.brandLink} onClick={onNavigate}>
             <Logo variant="full" />
           </NavLink>
         </div>
@@ -53,6 +54,12 @@ export default function Sidebar({ id, open = false, onDismiss, onNavigate }) {
             ))}
           </ul>
         </nav>
+
+        <div className={styles.cta}>
+          <Button as={NavLink} to={paths.novaEntrevista()} variant="primary" icon={<PlusIcon size={18} />} className={styles.new} onClick={onNavigate}>
+            Nova entrevista
+          </Button>
+        </div>
 
         <div className={styles.footer}>
           <AccountMenu onNavigate={onNavigate} />

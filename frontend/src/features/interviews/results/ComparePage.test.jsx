@@ -34,7 +34,7 @@ function renderCompare(path) {
       element: <LayoutOutlet />,
       children: [
         { path: '/comparar', element: <ComparePage /> },
-        { path: '/ranking', element: <p>Selecionar ranking</p> },
+        { path: '/vagas', element: <p>Vagas</p> },
       ],
     },
   ], { initialEntries: [path] });
@@ -102,8 +102,8 @@ test('erro ao gerar o parecer mostra o detail em toast', async () => {
   expect(screen.getByRole('button', { name: 'Gerar parecer da IA' })).toBeEnabled();
 });
 
-test.each(['/comparar?ids=1', '/comparar?ids=1,2,3,4', '/comparar'])('%s volta para /ranking', async (path) => {
+test.each(['/comparar?ids=1', '/comparar?ids=1,2,3,4', '/comparar'])('%s volta para /vagas', async (path) => {
   const { router } = renderCompare(path);
-  await waitFor(() => expect(router.state.location.pathname).toBe('/ranking'));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/vagas'));
   expect(getInterview).not.toHaveBeenCalled();
 });

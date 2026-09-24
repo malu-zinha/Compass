@@ -8,11 +8,11 @@ import {
   Button, Card, Chip, EmptyState, ScoreMeter, Skeleton, StatusBadge, useToast,
 } from '../../../components/ui';
 import { CalendarIcon, ClockIcon, CompareIcon, InterviewsIcon } from '../../../components/icons';
-import { formatDate, formatDuration } from '../../../lib/format';
+import { formatDate, formatDuration, vacanciesLabel } from '../../../lib/format';
 import { PROCESSING_STATUSES } from '../../../lib/transcript';
-import { vacanciesLabel } from './RankingSelectPage';
 import PointsList from './PointsList';
 import styles from './ResultsPage.module.css';
+import { paths } from '../../../app/paths';
 
 const PER_PAGE = 20;
 const RANKING_SIZE = 5;
@@ -43,7 +43,7 @@ function InterviewCard({ interview, settings, showPosition, selecting, selected,
       <div className={styles.cardHead}>
         <div className={styles.identity}>
           <h3 className={styles.name}>
-            <Link to={`/entrevista/${interview.id}`} className={styles.stretched}>
+            <Link to={paths.entrevista(interview.id)} className={styles.stretched}>
               {interview.candidate_name}
             </Link>
           </h3>
@@ -78,7 +78,7 @@ function InterviewCard({ interview, settings, showPosition, selecting, selected,
 export default function ResultsPage() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { positionId } = useParams();
+  const { id: positionId } = useParams();
   const { settings } = useUserSettings();
   const positionFilter = positionId ? Number(positionId) : undefined;
   const [position, setPosition] = useState(null);
@@ -192,7 +192,7 @@ export default function ResultsPage() {
         <div className={styles.positionBar}>
           <span className={styles.positionName}>{selectedPosition.name}</span>
           {selectedPosition.vacancies > 0 && <Chip tone="info">{vacanciesLabel(selectedPosition.vacancies)}</Chip>}
-          <Button as={Link} to="/ranking" variant="ghost" size="sm" className={styles.switch}>Trocar cargo</Button>
+          <Button as={Link} to={paths.vagas} variant="ghost" size="sm" className={styles.switch}>Trocar cargo</Button>
         </div>
       )}
 
@@ -209,7 +209,7 @@ export default function ResultsPage() {
               icon={<InterviewsIcon size={24} />}
               title="Nenhuma entrevista realizada"
               description="As entrevistas aparecem aqui assim que forem gravadas ou enviadas."
-              action={<Button as={Link} to="/nova-entrevista" variant="primary">Nova entrevista</Button>}
+              action={<Button as={Link} to={paths.novaEntrevista()} variant="primary">Nova entrevista</Button>}
             />
           ) : (
             <>
@@ -247,7 +247,7 @@ export default function ResultsPage() {
               <ol className={styles.ranking}>
                 {ranking.map((item, index) => (
                   <li key={item.id}>
-                    <Link to={`/entrevista/${item.id}`} className={styles.rankRow}>
+                    <Link to={paths.entrevista(item.id)} className={styles.rankRow}>
                       <span className={`${styles.rank} ${index === 0 ? styles.first : ''}`}>{index + 1}</span>
                       <span className={styles.rankBody}>
                         <span className={styles.rankName}>{item.candidate_name}</span>
@@ -274,7 +274,7 @@ export default function ResultsPage() {
           <Button
             variant="primary"
             disabled={selected.length < 2}
-            onClick={() => navigate(`/comparar?ids=${selected.map((s) => s.id).join(',')}`)}
+            onClick={() => navigate(paths.comparar(selected[0].positionId, selected.map((s) => s.id)))}
           >
             Comparar selecionados ({selected.length})
           </Button>

@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/layout';
 import { Avatar, Button, Card, Field, Input, useToast } from '../../components/ui';
 import { LogoutIcon } from '../../components/icons';
 import styles from './ProfilePage.module.css';
+import { paths } from '../../app/paths';
 
 const AVATAR_ACCEPT = 'image/png,image/jpeg,image/webp';
 
@@ -150,7 +151,7 @@ export default function ProfilePage() {
           className={styles.logout}
           onClick={() => {
             logout();
-            navigate('/');
+            navigate(paths.landing);
           }}
         >
           Sair da conta

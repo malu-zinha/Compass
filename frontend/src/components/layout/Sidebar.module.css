@@ -97,6 +97,11 @@
   background: var(--color-accent);
 }
 
+.cta {
+  padding: var(--space-3);
+}
+.new { width: 100%; }
+
 .footer {
   padding: var(--space-3);
   border-top: 1px solid var(--color-border);

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../ui';
 import { Logo } from '../brand';
-import { MenuIcon, PlusIcon } from '../icons';
+import { MenuIcon } from '../icons';
 import styles from './AppHeader.module.css';
+import { paths } from '../../app/paths';
 
 /*
- * Grade de três colunas — [menu+logo] [título] [ações] — com o título em
+ * Grade de três colunas — [menu+logo] [caminho+título] [ações] — com o título em
  * ellipsis: nada de posicionamento absoluto, então título longo nunca colide
  * com os botões. Menu e logo só aparecem quando a sidebar é gaveta.
  */
@@ -24,16 +25,13 @@ export default function AppHeader({ onMenuClick, menuExpanded, menuRef, titleRef
           className={styles.menu}
           onClick={onMenuClick}
         />
-        <Link to="/inicio" className={styles.logo} aria-label="Compass — início">
+        <Link to={paths.inicio} className={styles.logo} aria-label="Compass — início">
           <Logo variant="mark" decorative size={28} />
         </Link>
       </div>
       <div ref={titleRef} className={styles.title} />
       <div className={styles.actions}>
         <div ref={actionsRef} className={styles.pageActions} />
-        <Button as={Link} to="/nova-entrevista" variant="primary" icon={<PlusIcon size={18} />}>
-          <span className={styles.newLabel}>Nova entrevista</span>
-        </Button>
       </div>
     </header>
   );

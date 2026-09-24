@@ -35,18 +35,6 @@
   gap: var(--space-2);
 }
 
-/* No celular o botão fica só com o ícone, mas o nome continua para leitor de tela. */
-@media (max-width: 640px) {
-  .newLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-}
-
 @media (min-width: 1024px) {
   .header { padding: 0 var(--space-8); }
   .start { display: none; }

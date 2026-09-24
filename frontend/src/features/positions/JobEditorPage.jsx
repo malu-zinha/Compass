@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/layout';
 import { Button, Card, Field, Input, Skeleton, Textarea, useToast } from '../../components/ui';
 import SkillsInput from './SkillsInput';
 import styles from './JobEditorPage.module.css';
+import { paths } from '../../app/paths';
 
 const EMPTY = { name: '', description: '', vacancies: '', skills: [], idealProfile: '' };
 
@@ -45,7 +46,7 @@ export default function JobEditorPage() {
       .catch((error) => {
         console.error('Erro ao carregar cargo:', error);
         toast.error(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
-        navigate('/cargos');
+        navigate(paths.vagas);
       });
     return () => { active = false; };
   }, [id, isEditing, navigate, toast]);
@@ -76,7 +77,7 @@ export default function JobEditorPage() {
         await createPosition(payload);
         toast.success('Cargo salvo com sucesso!');
       }
-      navigate('/cargos');
+      navigate(paths.vagas);
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
       toast.error(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
@@ -140,7 +141,7 @@ export default function JobEditorPage() {
       </div>
 
       <div className={styles.footer}>
-        <Button as={Link} to="/cargos" variant="ghost">Cancelar</Button>
+        <Button as={Link} to={paths.vagas} variant="ghost">Cancelar</Button>
         <Button type="submit" variant="primary" loading={saving}>Salvar cargo</Button>
       </div>
     </form>

@@ -12,3 +12,9 @@ test('formatDate respeita fuso e formato', () => {
   expect(formatDate(iso, { timezone: 'UTC', date_format: 'MM/DD/YYYY' })).toBe('03/01/2026');
   expect(formatDate(null, { timezone: 'UTC', date_format: 'DD/MM/YYYY' })).toBe('Data não disponível');
 });
+
+test('vacanciesLabel pluraliza sem o "disponíveleis"', async () => {
+  const { vacanciesLabel } = await import('./format');
+  expect(vacanciesLabel(1)).toBe('1 vaga disponível');
+  expect(vacanciesLabel(2)).toBe('2 vagas disponíveis');
+});

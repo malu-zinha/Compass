@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from '../components/brand';
 import { ErrorBoundary } from '../components/ui';
 import styles from './FlowLayout.module.css';
+import { paths } from './paths';
 
 /*
  * Moldura do fluxo de nova entrevista: cabeçalho enxuto com a marca, indicador
@@ -10,9 +11,9 @@ import styles from './FlowLayout.module.css';
  * controles de encerramento.
  */
 function stepsFor(pathname) {
-  if (pathname.startsWith('/gravar')) return { current: 2, last: 'Gravar', exit: false };
-  if (pathname.startsWith('/upload')) return { current: 2, last: 'Enviar', exit: true };
-  if (pathname.startsWith('/tipo-entrevista')) return { current: 1, last: 'Gravar ou enviar', exit: true };
+  if (pathname.startsWith('/gravar/')) return { current: 2, last: 'Gravar', exit: false };
+  if (pathname.startsWith(paths.enviar)) return { current: 2, last: 'Enviar', exit: true };
+  if (pathname.startsWith(paths.tipoEntrevista)) return { current: 1, last: 'Gravar ou enviar', exit: true };
   return { current: 0, last: 'Gravar ou enviar', exit: true };
 }
 
@@ -25,7 +26,7 @@ export default function FlowLayout() {
     <div className={styles.flow}>
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
       <header className={styles.header}>
-        <Link to="/inicio" className={styles.brand} aria-label="Compass — início">
+        <Link to={paths.inicio} className={styles.brand} aria-label="Compass — início">
           <Logo variant="full" decorative className={styles.logo} />
         </Link>
         <ol className={styles.steps} aria-label="Etapas da nova entrevista">
@@ -42,7 +43,7 @@ export default function FlowLayout() {
         </ol>
         <div className={styles.end}>
           {exit && (
-            <Link to="/inicio" className={styles.exit}>
+            <Link to={paths.inicio} className={styles.exit}>
               Cancelar
             </Link>
           )}

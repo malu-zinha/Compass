@@ -5,6 +5,7 @@ import { Button, Card, useToast } from '../../../components/ui';
 import { MicrophoneIcon, UploadIcon } from '../../../components/icons';
 import { useInterviewDraft } from './useInterviewDraft';
 import styles from './flow.module.css';
+import { paths } from '../../../app/paths';
 
 export default function InterviewTypePage() {
   const toast = useToast();
@@ -16,7 +17,7 @@ export default function InterviewTypePage() {
   const leavingRef = useRef(false);
 
   useEffect(() => {
-    if (!draft && !leavingRef.current) navigate('/nova-entrevista');
+    if (!draft && !leavingRef.current) navigate(paths.novaEntrevista());
   }, [draft, navigate]);
 
   const startLive = async () => {
@@ -32,7 +33,7 @@ export default function InterviewTypePage() {
       });
       leavingRef.current = true;
       clearDraft();
-      navigate(`/gravar/${result.id}`);
+      navigate(paths.gravar(result.id));
     } catch (error) {
       console.error('Erro ao criar entrevista:', error);
       toast.error(error.detail || 'Erro ao criar entrevista. Verifique se o backend está rodando.');
@@ -58,7 +59,7 @@ export default function InterviewTypePage() {
               {creating ? 'Criando entrevista...' : 'Grave pelo microfone com transcrição em tempo real e perguntas sugeridas.'}
             </span>
           </Card>
-          <Card as="button" type="button" variant="interactive" className={styles.option} onClick={() => navigate('/upload')} disabled={creating}>
+          <Card as="button" type="button" variant="interactive" className={styles.option} onClick={() => navigate(paths.enviar)} disabled={creating}>
             <span className={styles.optionIcon}><UploadIcon size={26} /></span>
             <span className={styles.optionTitle}>Enviar áudio</span>
             <span className={styles.optionText}>Envie a gravação de uma entrevista que já aconteceu.</span>
@@ -68,7 +69,7 @@ export default function InterviewTypePage() {
         <Card>
           <div className={styles.summaryHead}>
             <h2 className={styles.summaryTitle}>Candidato</h2>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/nova-entrevista')} disabled={creating}>Editar</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(paths.novaEntrevista())} disabled={creating}>Editar</Button>
           </div>
           <dl className={styles.summary}>
             <div><dt>Nome</dt><dd>{draft.candidate_name}</dd></div>

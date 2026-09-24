@@ -21,3 +21,5 @@ export function formatDate(iso, { timezone, date_format: dateFormat }) {
   if (dateFormat === 'YYYY-MM-DD') return `${year}-${month}-${day}`;
   return `${day}/${month}/${year}`;
 }
+
+export const vacanciesLabel = (n) => `${n} ${n === 1 ? 'vaga disponível' : 'vagas disponíveis'}`;

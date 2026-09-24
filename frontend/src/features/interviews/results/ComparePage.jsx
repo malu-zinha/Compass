@@ -8,6 +8,7 @@ import { ChartIcon } from '../../../components/icons';
 import { SUBSCORES } from '../../../lib/score';
 import PointsList from './PointsList';
 import styles from './ComparePage.module.css';
+import { paths } from '../../../app/paths';
 
 const MIN_COMPARE = 2;
 const MAX_COMPARE = 3;
@@ -81,7 +82,7 @@ export default function ComparePage() {
 
   useEffect(() => {
     if (!validIds) {
-      navigate('/ranking', { replace: true });
+      navigate(paths.vagas, { replace: true });
       return undefined;
     }
     let active = true;
@@ -93,7 +94,7 @@ export default function ComparePage() {
         if (!active) return;
         console.error('Erro ao carregar entrevistas para comparar:', error);
         toast.error(error.detail || 'Erro ao carregar as entrevistas. Tente novamente.');
-        navigate('/ranking', { replace: true });
+        navigate(paths.vagas, { replace: true });
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };

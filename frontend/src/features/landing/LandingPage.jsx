@@ -7,6 +7,7 @@ import {
 } from '../../components/icons';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import styles from './LandingPage.module.css';
+import { paths } from '../../app/paths';
 
 const FEATURES = [
   { Icon: MicrophoneIcon, title: 'Tempo real', text: 'Transcrição durante a entrevista, com perguntas sugeridas enquanto você conversa.' },
@@ -39,13 +40,13 @@ export default function LandingPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link to="/" className={styles.brand}>
+        <Link to={paths.landing} className={styles.brand}>
           <Logo variant="full" />
         </Link>
         <nav className={styles.nav} aria-label="Conta">
           <ThemeSwitcher compact className={styles.theme} />
-          <Button as={Link} to="/login" variant="ghost">Entrar</Button>
-          <Button as={Link} to="/login?mode=register" variant="primary">Criar conta</Button>
+          <Button as={Link} to={paths.login} variant="ghost">Entrar</Button>
+          <Button as={Link} to={paths.cadastro} variant="primary">Criar conta</Button>
         </nav>
       </header>
 
@@ -60,7 +61,7 @@ export default function LandingPage() {
               O Compass transcreve, resume e pontua cada entrevista, e aponta quem se encaixa melhor em cada cargo.
             </p>
             <div className={styles.heroActions}>
-              <Button as={Link} to="/login?mode=register" variant="primary" size="lg">Começar agora</Button>
+              <Button as={Link} to={paths.cadastro} variant="primary" size="lg">Começar agora</Button>
               <Button as="a" href="#recursos" variant="secondary" size="lg">Ver recursos</Button>
             </div>
           </div>
@@ -111,7 +112,7 @@ export default function LandingPage() {
 
         <section className={styles.cta}>
           <h2 className={styles.ctaTitle}>Sua próxima contratação começa numa boa conversa.</h2>
-          <Button as={Link} to="/login?mode=register" variant="primary" size="lg">Criar conta gratuita</Button>
+          <Button as={Link} to={paths.cadastro} variant="primary" size="lg">Criar conta gratuita</Button>
         </section>
       </main>
 

@@ -15,6 +15,7 @@ import AudioPlayer from './AudioPlayer';
 import CandidateModal from './CandidateModal';
 import TranscriptView from './TranscriptView';
 import styles from './InterviewDetailPage.module.css';
+import { paths } from '../../../app/paths';
 
 const DELETE_CONFIRMATION = 'Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.';
 
@@ -61,7 +62,7 @@ export default function InterviewDetailPage() {
     try {
       await deleteInterview(id);
       toast.success('Entrevista excluída.');
-      navigate('/entrevistas');
+      navigate(paths.entrevistas);
     } catch (err) {
       toast.error(err?.detail || 'Não foi possível excluir a entrevista.');
     }
@@ -87,7 +88,7 @@ export default function InterviewDetailPage() {
           <ErrorPanel
             title="Entrevista não encontrada"
             message={error.detail || 'Não foi possível carregar a entrevista.'}
-            onRetry={() => navigate('/entrevistas')}
+            onRetry={() => navigate(paths.entrevistas)}
             retryLabel="Voltar para entrevistas"
           />
         ) : (
