@@ -9,9 +9,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-6);
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 50%),
-    var(--surface);
+  background: var(--surface);
 }
 
 .identity {
