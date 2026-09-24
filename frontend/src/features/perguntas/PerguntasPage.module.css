@@ -1,0 +1,14 @@
+.page {
+  max-width: 880px;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-8); }
+}
+
+.lead {
+  max-width: 60ch;
+  margin: 0 0 var(--space-6);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+}

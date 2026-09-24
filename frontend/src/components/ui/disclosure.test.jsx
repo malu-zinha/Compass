@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Tabs, Accordion } from './index';
+import { Tabs } from './index';
 
 const items = [
   { id: 'resumo', label: 'Resumo', content: <p>conteúdo resumo</p> },
@@ -47,23 +47,5 @@ describe('Tabs', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('conteúdo notas');
     await userEvent.click(screen.getByRole('tab', { name: 'Pontos' }));
     expect(onChange).toHaveBeenCalledWith('pontos');
-  });
-});
-
-describe('Accordion', () => {
-  it('botão com aria-expanded controla a região', async () => {
-    render(<Accordion title="Histórico">detalhes</Accordion>);
-    const button = screen.getByRole('button', { name: 'Histórico' });
-    expect(button).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByText('detalhes')).not.toBeInTheDocument();
-
-    await userEvent.click(button);
-    expect(button).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('region', { name: 'Histórico' })).toHaveTextContent('detalhes');
-  });
-
-  it('pode começar aberto', () => {
-    render(<Accordion title="Histórico" defaultOpen>detalhes</Accordion>);
-    expect(screen.getByText('detalhes')).toBeInTheDocument();
   });
 });

@@ -1,0 +1,137 @@
+/* Estilos compartilhados pelas telas do fluxo de nova entrevista. */
+.page {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4) var(--space-12);
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 600px;
+}
+.wide { max-width: 760px; }
+
+.intro { text-align: center; }
+
+.title {
+  margin: 0;
+  font-size: var(--text-3xl);
+}
+
+.subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 640px) {
+  .form { grid-template-columns: 1fr 1fr; }
+  .full { grid-column: 1 / -1; }
+}
+
+.consent {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.hint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.hint a { color: var(--color-primary-fg); }
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.footer > :only-child { margin-left: auto; }
+
+/* Blocos do formulário */
+.blockTitle {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+/* Escolha de formato: cartões-rádio */
+.formats {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .formats { grid-template-columns: 1fr 1fr; }
+  .formats > legend { grid-column: 1 / -1; }
+}
+
+.format {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+.format:hover { border-color: var(--border-strong); }
+.format:has(.formatInput:checked) {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.format:has(.formatInput:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* O rádio cobre o cartão inteiro, invisível: clique e foco são dele. */
+.formatInput {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.optionIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-bg);
+  color: var(--color-text);
+}
+.format:has(.formatInput:checked) .optionIcon {
+  background: var(--color-primary);
+  color: var(--text-on-accent);
+}
+
+.optionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.optionText {
+  color: var(--text-muted);
+  line-height: var(--leading-normal);
+}

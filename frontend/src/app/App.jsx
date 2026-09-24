@@ -1,77 +1,72 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import LandingPage from '../features/landing/LandingPage';
 import HomePage from '../features/home/HomePage';
 import AuthScreen from '../features/auth/AuthScreen';
-import NewInterviewPage from '../features/interviews/new/NewInterviewPage';
-import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
-import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
-import RecordPage from '../features/interviews/live/RecordPage';
-import ResultsPage from '../features/interviews/results/ResultsPage';
-import ComparePage from '../features/interviews/results/ComparePage';
-import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
-import JobsPage from '../features/positions/JobsPage';
-import JobEditorPage from '../features/positions/JobEditorPage';
-import RankingSelectPage from '../features/interviews/results/RankingSelectPage';
-import QuestionsPage from '../features/questions/QuestionsPage';
-import ProfilePage from '../features/profile/ProfilePage';
-import SettingsPage from '../features/settings/SettingsPage';
+import NovaEntrevistaPage from '../features/entrevistas/nova/NovaEntrevistaPage';
+import UploadAudioPage from '../features/entrevistas/enviar/UploadAudioPage';
+import RecordPage from '../features/entrevistas/gravar/RecordPage';
+import EntrevistasPage from '../features/entrevistas/lista/EntrevistasPage';
+import ComparePage from '../features/entrevistas/comparar/ComparePage';
+import InterviewDetailPage from '../features/entrevistas/detalhe/InterviewDetailPage';
+import VagasPage from '../features/vagas/lista/VagasPage';
+import VagaEditorPage from '../features/vagas/editor/VagaEditorPage';
+import VagaPage from '../features/vagas/pagina/VagaPage';
+import PerguntasPage from '../features/perguntas/PerguntasPage';
+import ContaPage from '../features/conta/ContaPage';
 import NotFoundPage from '../features/not-found/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 import FlowLayout from './FlowLayout';
+import { paths, ROUTE_PATTERNS as R } from './paths';
+import { LegacyCompareRedirect, ParamRedirect } from './redirects';
 
-export const ROUTES = {
-  home: '/',
-  login: '/login',
-  inicio: '/inicio',
-  ranking: '/ranking',
-  entrevistas: '/entrevistas',
-  entrevistasPorCargo: '/entrevistas/:positionId',
-  comparar: '/comparar',
-  entrevista: '/entrevista/:id',
-  cargos: '/cargos',
-  cargosNovo: '/cargos/novo',
-  cargosEditar: '/cargos/editar/:id',
-  perguntas: '/perguntas',
-  perfil: '/perfil',
-  configuracoes: '/configuracoes',
-  novaEntrevista: '/nova-entrevista',
-  tipoEntrevista: '/tipo-entrevista',
-  upload: '/upload',
-  gravar: '/gravar/:id',
-};
+// A tabela de rotas, sem o router: o App a envolve no BrowserRouter e os
+// testes num MemoryRouter.
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route path={R.landing} element={<LandingPage />} />
+      <Route path={R.login} element={<AuthScreen />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path={R.inicio} element={<HomePage />} />
+          <Route path={R.entrevistas} element={<EntrevistasPage />} />
+          <Route path={R.entrevista} element={<InterviewDetailPage />} />
+          <Route path={R.vagas} element={<VagasPage />} />
+          <Route path={R.novaVaga} element={<VagaEditorPage />} />
+          <Route path={R.vaga} element={<VagaPage />} />
+          <Route path={R.editarVaga} element={<VagaEditorPage />} />
+          <Route path={R.comparar} element={<ComparePage />} />
+          <Route path={R.perguntas} element={<PerguntasPage />} />
+          <Route path={R.conta} element={<ContaPage />} />
+        </Route>
+        <Route element={<FlowLayout />}>
+          <Route path={R.novaEntrevista} element={<NovaEntrevistaPage />} />
+          <Route path={R.enviar} element={<UploadAudioPage />} />
+          <Route path={R.gravar} element={<RecordPage />} />
+        </Route>
+
+        {/* Endereços antigos */}
+        <Route path="/ranking" element={<Navigate to={paths.vagas} replace />} />
+        <Route path="/cargos" element={<Navigate to={paths.vagas} replace />} />
+        <Route path="/cargos/novo" element={<Navigate to={paths.novaVaga} replace />} />
+        <Route path="/cargos/editar/:id" element={<ParamRedirect to={({ id }) => paths.editarVaga(id)} />} />
+        <Route path="/entrevistas/:id" element={<ParamRedirect to={({ id }) => paths.vaga(id)} />} />
+        <Route path="/comparar" element={<LegacyCompareRedirect />} />
+        <Route path="/perfil" element={<Navigate to={paths.conta()} replace />} />
+        <Route path="/configuracoes" element={<Navigate to={paths.conta('preferencias')} replace />} />
+        <Route path="/upload" element={<Navigate to={paths.enviar} replace />} />
+        <Route path="/tipo-entrevista" element={<Navigate to={paths.novaEntrevista()} replace />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path={ROUTES.home} element={<LandingPage />} />
-        <Route path={ROUTES.login} element={<AuthScreen />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path={ROUTES.inicio} element={<HomePage />} />
-            <Route path={ROUTES.ranking} element={<RankingSelectPage />} />
-            <Route path={ROUTES.entrevistas} element={<ResultsPage />} />
-            <Route path={ROUTES.entrevistasPorCargo} element={<ResultsPage />} />
-            <Route path={ROUTES.comparar} element={<ComparePage />} />
-            <Route path={ROUTES.entrevista} element={<InterviewDetailPage />} />
-            <Route path={ROUTES.cargos} element={<JobsPage />} />
-            <Route path={ROUTES.cargosNovo} element={<JobEditorPage />} />
-            <Route path={ROUTES.cargosEditar} element={<JobEditorPage />} />
-            <Route path={ROUTES.perguntas} element={<QuestionsPage />} />
-            <Route path={ROUTES.perfil} element={<ProfilePage />} />
-            <Route path={ROUTES.configuracoes} element={<SettingsPage />} />
-          </Route>
-          <Route element={<FlowLayout />}>
-            <Route path={ROUTES.novaEntrevista} element={<NewInterviewPage />} />
-            <Route path={ROUTES.tipoEntrevista} element={<InterviewTypePage />} />
-            <Route path={ROUTES.upload} element={<UploadAudioPage />} />
-            <Route path={ROUTES.gravar} element={<RecordPage />} />
-          </Route>
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <AppRoutes />
     </Router>
   );
 }

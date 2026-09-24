@@ -1,0 +1,128 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 1440px;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-8); }
+}
+
+.loading { display: grid; gap: var(--space-6); }
+.headSkeleton { height: 120px; }
+.bodySkeleton { height: 480px; }
+
+.danger { color: var(--color-danger-fg); }
+.danger:hover:not(:disabled) { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+
+@media (max-width: 720px) {
+  .hideSmall { display: none; }
+}
+
+/* Cabeçalho tipográfico, sem cartão. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 240px;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-medium);
+  line-height: 1.05;
+}
+
+.meta {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.contact {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+}
+
+.score { margin-left: auto; }
+
+/* Índice | leitura | transcrição */
+.grid {
+  display: grid;
+  gap: var(--space-8);
+  align-items: start;
+}
+.index { display: none; }
+
+@media (min-width: 1000px) {
+  .grid { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); }
+}
+@media (min-width: 1280px) {
+  .withIndex { grid-template-columns: 180px minmax(0, 1fr) minmax(340px, 400px); }
+  .withIndex .index {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
+    display: block;
+  }
+}
+
+.analysis {
+  min-width: 0;
+  max-width: 72ch;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+}
+.state p { margin: 0; }
+.stateHint { color: var(--text-muted); font-size: var(--text-sm); }
+
+/* Transcrição acompanha a rolagem e rola por dentro, com o player sempre à mão. */
+.transcript {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+@media (min-width: 1000px) {
+  .transcript {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
+    max-height: calc(100vh - var(--header-height) - var(--space-12));
+  }
+}
+
+.transcriptTitle {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-lg);
+}

@@ -61,7 +61,7 @@
   height: 24px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xs);
 }
 

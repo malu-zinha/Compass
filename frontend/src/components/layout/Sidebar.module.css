@@ -94,8 +94,13 @@
   left: calc(var(--space-3) * -1);
   width: 3px;
   border-radius: 0 var(--radius-full) var(--radius-full) 0;
-  background: var(--color-primary);
+  background: var(--color-accent);
 }
+
+.cta {
+  padding: var(--space-3);
+}
+.new { width: 100%; }
 
 .footer {
   padding: var(--space-3);

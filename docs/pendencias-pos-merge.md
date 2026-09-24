@@ -46,14 +46,16 @@ Os itens bloqueantes já foram corrigidos na própria branch.
 - Sem teste para o fechamento 4404, o teto de 10s do backoff e o timeout de 15s do encerramento.
 
 **Listas e limites**
-- `listPositions()` só busca a primeira página (100 cargos): acima disso, cargos somem dos seletores.
+- `listPositions()` só busca a primeira página (100 vagas): acima disso, vagas somem dos seletores.
+- A busca por nome em Entrevistas filtra só o que já foi carregado (páginas de 100): o backend não tem busca por texto.
+- O resumo por vaga (lista de vagas e Início) faz duas listagens por vaga para contar entrevistas e achar a melhor pontuação; com muitas vagas, vale um endpoint de estatística.
 - `UploadAudioPage` não valida o tamanho no navegador; o arquivo sobe inteiro até o backend recusar.
 - `formatDuration(0)` devolve "N/A" em vez de "0s".
 - Duas vulnerabilidades altas do `npm audit` em dependências de desenvolvimento (cadeia do Vite).
 
-## Fase de design — concluída (branch `redesign/frontend`)
+## Fase de design — concluída (branches `redesign/frontend` e `redesign/estrutura`)
 
-Tudo o que estava listado aqui foi resolvido pelo redesign:
+Tudo o que estava listado aqui foi resolvido pelo redesign. A segunda etapa (`redesign/estrutura`) reorganizou as páginas em torno da vaga, trocou a identidade para papel e tinta com laranja de detalhe e Fraunces + Source Sans 3, e centralizou as rotas em `src/app/paths.js`:
 
 - Cores, fontes, espaçamentos, raios, sombras e movimento vêm de `frontend/src/styles/tokens.css`, com temas claro, escuro e "sistema". `npm run lint:tokens` falha se aparecer cor ou fonte literal fora dele (a lista legada está vazia) e `npm run check:contrast` valida os pares de cor em WCAG AA nos dois temas; os dois rodam no CI.
 - Uma abordagem de estilo só: CSS Modules colocalizados. Os únicos CSS globais são `tokens.css` e `base.css`; não há mais classes globais colididas nem `!important` de cor.

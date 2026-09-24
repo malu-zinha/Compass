@@ -4,12 +4,13 @@ import { useAuth } from '../../auth/AuthContext';
 import { apiUrl } from '../../api/client';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import { Avatar } from '../ui';
-import { ChevronDownIcon, LogoutIcon, SettingsIcon, UserIcon } from '../icons';
+import { ChevronDownIcon, LogoutIcon, UserIcon } from '../icons';
 import styles from './AccountMenu.module.css';
+import { paths } from '../../app/paths';
 
 /*
  * Menu de conta no pé da sidebar: botão de divulgação (aria-expanded) que abre
- * um painel com tema, Perfil, Configurações e Sair. Esc ou clique fora fecham;
+ * um painel com tema, Minha conta e Sair. Esc ou clique fora fecham;
  * Esc devolve o foco ao botão.
  */
 export default function AccountMenu({ onNavigate }) {
@@ -46,7 +47,7 @@ export default function AccountMenu({ onNavigate }) {
   const handleLogout = () => {
     setOpen(false);
     logout();
-    navigate('/');
+    navigate(paths.landing);
   };
 
   return (
@@ -59,11 +60,8 @@ export default function AccountMenu({ onNavigate }) {
           </div>
           <ThemeSwitcher compact className={styles.theme} />
           <nav aria-label="Conta" className={styles.links}>
-            <NavLink to="/perfil" className={styles.link} onClick={go}>
-              <UserIcon size={16} /> Perfil
-            </NavLink>
-            <NavLink to="/configuracoes" className={styles.link} onClick={go}>
-              <SettingsIcon size={16} /> Configurações
+            <NavLink to={paths.conta()} className={styles.link} onClick={go}>
+              <UserIcon size={16} /> Minha conta
             </NavLink>
           </nav>
           <button type="button" className={`${styles.link} ${styles.logout}`} onClick={handleLogout}>

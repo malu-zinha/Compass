@@ -5,7 +5,7 @@ describe('scoreBand', () => {
   it('divide 0–1000 em fraco, médio e forte', () => {
     expect(scoreBand(1000)).toEqual({ band: 'strong', label: 'Forte', tone: 'success' });
     expect(scoreBand(700)).toMatchObject({ band: 'strong' });
-    expect(scoreBand(699)).toMatchObject({ band: 'medium', label: 'Médio', tone: 'warning' });
+    expect(scoreBand(699)).toMatchObject({ band: 'medium', label: 'Médio', tone: 'info' });
     expect(scoreBand(400)).toMatchObject({ band: 'medium' });
     expect(scoreBand(399)).toMatchObject({ band: 'weak', label: 'Fraco', tone: 'danger' });
     expect(scoreBand(0)).toMatchObject({ band: 'weak' });

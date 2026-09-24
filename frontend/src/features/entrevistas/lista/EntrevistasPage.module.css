@@ -1,0 +1,22 @@
+.page {
+  max-width: var(--content-max);
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-8); }
+}
+
+.search { width: 260px; }
+.select { width: 220px; }
+@media (max-width: 640px) {
+  .search,
+  .select { width: 100%; }
+}
+
+.loading { display: grid; gap: var(--space-3); }
+.skeleton { height: 56px; }
+
+.more {
+  display: flex;
+  margin: var(--space-6) auto 0;
+}

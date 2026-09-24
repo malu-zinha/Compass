@@ -5,6 +5,7 @@ import { Logo } from '../../components/brand';
 import { Button, Field, Input, useToast } from '../../components/ui';
 import { ChartIcon, MicrophoneIcon, QuestionsIcon } from '../../components/icons';
 import styles from './AuthScreen.module.css';
+import { paths } from '../../app/paths';
 
 const EMPTY = { nome: '', email: '', usuario: '', senha: '' };
 
@@ -38,7 +39,7 @@ export default function AuthScreen() {
   const toast = useToast();
   const { login, register, user } = useAuth();
 
-  if (user) return <Navigate to="/inicio" replace />;
+  if (user) return <Navigate to={paths.inicio} replace />;
 
   const isLogin = mode === 'login';
 
@@ -59,7 +60,7 @@ export default function AuthScreen() {
     try {
       if (isLogin) {
         await login(form.usuario, form.senha);
-        navigate(location.state?.from ?? '/inicio', { replace: true });
+        navigate(location.state?.from ?? paths.inicio, { replace: true });
         return;
       }
       await register({ name: form.nome, email: form.email, username: form.usuario, password: form.senha });
@@ -76,11 +77,11 @@ export default function AuthScreen() {
   return (
     <div className={styles.page}>
       <aside className={styles.brandPanel}>
-        <Link to="/" className={styles.brandLink} aria-label="Compass — página inicial">
-          <Logo variant="full" decorative />
+        <Link to={paths.landing} className={styles.brandLink} aria-label="Compass — página inicial">
+          <Logo variant="full" decorative className={styles.panelLogo} />
         </Link>
         <div className={styles.pitch}>
-          <h2 className={styles.pitchTitle}>Entrevistas que viram decisões.</h2>
+          <h2 className={styles.pitchTitle}>Entrevistas que viram <span className={styles.accent}>decisões</span>.</h2>
           <ul className={styles.highlights}>
             {HIGHLIGHTS.map(({ Icon, text }) => (
               <li key={text}>
@@ -93,7 +94,7 @@ export default function AuthScreen() {
       </aside>
 
       <main className={styles.formSide}>
-        <Link to="/" className={styles.back}>← Voltar ao site</Link>
+        <Link to={paths.landing} className={styles.back}>← Voltar ao site</Link>
 
         <div className={styles.formWrap}>
           <div className={styles.mobileLogo}>

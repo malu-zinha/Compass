@@ -1,17 +1,10 @@
 export { default as BriefcaseIcon } from './BriefcaseIcon';
-export { default as CalendarIcon } from './CalendarIcon';
 export { default as ChartIcon } from './ChartIcon';
 export { default as CheckIcon } from './CheckIcon';
 export { default as ChevronDownIcon } from './ChevronDownIcon';
 export { default as ChevronRightIcon } from './ChevronRightIcon';
-export { default as ClockIcon } from './ClockIcon';
-export { default as CompareIcon } from './CompareIcon';
-export { default as FileTextIcon } from './FileTextIcon';
-export { default as FolderIcon } from './FolderIcon';
 export { default as HomeIcon } from './HomeIcon';
-export { default as InfoIcon } from './InfoIcon';
 export { default as InterviewsIcon } from './InterviewsIcon';
-export { default as JobsIcon } from './JobsIcon';
 export { default as LogoutIcon } from './LogoutIcon';
 export { default as MenuIcon } from './MenuIcon';
 export { default as MicrophoneIcon } from './MicrophoneIcon';
@@ -19,10 +12,8 @@ export { default as PauseIcon } from './PauseIcon';
 export { default as PlayIcon } from './PlayIcon';
 export { default as PlusIcon } from './PlusIcon';
 export { default as QuestionsIcon } from './QuestionsIcon';
-export { default as SettingsIcon } from './SettingsIcon';
 export { default as UploadIcon } from './UploadIcon';
 export { default as UserIcon } from './UserIcon';
-export { default as VolumeIcon } from './VolumeIcon';
 
 export { default as SunIcon } from './SunIcon';
 export { default as MoonIcon } from './MoonIcon';

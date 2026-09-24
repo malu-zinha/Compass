@@ -100,16 +100,15 @@ vi.mock('../auth/SettingsContext', () => ({
 
 const { default: LandingPage } = await import('../features/landing/LandingPage');
 const { default: HomePage } = await import('../features/home/HomePage');
-const { default: JobsPage } = await import('../features/positions/JobsPage');
-const { default: JobEditorPage } = await import('../features/positions/JobEditorPage');
-const { default: QuestionsPage } = await import('../features/questions/QuestionsPage');
-const { default: ResultsPage } = await import('../features/interviews/results/ResultsPage');
-const { default: RankingSelectPage } = await import('../features/interviews/results/RankingSelectPage');
-const { default: ComparePage } = await import('../features/interviews/results/ComparePage');
-const { default: InterviewDetailPage } = await import('../features/interviews/detail/InterviewDetailPage');
-const { default: SettingsPage } = await import('../features/settings/SettingsPage');
-const { default: ProfilePage } = await import('../features/profile/ProfilePage');
-const { default: NewInterviewPage } = await import('../features/interviews/new/NewInterviewPage');
+const { default: VagasPage } = await import('../features/vagas/lista/VagasPage');
+const { default: VagaEditorPage } = await import('../features/vagas/editor/VagaEditorPage');
+const { default: VagaPage } = await import('../features/vagas/pagina/VagaPage');
+const { default: PerguntasPage } = await import('../features/perguntas/PerguntasPage');
+const { default: EntrevistasPage } = await import('../features/entrevistas/lista/EntrevistasPage');
+const { default: ComparePage } = await import('../features/entrevistas/comparar/ComparePage');
+const { default: InterviewDetailPage } = await import('../features/entrevistas/detalhe/InterviewDetailPage');
+const { default: ContaPage } = await import('../features/conta/ContaPage');
+const { default: NovaEntrevistaPage } = await import('../features/entrevistas/nova/NovaEntrevistaPage');
 const { default: NotFoundPage } = await import('../features/not-found/NotFoundPage');
 const { default: AppLayout } = await import('../app/AppLayout');
 
@@ -130,13 +129,11 @@ describe('acessibilidade das telas (axe)', () => {
   it.each([
     ['Landing', () => renderWithRouter(<LandingPage />, '/'), 'Entrevistas que viram'],
     ['Início', () => renderWithLayout(<HomePage />, '/inicio'), 'Candidata 1'],
-    ['Cargos', () => renderWithLayout(<JobsPage />, '/cargos'), 'React e CSS'],
-    ['Perguntas', () => renderWithLayout(<QuestionsPage />, '/perguntas'), 'Por que esta vaga?'],
-    ['Ranking', () => renderWithLayout(<RankingSelectPage />, '/ranking'), 'React e CSS'],
-    ['Entrevistas', () => renderWithLayout(<ResultsPage />, '/entrevistas'), 'Candidata 2'],
-    ['Configurações', () => renderWithLayout(<SettingsPage />, '/configuracoes'), 'Fuso horário'],
-    ['Perfil', () => renderWithLayout(<ProfilePage />, '/perfil'), 'Informações pessoais'],
-    ['Nova entrevista', () => renderWithLayout(<NewInterviewPage />, '/nova-entrevista'), 'Frontend'],
+    ['Vagas', () => renderWithLayout(<VagasPage />, '/vagas'), 'React e CSS'],
+    ['Perguntas', () => renderWithLayout(<PerguntasPage />, '/perguntas'), 'Por que esta vaga?'],
+    ['Entrevistas', () => renderWithLayout(<EntrevistasPage />, '/entrevistas'), 'Candidata 2'],
+    ['Minha conta', () => renderWithLayout(<ContaPage />, '/conta'), 'Informações pessoais'],
+    ['Nova entrevista', () => renderWithLayout(<NovaEntrevistaPage />, '/nova-entrevista'), 'Frontend'],
     ['404', () => renderWithRouter(<NotFoundPage />, '/x'), 'Esta página saiu do mapa'],
   ])('%s', async (_name, render, ready) => {
     const { container } = render();
@@ -144,8 +141,18 @@ describe('acessibilidade das telas (axe)', () => {
     await expectAccessible(container);
   });
 
-  it('Editor de cargo', async () => {
-    const { container } = renderAt(<JobEditorPage />, '/cargos/editar/:id', '/cargos/editar/3');
+  it.each([
+    ['candidatos', 'Ranking de candidatos da vaga'],
+    ['perguntas', 'Por que esta vaga?'],
+    ['perfil', 'Autônoma'],
+  ])('Página da vaga — aba %s', async (aba, ready) => {
+    const { container } = renderAt(<VagaPage />, '/vagas/:id', `/vagas/3?aba=${aba}`);
+    await screen.findAllByText(ready);
+    await expectAccessible(container);
+  });
+
+  it('Editor de vaga', async () => {
+    const { container } = renderAt(<VagaEditorPage />, '/vagas/:id/editar', '/vagas/3/editar');
     await screen.findByDisplayValue('Frontend');
     await expectAccessible(container);
   });
@@ -157,7 +164,7 @@ describe('acessibilidade das telas (axe)', () => {
   });
 
   it('Comparar', async () => {
-    const { container } = renderAt(<ComparePage />, '/comparar', '/comparar?ids=1,2');
+    const { container } = renderAt(<ComparePage />, '/vagas/:id/comparar', '/vagas/3/comparar?ids=1,2');
     await screen.findAllByText('Candidata 2');
     await expectAccessible(container);
   });

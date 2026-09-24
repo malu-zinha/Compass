@@ -11,9 +11,11 @@
  *   2. SEMÂNTICA (--color-*, --surface, --text-*) — muda por tema.
  *      É esta camada, e só ela, que os componentes consomem.
  *
- * Regra de significado: azul é a marca. Verde quer dizer "deu certo / é bom",
- * vermelho quer dizer "erro / é ruim", âmbar quer dizer "em andamento / atenção".
- * Nenhum dos três decora.
+ * Regra de significado: não há cor de marca. A marca é tinta — preto no claro,
+ * papel no escuro. Laranja é detalhe (item ativo, aba selecionada, agulha da
+ * logo, marcadores), nunca estado. Verde quer dizer "deu certo / é bom",
+ * vermelho quer dizer "erro / é ruim", azul quer dizer "informação / em
+ * andamento" e é também a cor do foco do teclado.
  */
 
 :root {
@@ -21,64 +23,65 @@
    * CAMADA 1 — ESCALA BRUTA
    * =================================================================== */
 
-  /* --- Neutros: uma rampa, percorrida em direções opostas pelos temas --- */
+  /* --- Neutros quentes ("papel e tinta"): uma rampa, percorrida em direções
+   * opostas pelos temas --- */
   --n-0: #ffffff;
-  --n-50: #f7f8fa;
-  --n-100: #eff1f5;
-  --n-200: #e4e7ee;
-  --n-300: #d3d8e2;
-  --n-400: #a8b0bf;
+  --n-50: #f7f5f1;
+  --n-100: #efece6;
+  --n-200: #e6e2da;
+  --n-300: #d6d1c7;
+  --n-400: #aca699;
   /* n-450 existe por exigência de contraste: é o cinza mais claro que ainda
    * alcança 3:1 sobre as superfícies claras, mínimo da WCAG 1.4.11 para o
    * contorno de um controle de formulário. */
-  --n-450: #7e8695;
-  --n-500: #6b7385;
-  --n-600: #4a5162;
-  --n-700: #2e3440;
-  --n-800: #22262c;
-  --n-850: #1a1d22;
-  --n-900: #14171c;
-  --n-950: #0e1014;
+  --n-450: #857f73;
+  --n-500: #6f695e;
+  --n-600: #5e5a53;
+  --n-700: #3a3732;
+  --n-800: #2c2a27;
+  --n-850: #1c1b19;
+  --n-900: #141312;
+  --n-950: #0e0d0c;
 
-  /* --- Azul: marca --- */
-  --blue-50: #eff5ff;
-  --blue-100: #d9e6ff;
-  --blue-400: #5b96ff;
-  --blue-500: #2f7bff;
-  --blue-600: #1a5fe0;
-  --blue-700: #1247b0;
-  --blue-800: #1e3a6b;
-  --blue-900: #16233d;
+  /* Tinta e papel: os dois extremos que fazem as vezes de "cor da marca". */
+  --ink: #1a1a1a;
+  --paper: #f4f2ee;
 
-  /* --- Verde: sucesso --- */
-  --green-50: #e8faf0;
-  --green-100: #c6f2da;
-  --green-400: #3ddc84;
-  --green-500: #12b76a;
-  --green-600: #0a8f50;
-  --green-700: #0a7a46;
-  --green-800: #17523a;
-  --green-900: #0d2a1d;
+  /* --- Laranja: detalhe --- */
+  --orange-50: #fdf0ea;
+  --orange-100: #f9d9cb;
+  --orange-400: #f06a3c;
+  --orange-600: #db3f0f;
+  --orange-700: #b8330b;
+  --orange-900: #2e140b;
 
-  /* --- Vermelho: erro e ação destrutiva --- */
-  --red-50: #fef0f0;
-  --red-100: #fbd8da;
-  --red-400: #ff6b70;
-  --red-500: #ef4d53;
-  --red-600: #d02a31;
-  --red-700: #b02a30;
-  --red-800: #6b2429;
-  --red-900: #351619;
+  /* --- Azul: informação, em andamento, foco --- */
+  --blue-50: #eaf3fb;
+  --blue-100: #cfe3f5;
+  --blue-400: #5aa6e0;
+  --blue-600: #0d6fba;
+  --blue-700: #0a5a98;
+  --blue-800: #173d5c;
+  --blue-900: #0e2232;
 
-  /* --- Âmbar: em andamento e atenção --- */
-  --amber-50: #fff6e5;
-  --amber-100: #fde7bc;
-  --amber-400: #f5b544;
-  --amber-500: #db9412;
-  --amber-600: #96570b;
-  --amber-700: #8a4f0a;
-  --amber-800: #6b4a12;
-  --amber-900: #33240d;
+  /* --- Verde: sucesso (puxado para o amarelo, longe do azul) --- */
+  --green-50: #edf7ee;
+  --green-100: #d3ebd6;
+  --green-400: #6cc47a;
+  --green-600: #2f8a3e;
+  --green-700: #25702f;
+  --green-800: #1f4a26;
+  --green-900: #11261a;
+
+  /* --- Carmim: erro e ação destrutiva (frio, longe do laranja) --- */
+  --red-50: #fcedf0;
+  --red-100: #f7d2da;
+  --red-400: #f06b83;
+  --red-500: #dd3a57;
+  --red-600: #c21f3a;
+  --red-700: #a3182f;
+  --red-800: #5c1a26;
+  --red-900: #2c1015;
 
   /* ===================================================================
    * ESCALAS NÃO-CROMÁTICAS — iguais nos dois temas
@@ -90,9 +93,10 @@
    * (é o que distingue o arquivo variável do estático). O nome sem sufixo fica
    * como reserva, para o caso de a fonte estar instalada no sistema.
    */
-  --font-display: 'Space Grotesk Variable', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: 'Fraunces Variable', 'Fraunces', ui-serif, Georgia, serif;
+  --font-body: 'Source Sans 3 Variable', 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Só para <code>/<kbd>: fonte do sistema, sem arquivo extra. */
+  --font-code: ui-monospace, 'SF Mono', Menlo, monospace;
 
   --text-xs: 0.75rem;    /* 12 — metadados, rótulo de chip */
   --text-sm: 0.875rem;   /* 14 — texto secundário, tabela */
@@ -107,7 +111,7 @@
   --leading-normal: 1.5;   /* corpo */
   --leading-relaxed: 1.65; /* transcrição: leitura longa */
 
-  --tracking-tight: -0.02em; /* títulos em Space Grotesk */
+  --tracking-tight: -0.01em; /* títulos em Fraunces */
   --tracking-wide: 0.04em;   /* rótulo em caixa alta */
 
   --weight-regular: 400;
@@ -129,8 +133,8 @@
 
   /* --- Forma --- */
   --radius-sm: 6px;   /* input, chip */
-  --radius-md: 10px;  /* card, botão */
-  --radius-lg: 16px;  /* modal, painel */
+  --radius-md: 8px;   /* card, botão */
+  --radius-lg: 12px;  /* modal, painel */
   --radius-full: 999px;
 
   /* --- Movimento --- */
@@ -179,7 +183,7 @@
   --surface-active: var(--n-200);
 
   /* Texto: três níveis, não mais */
-  --color-text: var(--n-800);
+  --color-text: var(--ink);
   --text-muted: var(--n-600);
   --text-subtle: var(--n-500);
   --text-on-accent: var(--n-0);
@@ -198,13 +202,27 @@
   --border-control: var(--n-450);
   --border-control-hover: var(--n-500);
 
-  /* Marca */
-  --color-primary: var(--blue-600);
-  --color-primary-hover: var(--blue-700);
-  --color-primary-fg: var(--blue-700);
-  --color-primary-bg: var(--blue-50);
-  --color-primary-border: var(--blue-100);
-  --ring-primary: rgba(26, 95, 224, 0.3);
+  /* Marca = tinta: botão principal, logo, item ativo */
+  --color-primary: var(--ink);
+  --color-primary-hover: var(--n-700);
+  --color-primary-fg: var(--ink);
+  --color-primary-bg: var(--n-100);
+  --color-primary-border: var(--n-200);
+
+  /* Detalhe (laranja). --color-accent só para não-texto e texto grande:
+   * sobre branco dá 4,4:1. Texto pequeno usa --color-accent-fg. */
+  --color-accent: var(--orange-600);
+  --color-accent-fg: var(--orange-700);
+  --color-accent-bg: var(--orange-50);
+
+  /* Informação e em andamento (azul) — também links e foco */
+  --color-info: var(--blue-600);
+  --color-info-fg: var(--blue-700);
+  --color-info-bg: var(--blue-50);
+  --color-info-border: var(--blue-100);
+  --color-link: var(--blue-600);
+  --color-focus: var(--blue-600);
+  --ring-primary: rgba(13, 111, 186, 0.3);
 
   /* Sucesso */
   --color-success: var(--green-600);
@@ -218,21 +236,15 @@
   --color-danger-fg: var(--red-700);
   --color-danger-bg: var(--red-50);
   --color-danger-border: var(--red-100);
-  --ring-danger: rgba(208, 42, 49, 0.3);
+  --ring-danger: rgba(194, 31, 58, 0.3);
 
-  /* Em andamento e atenção */
-  --color-warning: var(--amber-600);
-  --color-warning-fg: var(--amber-700);
-  --color-warning-bg: var(--amber-50);
-  --color-warning-border: var(--amber-100);
-
-  /* Sombras: profundidade real no claro */
-  --shadow-sm: 0 1px 2px rgba(16, 20, 28, 0.06), 0 1px 3px rgba(16, 20, 28, 0.04);
-  --shadow-md: 0 2px 4px rgba(16, 20, 28, 0.06), 0 4px 12px rgba(16, 20, 28, 0.08);
-  --shadow-lg: 0 8px 24px rgba(16, 20, 28, 0.12), 0 2px 6px rgba(16, 20, 28, 0.08);
+  /* Sombras: só em sobreposições (menu, modal, toast); o resto é borda fina */
+  --shadow-sm: 0 1px 2px rgba(28, 24, 18, 0.05);
+  --shadow-md: 0 2px 8px rgba(28, 24, 18, 0.07);
+  --shadow-lg: 0 12px 32px rgba(28, 24, 18, 0.14), 0 2px 6px rgba(28, 24, 18, 0.06);
 
   /* Véu de overlay */
-  --overlay-bg: rgba(20, 23, 28, 0.45);
+  --overlay-bg: rgba(26, 24, 20, 0.45);
 
   /* Barra de rolagem */
   --scrollbar-thumb: var(--n-300);
@@ -258,7 +270,7 @@
   --surface-hover: var(--n-800);
   --surface-active: var(--n-700);
 
-  --color-text: var(--n-100);
+  --color-text: var(--paper);
   --text-muted: var(--n-400);
   --text-subtle: var(--n-500);
   --text-on-accent: var(--n-950);
@@ -268,12 +280,23 @@
   --border-control: var(--n-500);
   --border-control-hover: var(--n-400);
 
-  --color-primary: var(--blue-400);
-  --color-primary-hover: var(--blue-500);
-  --color-primary-fg: var(--blue-400);
-  --color-primary-bg: var(--blue-900);
-  --color-primary-border: var(--blue-800);
-  --ring-primary: rgba(91, 150, 255, 0.4);
+  --color-primary: var(--paper);
+  --color-primary-hover: var(--n-300);
+  --color-primary-fg: var(--paper);
+  --color-primary-bg: var(--n-800);
+  --color-primary-border: var(--n-700);
+
+  --color-accent: var(--orange-400);
+  --color-accent-fg: var(--orange-400);
+  --color-accent-bg: var(--orange-900);
+
+  --color-info: var(--blue-400);
+  --color-info-fg: var(--blue-400);
+  --color-info-bg: var(--blue-900);
+  --color-info-border: var(--blue-800);
+  --color-link: var(--blue-400);
+  --color-focus: var(--blue-400);
+  --ring-primary: rgba(90, 166, 224, 0.4);
 
   --color-success: var(--green-400);
   --color-success-fg: var(--green-400);
@@ -285,12 +308,7 @@
   --color-danger-fg: var(--red-400);
   --color-danger-bg: var(--red-900);
   --color-danger-border: var(--red-800);
-  --ring-danger: rgba(255, 107, 112, 0.4);
-
-  --color-warning: var(--amber-400);
-  --color-warning-fg: var(--amber-400);
-  --color-warning-bg: var(--amber-900);
-  --color-warning-border: var(--amber-800);
+  --ring-danger: rgba(240, 107, 131, 0.4);
 
   /*
    * No escuro, sombra preta sobre fundo preto não existe. A profundidade vem
@@ -301,7 +319,7 @@
   --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);
 
-  --overlay-bg: rgba(0, 0, 0, 0.65);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
 
   --scrollbar-thumb: var(--n-700);
   --scrollbar-thumb-hover: var(--n-600);

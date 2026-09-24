@@ -9,9 +9,9 @@
  * dependência de rede externa em produção.
  */
 
-@import '@fontsource-variable/space-grotesk';
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
+/* Fraunces com todos os eixos (opsz, SOFT, WONK, peso); Source Sans 3 no corpo. */
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/source-sans-3';
 
 @import './styles/tokens.css';
 @import './styles/base.css';

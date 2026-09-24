@@ -1,5 +1,5 @@
 export function formatDuration(seconds) {
-  if (!seconds || Number.isNaN(seconds)) return 'N/A';
+  if (!seconds || Number.isNaN(seconds)) return '—';
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
@@ -21,3 +21,5 @@ export function formatDate(iso, { timezone, date_format: dateFormat }) {
   if (dateFormat === 'YYYY-MM-DD') return `${year}-${month}-${day}`;
   return `${day}/${month}/${year}`;
 }
+
+export const vacanciesLabel = (n) => `${n} ${n === 1 ? 'vaga disponível' : 'vagas disponíveis'}`;

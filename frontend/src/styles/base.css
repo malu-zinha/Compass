@@ -67,6 +67,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-synthesis-weight: none;
+  /* Algarismos de largura fixa em todo lugar: tabelas, notas, horários e
+   * contagens alinham sem precisar de fonte mono. */
+  font-variant-numeric: tabular-nums;
 
   /*
    * A troca de tema anima aqui, no fundo e no texto. Componentes não repetem
@@ -95,6 +98,10 @@ h5,
 h6 {
   font-family: var(--font-display);
   font-weight: var(--weight-semibold);
+  /* Fraunces "macia" (SOFT) e sem as formas excêntricas (WONK); o tamanho
+   * óptico (opsz) segue o corpo do texto sozinho. */
+  font-variation-settings: 'SOFT' 50, 'WONK' 0;
+  font-optical-sizing: auto;
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
   text-wrap: balance;
@@ -121,8 +128,8 @@ p {
 }
 
 a {
-  color: var(--color-primary-fg);
-  text-decoration-color: var(--color-primary-border);
+  color: var(--color-link);
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
   text-underline-offset: 0.2em;
   transition: color var(--duration-fast) var(--ease-out);
 }
@@ -144,14 +151,8 @@ code,
 kbd,
 samp,
 pre {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   font-size: 0.9em;
-}
-
-/* Números tabulares onde o alinhamento importa: score, duração, data. */
-.numeric {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
 }
 
 /* ===================================================================
@@ -212,7 +213,7 @@ button:disabled {
  * `:focus-visible` mostra o anel para teclado sem poluir o clique de mouse.
  */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }

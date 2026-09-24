@@ -134,12 +134,26 @@ const PAIRS = [
   ['--text-subtle', '--color-bg', 3.0, 'texto terciário (só em texto grande)'],
   ['--text-subtle', '--surface', 3.0, 'texto terciário sobre card'],
 
-  // Marca
-  ['--color-primary-fg', '--surface', 4.5, 'link sobre card'],
-  ['--color-primary-fg', '--color-bg', 4.5, 'link sobre o fundo'],
+  // Marca = tinta (botão principal, item ativo)
   ['--text-on-accent', '--color-primary', 4.5, 'rótulo do botão primário'],
-  ['--color-primary', '--surface', 3.0, 'contorno/ícone primário sobre card'],
-  ['--color-primary-fg', '--color-primary-bg', 4.5, 'texto do chip primário'],
+  ['--color-primary', '--surface', 3.0, 'botão/ícone primário sobre card'],
+  ['--color-primary-fg', '--color-primary-bg', 4.5, 'texto sobre realce neutro'],
+
+  // Detalhe (laranja): o tom puro só como não-texto; texto usa -fg
+  ['--color-accent', '--surface', 3.0, 'marcador laranja sobre card'],
+  ['--color-accent', '--color-bg', 3.0, 'marcador laranja sobre o fundo'],
+  ['--color-accent-fg', '--surface', 4.5, 'texto laranja sobre card'],
+  ['--color-accent-fg', '--color-bg', 4.5, 'texto laranja sobre o fundo'],
+  ['--color-accent-fg', '--color-accent-bg', 4.5, 'texto laranja sobre realce laranja'],
+
+  // Informação (azul): links, em andamento, foco
+  ['--color-link', '--surface', 4.5, 'link sobre card'],
+  ['--color-link', '--color-bg', 4.5, 'link sobre o fundo'],
+  ['--color-info-fg', '--surface', 4.5, 'texto informativo sobre card'],
+  ['--color-info-fg', '--color-info-bg', 4.5, 'texto do chip informativo'],
+  ['--color-info', '--surface', 3.0, 'ícone/medidor informativo'],
+  ['--color-focus', '--surface', 3.0, 'anel de foco sobre card'],
+  ['--color-focus', '--color-bg', 3.0, 'anel de foco sobre o fundo'],
 
   // Sucesso
   ['--color-success-fg', '--surface', 4.5, 'texto de sucesso sobre card'],
@@ -151,11 +165,6 @@ const PAIRS = [
   ['--color-danger-fg', '--color-danger-bg', 4.5, 'texto do chip de erro'],
   ['--text-on-accent', '--color-danger', 4.5, 'rótulo do botão destrutivo'],
   ['--color-danger', '--surface', 3.0, 'ícone/medidor de erro'],
-
-  // Atenção
-  ['--color-warning-fg', '--surface', 4.5, 'texto de atenção sobre card'],
-  ['--color-warning-fg', '--color-warning-bg', 4.5, 'texto do chip de atenção'],
-  ['--color-warning', '--surface', 3.0, 'ícone/medidor de atenção'],
 
   /*
    * Limites de componente (1.4.11). Só o contorno de controle entra: ele informa

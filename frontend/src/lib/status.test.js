@@ -9,14 +9,14 @@ describe('interviewStatus', () => {
     INTERVIEW_STATUSES.forEach((s) => {
       const { label, tone } = interviewStatus(s);
       expect(label).toBeTruthy();
-      expect(['neutral', 'info', 'warning', 'success', 'danger']).toContain(tone);
+      expect(['neutral', 'info', 'success', 'danger']).toContain(tone);
     });
   });
 
   it('usa verde e vermelho só para resultado', () => {
     expect(interviewStatus('done')).toEqual({ label: 'Concluída', tone: 'success' });
     expect(interviewStatus('error')).toEqual({ label: 'Falhou', tone: 'danger' });
-    expect(interviewStatus('analyzing').tone).toBe('warning');
+    expect(interviewStatus('analyzing').tone).toBe('info');
     expect(interviewStatus('draft').tone).toBe('neutral');
   });
 
