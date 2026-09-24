@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Chip, Input } from '../../components/ui';
+import { Chip, Input } from '../../../components/ui';
 import styles from './SkillsInput.module.css';
 
 /*

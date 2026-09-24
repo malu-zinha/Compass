@@ -100,8 +100,8 @@ vi.mock('../auth/SettingsContext', () => ({
 
 const { default: LandingPage } = await import('../features/landing/LandingPage');
 const { default: HomePage } = await import('../features/home/HomePage');
-const { default: JobsPage } = await import('../features/positions/JobsPage');
-const { default: JobEditorPage } = await import('../features/positions/JobEditorPage');
+const { default: VagasPage } = await import('../features/vagas/lista/VagasPage');
+const { default: VagaEditorPage } = await import('../features/vagas/editor/VagaEditorPage');
 const { default: PerguntasPage } = await import('../features/perguntas/PerguntasPage');
 const { default: ResultsPage } = await import('../features/interviews/results/ResultsPage');
 const { default: ComparePage } = await import('../features/interviews/results/ComparePage');
@@ -129,7 +129,7 @@ describe('acessibilidade das telas (axe)', () => {
   it.each([
     ['Landing', () => renderWithRouter(<LandingPage />, '/'), 'Entrevistas que viram'],
     ['Início', () => renderWithLayout(<HomePage />, '/inicio'), 'Candidata 1'],
-    ['Cargos', () => renderWithLayout(<JobsPage />, '/cargos'), 'React e CSS'],
+    ['Vagas', () => renderWithLayout(<VagasPage />, '/vagas'), 'React e CSS'],
     ['Perguntas', () => renderWithLayout(<PerguntasPage />, '/perguntas'), 'Por que esta vaga?'],
     ['Entrevistas', () => renderWithLayout(<ResultsPage />, '/entrevistas'), 'Candidata 2'],
     ['Configurações', () => renderWithLayout(<SettingsPage />, '/configuracoes'), 'Fuso horário'],
@@ -143,7 +143,7 @@ describe('acessibilidade das telas (axe)', () => {
   });
 
   it('Editor de cargo', async () => {
-    const { container } = renderAt(<JobEditorPage />, '/cargos/editar/:id', '/cargos/editar/3');
+    const { container } = renderAt(<VagaEditorPage />, '/vagas/:id/editar', '/vagas/3/editar');
     await screen.findByDisplayValue('Frontend');
     await expectAccessible(container);
   });

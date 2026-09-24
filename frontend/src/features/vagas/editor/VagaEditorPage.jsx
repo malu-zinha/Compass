@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { createPosition, getPosition, updatePosition } from '../../api/positions';
-import { PageHeader } from '../../components/layout';
-import { Button, Card, Field, Input, Skeleton, Textarea, useToast } from '../../components/ui';
+import { createPosition, getPosition, updatePosition } from '../../../api/positions';
+import { PageHeader } from '../../../components/layout';
+import { Button, Card, Field, Input, Skeleton, Textarea, useToast } from '../../../components/ui';
 import SkillsInput from './SkillsInput';
-import styles from './JobEditorPage.module.css';
-import { paths } from '../../app/paths';
+import styles from './VagaEditorPage.module.css';
+import { paths } from '../../../app/paths';
 
 const EMPTY = { name: '', description: '', vacancies: '', skills: [], idealProfile: '' };
 
 function validate(form) {
   const errors = {};
-  if (!form.name.trim()) errors.name = 'Dê um nome ao cargo.';
+  if (!form.name.trim()) errors.name = 'Dê um nome à vaga.';
   if (!form.description.trim()) errors.description = 'Descreva a vaga.';
   if (form.skills.length === 0) errors.skills = 'Adicione pelo menos uma competência.';
   return errors;
 }
 
-export default function JobEditorPage() {
+export default function VagaEditorPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -44,8 +44,8 @@ export default function JobEditorPage() {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Erro ao carregar cargo:', error);
-        toast.error(error.detail || 'Erro ao carregar cargo. Verifique se o backend está rodando.');
+        console.error('Erro ao carregar a vaga:', error);
+        toast.error(error.detail || 'Erro ao carregar a vaga. Verifique se o backend está rodando.');
         navigate(paths.vagas);
       });
     return () => { active = false; };
@@ -72,25 +72,29 @@ export default function JobEditorPage() {
     try {
       if (isEditing) {
         await updatePosition(id, payload);
-        toast.success('Cargo atualizado com sucesso!');
+        toast.success('Vaga atualizada.');
+        navigate(paths.vaga(id, 'perfil'));
       } else {
-        await createPosition(payload);
-        toast.success('Cargo salvo com sucesso!');
+        const created = await createPosition(payload);
+        toast.success('Vaga criada.');
+        navigate(created?.id ? paths.vaga(created.id) : paths.vagas);
       }
-      navigate(paths.vagas);
     } catch (error) {
-      console.error('Erro ao salvar cargo:', error);
-      toast.error(error.detail || 'Erro ao salvar cargo. Verifique se o backend está rodando.');
+      console.error('Erro ao salvar a vaga:', error);
+      toast.error(error.detail || 'Erro ao salvar a vaga. Verifique se o backend está rodando.');
       setSaving(false);
     }
   };
 
-  const title = isEditing ? 'Editar cargo' : 'Novo cargo';
+  const title = isEditing ? 'Editar vaga' : 'Nova vaga';
+  const breadcrumbs = isEditing && form.name
+    ? [{ label: 'Vagas', to: paths.vagas }, { label: form.name, to: paths.vaga(id) }]
+    : [{ label: 'Vagas', to: paths.vagas }];
 
   if (loading) {
     return (
       <div className={styles.page} aria-busy="true">
-        <PageHeader title={title} />
+        <PageHeader title={title} breadcrumbs={breadcrumbs} />
         <Skeleton variant="block" className={styles.skeleton} />
       </div>
     );
@@ -98,7 +102,7 @@ export default function JobEditorPage() {
 
   return (
     <form className={styles.page} onSubmit={handleSubmit} noValidate>
-      <PageHeader title={title} />
+      <PageHeader title={title} breadcrumbs={breadcrumbs} />
 
       <div className={styles.grid}>
         <Card className={styles.section}>
@@ -141,8 +145,8 @@ export default function JobEditorPage() {
       </div>
 
       <div className={styles.footer}>
-        <Button as={Link} to={paths.vagas} variant="ghost">Cancelar</Button>
-        <Button type="submit" variant="primary" loading={saving}>Salvar cargo</Button>
+        <Button as={Link} to={isEditing ? paths.vaga(id, 'perfil') : paths.vagas} variant="ghost">Cancelar</Button>
+        <Button type="submit" variant="primary" loading={saving}>Salvar vaga</Button>
       </div>
     </form>
   );
