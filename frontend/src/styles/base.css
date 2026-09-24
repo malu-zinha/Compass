@@ -286,6 +286,22 @@ button:disabled {
   transform: translateY(0);
 }
 
+/*
+ * Troca de tema: por um instante, cores de fundo, texto e borda fazem
+ * crossfade em vez de piscar. A classe é posta e tirada pelo ThemeProvider só
+ * quando o usuário troca — nunca no carregamento.
+ */
+.theme-changing,
+.theme-changing *,
+.theme-changing *::before,
+.theme-changing *::after {
+  transition:
+    background-color var(--duration-slow) var(--ease-out),
+    border-color var(--duration-slow) var(--ease-out),
+    color var(--duration-slow) var(--ease-out),
+    fill var(--duration-slow) var(--ease-out) !important;
+}
+
 /* ===================================================================
  * Movimento reduzido
  *

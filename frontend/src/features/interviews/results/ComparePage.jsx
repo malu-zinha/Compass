@@ -133,11 +133,14 @@ export default function ComparePage() {
         </div>
       ) : (
         <>
-          <div className={styles.columns}>
-            {interviews.map((item) => (
-              <CompareColumn key={item.id} interview={item} leader={item.id === leaderId && item.score != null} />
-            ))}
-          </div>
+          <section aria-labelledby="lado-a-lado">
+            <h2 id="lado-a-lado" className="sr-only">Candidatos lado a lado</h2>
+            <div className={styles.columns}>
+              {interviews.map((item) => (
+                <CompareColumn key={item.id} interview={item} leader={item.id === leaderId && item.score != null} />
+              ))}
+            </div>
+          </section>
 
           <Card as="section" aria-labelledby="parecer" className={styles.verdict}>
             <div className={styles.verdictHead}>
