@@ -35,6 +35,27 @@
   gap: var(--space-2);
 }
 
+/*
+ * Celular: as ações da página descem para uma segunda faixa (com rolagem
+ * horizontal se preciso), e o caminho + título ficam com a largura toda.
+ */
+@media (max-width: 640px) {
+  .header {
+    grid-template-columns: auto minmax(0, 1fr);
+    height: auto;
+    min-height: var(--header-height);
+    row-gap: 0;
+  }
+  .start,
+  .title { min-height: var(--header-height); display: flex; align-items: center; }
+  .actions {
+    grid-column: 1 / -1;
+    overflow-x: auto;
+  }
+  .actions:has(.pageActions:not(:empty)) { padding-bottom: var(--space-3); }
+  .pageActions:empty { display: none; }
+}
+
 @media (min-width: 1024px) {
   .header { padding: 0 var(--space-8); }
   .start { display: none; }

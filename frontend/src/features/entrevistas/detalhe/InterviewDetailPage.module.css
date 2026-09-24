@@ -55,16 +55,8 @@
 }
 
 .meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
   margin: 0;
   color: var(--text-muted);
-}
-.meta span + span::before {
-  content: '·';
-  margin-right: var(--space-4);
-  color: var(--text-subtle);
 }
 
 .contact {

@@ -165,9 +165,11 @@ export default function InterviewDetailPage() {
           </p>
           <h2 className={styles.name}>{name}</h2>
           <p className={styles.meta}>
-            <span>{interview.position_name}</span>
-            <span>{formatDate(interview.created_at, settings)}</span>
-            {interview.audio_duration_seconds ? <span>{formatDuration(interview.audio_duration_seconds)}</span> : null}
+            {[
+              interview.position_name,
+              formatDate(interview.created_at, settings),
+              interview.audio_duration_seconds ? formatDuration(interview.audio_duration_seconds) : null,
+            ].filter(Boolean).join(' · ')}
           </p>
           {contact && <p className={styles.contact}>{contact}</p>}
         </div>
