@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { formatDate, formatDuration, scoreToPercent } from './format';
 
-test.each([[null, 'N/A'], [45, '45s'], [200, '3m 20s'], [3900, '1h 5m']])('formatDuration(%s)', (s, e) => expect(formatDuration(s)).toBe(e));
+test.each([[null, '—'], [45, '45s'], [200, '3m 20s'], [3900, '1h 5m']])('formatDuration(%s)', (s, e) => expect(formatDuration(s)).toBe(e));
 
 test('scoreToPercent', () => { expect(scoreToPercent(873)).toBe(87); expect(scoreToPercent(null)).toBe(0); });
 

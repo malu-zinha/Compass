@@ -6,7 +6,7 @@ import { PageHeader } from '../../../components/layout';
 import { Button, Card, Chip, ScoreMeter, Skeleton, useToast } from '../../../components/ui';
 import { ChartIcon } from '../../../components/icons';
 import { SUBSCORES } from '../../../lib/score';
-import PointsList from './PointsList';
+import PointsList from '../../entrevistas/PointsList';
 import styles from './ComparePage.module.css';
 import { paths } from '../../../app/paths';
 

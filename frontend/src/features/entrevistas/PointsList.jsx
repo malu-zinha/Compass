@@ -1,4 +1,4 @@
-import { CheckIcon } from '../../../components/icons';
+import { CheckIcon } from '../../components/icons';
 import styles from './PointsList.module.css';
 
 /* Pontos positivos (✓ verde) ou de atenção (– vermelho). O ícone reforça, o título diz. */

@@ -1,6 +1,6 @@
 import { Chip, ScoreMeter, Tabs } from '../../../components/ui';
 import { SUBSCORES } from '../../../lib/score';
-import PointsList from '../results/PointsList';
+import PointsList from '../../entrevistas/PointsList';
 import styles from './AnalysisPanel.module.css';
 
 const EMPTY = 'Nenhuma informação coletada';

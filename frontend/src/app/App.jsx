@@ -6,7 +6,7 @@ import NewInterviewPage from '../features/interviews/new/NewInterviewPage';
 import InterviewTypePage from '../features/interviews/new/InterviewTypePage';
 import UploadAudioPage from '../features/interviews/new/UploadAudioPage';
 import RecordPage from '../features/interviews/live/RecordPage';
-import ResultsPage from '../features/interviews/results/ResultsPage';
+import EntrevistasPage from '../features/entrevistas/lista/EntrevistasPage';
 import ComparePage from '../features/interviews/results/ComparePage';
 import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
 import VagasPage from '../features/vagas/lista/VagasPage';
@@ -31,7 +31,7 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path={R.inicio} element={<HomePage />} />
-          <Route path={R.entrevistas} element={<ResultsPage />} />
+          <Route path={R.entrevistas} element={<EntrevistasPage />} />
           <Route path={R.entrevista} element={<InterviewDetailPage />} />
           <Route path={R.vagas} element={<VagasPage />} />
           <Route path={R.novaVaga} element={<VagaEditorPage />} />
