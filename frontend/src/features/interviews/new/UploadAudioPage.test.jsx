@@ -33,7 +33,7 @@ test('falha no upload apaga a entrevista criada', async () => {
   renderWithRouter(<UploadAudioPage />, '/upload');
 
   const file = new File(['x'], 'e.mp3', { type: 'audio/mpeg' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Arquivo de áudio'), file);
   await userEvent.click(screen.getByRole('button', { name: 'Enviar e Processar' }));
 
   await waitFor(() => expect(api.deleteInterview).toHaveBeenCalledWith(9));
@@ -46,7 +46,7 @@ test('sucesso cria a entrevista, envia o áudio, limpa o rascunho e navega', asy
 
   await userEvent.type(screen.getByLabelText('Anotações (opcional)'), 'observação');
   const file = new File(['x'], 'e.mp3', { type: 'audio/mpeg' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Arquivo de áudio'), file);
   await userEvent.click(screen.getByRole('button', { name: 'Enviar e Processar' }));
 
   await waitFor(() => expect(router.state.location.pathname).toBe('/entrevista/9'));
@@ -70,4 +70,15 @@ test('sem rascunho redireciona para /nova-entrevista', async () => {
 
   expect(await screen.findByText('/nova-entrevista')).toBeInTheDocument();
   expect(router.state.location.pathname).toBe('/nova-entrevista');
+});
+
+test('recusa no navegador arquivo acima do limite, sem criar entrevista', async () => {
+  const api = await import('../../../api/interviews');
+  renderWithRouter(<UploadAudioPage />, '/upload');
+  const big = new File(['x'], 'longa.mp3', { type: 'audio/mpeg' });
+  Object.defineProperty(big, 'size', { value: 201 * 1024 * 1024 });
+  await userEvent.upload(screen.getByLabelText('Arquivo de áudio'), big);
+  expect(screen.getByRole('alert')).toHaveTextContent('o limite é 200 MB');
+  expect(screen.getByRole('button', { name: 'Enviar e Processar' })).toBeDisabled();
+  expect(api.createInterview).not.toHaveBeenCalled();
 });

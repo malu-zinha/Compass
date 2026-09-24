@@ -133,7 +133,7 @@ export default function ComparePage() {
         </div>
       ) : (
         <>
-          <div className={styles.columns} style={{ '--cols': interviews.length }}>
+          <div className={styles.columns}>
             {interviews.map((item) => (
               <CompareColumn key={item.id} interview={item} leader={item.id === leaderId && item.score != null} />
             ))}
