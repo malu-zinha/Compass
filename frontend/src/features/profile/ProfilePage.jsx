@@ -1,217 +1,161 @@
-import React, { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../components/layout';
-import { useAuth } from '../../auth/AuthContext';
 import { apiUrl } from '../../api/client';
 import { updateMe, uploadAvatar } from '../../api/users';
-import './ProfilePage.css';
-import { useToast } from '../../components/ui';
+import { useAuth } from '../../auth/AuthContext';
+import { PageHeader } from '../../components/layout';
+import { Avatar, Button, Card, Field, Input, useToast } from '../../components/ui';
+import { LogoutIcon } from '../../components/icons';
+import styles from './ProfilePage.module.css';
 
 const AVATAR_ACCEPT = 'image/png,image/jpeg,image/webp';
 
-function toFormData(user) {
-  return {
-    nome: user?.name || '',
-    email: user?.email || '',
-    cargo: user?.job_title || '',
-    telefone: user?.phone || '',
-    empresa: user?.company || '',
-    departamento: user?.department || '',
-  };
-}
+const FIELDS = [
+  { key: 'name', label: 'Nome completo', type: 'text', autoComplete: 'name' },
+  { key: 'email', label: 'E-mail', type: 'email', autoComplete: 'email' },
+  { key: 'job_title', label: 'Cargo', type: 'text', autoComplete: 'organization-title' },
+  { key: 'phone', label: 'Telefone', type: 'tel', autoComplete: 'tel' },
+  { key: 'company', label: 'Empresa', type: 'text', autoComplete: 'organization' },
+  { key: 'department', label: 'Departamento', type: 'text' },
+];
 
-function initialsOf(name) {
-  return (name || '')
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
+const toForm = (user) => Object.fromEntries(FIELDS.map(({ key }) => [key, user?.[key] || '']));
 
 export default function ProfilePage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
   const fileInputRef = useRef(null);
+  const fileId = useId();
 
-  const [formData, setFormData] = useState(() => toFormData(user));
-  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState(() => toForm(user));
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const startEditing = () => {
+    setForm(toForm(user));
+    setEditing(true);
   };
 
-  const handleEdit = () => {
-    setFormData(toFormData(user));
-    setIsEditing(true);
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (event) => {
+    event.preventDefault();
+    setSaving(true);
     try {
-      const updated = await updateMe({
-        name: formData.nome,
-        email: formData.email,
-        job_title: formData.cargo,
-        phone: formData.telefone,
-        company: formData.empresa,
-        department: formData.departamento,
-      });
+      const updated = await updateMe(form);
       setUser(updated);
-      setIsEditing(false);
+      setEditing(false);
+      toast.success('Perfil atualizado.');
     } catch (error) {
       toast.error(error.detail || 'Não foi possível salvar o perfil.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleChangePhotoClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    e.target.value = '';
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    event.target.value = '';
     if (!file) return;
+    setUploading(true);
     try {
-      const updated = await uploadAvatar(file);
-      setUser(updated);
+      setUser(await uploadAvatar(file));
     } catch (error) {
       toast.error(error.detail || 'Não foi possível atualizar a foto.');
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <div className="profile-page">
+    <div className={styles.page}>
       <PageHeader title="Perfil" />
 
-      <div className="profile-content">
-        <div className="profile-container">
-          <div className="profile-header">
-            <div className="profile-avatar-section">
-              <div className="profile-avatar">
-                {user?.avatar_url ? (
-                  <img
-                    alt="Foto de perfil"
-                    src={apiUrl(user.avatar_url)}
-                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <span className="avatar-initials">{initialsOf(user?.name)}</span>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={AVATAR_ACCEPT}
-                hidden
-                onChange={handleFileChange}
-              />
-              <button className="change-avatar-btn" onClick={handleChangePhotoClick}>
-                Alterar foto
-              </button>
-            </div>
-            <div className="profile-header-info">
-              <h1 className="profile-name">{user?.name}</h1>
-              <p className="profile-role">{user?.job_title}</p>
-              <p className="profile-email">{user?.email}</p>
-            </div>
-          </div>
-
-          <div className="profile-details">
-            <div className="details-header">
-              <h2 className="details-title">Informações Pessoais</h2>
-              {!isEditing ? (
-                <button className="edit-btn" onClick={handleEdit}>
-                  Editar
-                </button>
-              ) : (
-                <div className="edit-actions">
-                  <button className="cancel-btn" onClick={handleCancel}>
-                    Cancelar
-                  </button>
-                  <button className="save-btn" onClick={handleSave}>
-                    Salvar
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="details-grid">
-              <div className="detail-field">
-                <label className="field-label">Nome Completo</label>
-                {isEditing ? (
-                  <input type="text" name="nome" value={formData.nome} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.name}</div>
-                )}
-              </div>
-
-              <div className="detail-field">
-                <label className="field-label">Email</label>
-                {isEditing ? (
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.email}</div>
-                )}
-              </div>
-
-              <div className="detail-field">
-                <label className="field-label">Cargo</label>
-                {isEditing ? (
-                  <input type="text" name="cargo" value={formData.cargo} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.job_title}</div>
-                )}
-              </div>
-
-              <div className="detail-field">
-                <label className="field-label">Telefone</label>
-                {isEditing ? (
-                  <input type="tel" name="telefone" value={formData.telefone} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.phone}</div>
-                )}
-              </div>
-
-              <div className="detail-field">
-                <label className="field-label">Empresa</label>
-                {isEditing ? (
-                  <input type="text" name="empresa" value={formData.empresa} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.company}</div>
-                )}
-              </div>
-
-              <div className="detail-field">
-                <label className="field-label">Departamento</label>
-                {isEditing ? (
-                  <input type="text" name="departamento" value={formData.departamento} onChange={handleInputChange} className="field-input" />
-                ) : (
-                  <div className="field-value">{user?.department}</div>
-                )}
-              </div>
-            </div>
-
-            <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(0, 0, 0, 0.08)', display: 'flex', justifyContent: 'center' }}>
-              <button
-                className="security-btn danger"
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                style={{ fontFamily: 'var(--font-body)', padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}
-              >
-                Sair
-              </button>
-            </div>
-          </div>
+      <Card className={styles.banner}>
+        <Avatar
+          src={user?.avatar_url ? apiUrl(user.avatar_url) : undefined}
+          name={user?.name}
+          alt="Foto de perfil"
+          size="xl"
+        />
+        <div className={styles.identity}>
+          <h2 className={styles.name}>{user?.name}</h2>
+          <p className={styles.role}>{user?.job_title}</p>
+          <p className={styles.email}>{user?.email}</p>
         </div>
-      </div>
+        <div className={styles.photo}>
+          <input
+            ref={fileInputRef}
+            id={fileId}
+            type="file"
+            accept={AVATAR_ACCEPT}
+            className="sr-only"
+            aria-label="Alterar foto"
+            onChange={handleFileChange}
+            tabIndex={-1}
+          />
+          <Button variant="secondary" onClick={() => fileInputRef.current?.click()} loading={uploading}>
+            Alterar foto
+          </Button>
+          <span className={styles.photoHint}>PNG, JPG ou WebP, até 2 MB</span>
+        </div>
+      </Card>
+
+      <Card as="form" onSubmit={handleSave} className={styles.details} aria-labelledby="info-pessoal">
+        <div className={styles.detailsHead}>
+          <h2 id="info-pessoal" className={styles.sectionTitle}>Informações pessoais</h2>
+          {editing ? (
+            <div className={styles.actions}>
+              <Button variant="ghost" onClick={() => setEditing(false)} disabled={saving}>Cancelar</Button>
+              <Button type="submit" variant="primary" loading={saving}>Salvar</Button>
+            </div>
+          ) : (
+            <Button variant="secondary" onClick={startEditing}>Editar</Button>
+          )}
+        </div>
+
+        {editing ? (
+          <div className={styles.grid}>
+            {FIELDS.map(({ key, label, type, autoComplete }) => (
+              <Field key={key} label={label}>
+                <Input
+                  type={type}
+                  autoComplete={autoComplete}
+                  value={form[key]}
+                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                />
+              </Field>
+            ))}
+          </div>
+        ) : (
+          <dl className={styles.grid}>
+            {FIELDS.map(({ key, label }) => (
+              <div key={key} className={styles.item}>
+                <dt>{label}</dt>
+                <dd>{user?.[key] || <span className={styles.empty}>Não informado</span>}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </Card>
+
+      <Card className={styles.session}>
+        <div>
+          <h2 className={styles.sectionTitle}>Sessão</h2>
+          <p className={styles.muted}>Sair encerra a sessão neste navegador.</p>
+        </div>
+        <Button
+          variant="ghost"
+          icon={<LogoutIcon size={16} />}
+          className={styles.logout}
+          onClick={() => {
+            logout();
+            navigate('/');
+          }}
+        >
+          Sair da conta
+        </Button>
+      </Card>
     </div>
   );
 }

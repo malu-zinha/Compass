@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { apiUrl } from '../../api/client';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import { Avatar } from '../ui';
 import { ChevronDownIcon, LogoutIcon, SettingsIcon, UserIcon } from '../icons';
@@ -78,7 +79,7 @@ export default function AccountMenu({ onNavigate }) {
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen((o) => !o)}
       >
-        <Avatar src={user?.avatar_url} name={user?.name} size="md" />
+        <Avatar src={user?.avatar_url ? apiUrl(user.avatar_url) : undefined} name={user?.name} size="md" />
         <span className={styles.who}>
           <span className={styles.name}>{user?.name}</span>
           <span className={styles.role}>{user?.job_title}</span>

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { PageHeader } from '../../components/layout';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import { useUserSettings } from '../../auth/SettingsContext';
-import './SettingsPage.css';
-import { useToast } from '../../components/ui';
+import { Button, Card, Select, Switch, useToast } from '../../components/ui';
+import styles from './SettingsPage.module.css';
 
 const INTERVAL_OPTIONS = [20, 40, 60, 90, 120];
 const LANGUAGE_OPTIONS = [
@@ -12,163 +12,130 @@ const LANGUAGE_OPTIONS = [
   ['es', 'Español'],
 ];
 
+/*
+ * Uma configuração: rótulo e descrição à esquerda, controle à direita. É um
+ * role="group" nomeado pelo rótulo, então leitor de tela e testes acham o
+ * controle pelo nome da configuração, sem depender de classe.
+ */
+function SettingRow({ label, description, children }) {
+  const id = useId();
+  return (
+    <div role="group" aria-labelledby={`${id}-label`} aria-describedby={`${id}-desc`} className={styles.row}>
+      <div className={styles.info}>
+        <span id={`${id}-label`} className={styles.label}>{label}</span>
+        <span id={`${id}-desc`} className={styles.description}>{description}</span>
+      </div>
+      <div className={styles.control}>{children}</div>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  const id = useId();
+  return (
+    <Card as="section" padding="none" aria-labelledby={id} className={styles.section}>
+      <h2 id={id} className={styles.sectionTitle}>{title}</h2>
+      {children}
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   const toast = useToast();
   const { settings, saveSettings } = useUserSettings();
   const [form, setForm] = useState(settings);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { setForm(settings); }, [settings]);
 
   const handleChange = (key, value) => {
     setForm({ ...form, [key]: value });
-    setSaved(false);
   };
 
   const handleSaveSettings = async () => {
+    setSaving(true);
     try {
       await saveSettings(form);
-      setSaved(true);
+      toast.success('Configurações salvas.');
     } catch (error) {
       toast.error(error.detail || 'Não foi possível salvar as configurações.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="settings-page">
+    <div className={styles.page}>
       <PageHeader title="Configurações" />
 
-      <div className="settings-content">
-        <div className="settings-container">
+      <Section title="Aparência">
+        <SettingRow
+          label="Tema"
+          description={'Vale na hora e fica salvo neste dispositivo. "Sistema" acompanha o claro ou escuro do seu computador.'}
+        >
+          <ThemeSwitcher />
+        </SettingRow>
+      </Section>
 
-          <section className="settings-section" aria-labelledby="aparencia-titulo">
-            <h2 id="aparencia-titulo" className="section-title">Aparência</h2>
-            <div className="settings-grid">
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Tema</div>
-                  <div className="setting-description">
-                    Vale na hora e fica salvo neste dispositivo. &quot;Sistema&quot; acompanha o claro ou escuro do seu computador.
-                  </div>
-                </div>
-                <ThemeSwitcher />
-              </div>
-            </div>
-          </section>
+      <Section title="Datas e horários">
+        <SettingRow label="Fuso horário" description="Usado para exibir as datas das entrevistas.">
+          <Select aria-label="Fuso horário" value={form.timezone} onChange={(e) => handleChange('timezone', e.target.value)}>
+            <option value="America/Sao_Paulo">São Paulo (GMT-3)</option>
+            <option value="America/New_York">New York (GMT-5)</option>
+            <option value="Europe/London">London (GMT+0)</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label="Formato de data" description="Como as datas aparecem no app.">
+          <Select aria-label="Formato de data" value={form.date_format} onChange={(e) => handleChange('date_format', e.target.value)}>
+            <option value="DD/MM/YYYY">DD/MM/AAAA</option>
+            <option value="MM/DD/YYYY">MM/DD/AAAA</option>
+            <option value="YYYY-MM-DD">AAAA-MM-DD</option>
+          </Select>
+        </SettingRow>
+      </Section>
 
-          <div className="settings-section">
-            <h2 className="section-title">Configurações Gerais</h2>
+      <Section title="Entrevistas">
+        <SettingRow label="Sugerir perguntas" description="A IA sugere perguntas durante a entrevista ao vivo.">
+          <Switch
+            aria-label="Sugerir perguntas"
+            checked={form.suggest_questions}
+            onChange={(value) => handleChange('suggest_questions', value)}
+          />
+        </SettingRow>
+        <SettingRow label="Intervalo das sugestões" description="De quanto em quanto tempo chegam novas sugestões.">
+          <Select
+            aria-label="Intervalo das sugestões"
+            value={form.suggestion_interval_seconds}
+            onChange={(e) => handleChange('suggestion_interval_seconds', Number(e.target.value))}
+            disabled={!form.suggest_questions}
+          >
+            {INTERVAL_OPTIONS.map((seconds) => (
+              <option key={seconds} value={seconds}>{seconds} segundos</option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label="Idioma da transcrição" description="Idioma falado nas entrevistas.">
+          <Select
+            aria-label="Idioma da transcrição"
+            value={form.transcription_language}
+            onChange={(e) => handleChange('transcription_language', e.target.value)}
+          >
+            {LANGUAGE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label="Salvar anotações automaticamente" description="Grava as anotações enquanto você escreve, sem precisar salvar.">
+          <Switch
+            aria-label="Salvar anotações automaticamente"
+            checked={form.auto_save_notes}
+            onChange={(value) => handleChange('auto_save_notes', value)}
+          />
+        </SettingRow>
+      </Section>
 
-            <div className="settings-grid">
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Fuso Horário</div>
-                  <div className="setting-description">Fuso horário para exibição de datas</div>
-                </div>
-                <select
-                  className="setting-select"
-                  value={form.timezone}
-                  onChange={(e) => handleChange('timezone', e.target.value)}
-                >
-                  <option value="America/Sao_Paulo">São Paulo (GMT-3)</option>
-                  <option value="America/New_York">New York (GMT-5)</option>
-                  <option value="Europe/London">London (GMT+0)</option>
-                </select>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Formato de Data</div>
-                  <div className="setting-description">Como as datas serão exibidas</div>
-                </div>
-                <select
-                  className="setting-select"
-                  value={form.date_format}
-                  onChange={(e) => handleChange('date_format', e.target.value)}
-                >
-                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-section">
-            <h2 className="section-title">Entrevistas</h2>
-
-            <div className="settings-grid">
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Sugerir Perguntas</div>
-                  <div className="setting-description">Sugerir perguntas durante entrevista</div>
-                </div>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={form.suggest_questions}
-                    onChange={(e) => handleChange('suggest_questions', e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Intervalo das sugestões</div>
-                  <div className="setting-description">Frequência das sugestões de perguntas</div>
-                </div>
-                <select
-                  className="setting-select"
-                  value={form.suggestion_interval_seconds}
-                  onChange={(e) => handleChange('suggestion_interval_seconds', Number(e.target.value))}
-                >
-                  {INTERVAL_OPTIONS.map((seconds) => (
-                    <option key={seconds} value={seconds}>{seconds} segundos</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Idioma da transcrição</div>
-                  <div className="setting-description">Idioma usado para transcrever o áudio</div>
-                </div>
-                <select
-                  className="setting-select"
-                  value={form.transcription_language}
-                  onChange={(e) => handleChange('transcription_language', e.target.value)}
-                >
-                  {LANGUAGE_OPTIONS.map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <div className="setting-label">Salvar anotações automaticamente</div>
-                  <div className="setting-description">Salvar as anotações da entrevista sem precisar clicar em salvar</div>
-                </div>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={form.auto_save_notes}
-                    onChange={(e) => handleChange('auto_save_notes', e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-actions">
-            <button className="save-settings-btn" onClick={handleSaveSettings}>
-              Salvar Configurações
-            </button>
-          </div>
-          {saved && <p className="setting-description">Configurações salvas.</p>}
-        </div>
+      <div className={styles.footer}>
+        <Button variant="primary" onClick={handleSaveSettings} loading={saving}>Salvar configurações</Button>
       </div>
     </div>
   );

@@ -110,7 +110,7 @@ test('(d) escolher arquivo em Alterar foto chama uploadAvatar e renderiza a img'
   const { setUser } = renderProfile();
 
   const file = new File(['x'], 'foto.png', { type: 'image/png' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Alterar foto'), file);
 
   expect(uploadAvatar).toHaveBeenCalledWith(file);
   const img = await screen.findByAltText('Foto de perfil');
@@ -125,7 +125,7 @@ test('erro no upload da foto mostra o detail em toast', async () => {
   renderProfile();
 
   const file = new File(['x'], 'foto.png', { type: 'image/png' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Alterar foto'), file);
 
   expect(await screen.findByRole('alert')).toHaveTextContent('O arquivo excede o limite de 2 MB.');
 });

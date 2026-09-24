@@ -11,13 +11,13 @@ export function initials(name = '') {
 }
 
 /* Foto com fallback de iniciais; se a imagem falhar ao carregar, cai nas iniciais. */
-export default function Avatar({ src, name, size = 'md', className }) {
+export default function Avatar({ src, name, alt, size = 'md', className }) {
   const [failed, setFailed] = useState(false);
   const showImage = src && !failed;
   return (
     <span className={cx(styles.avatar, styles[size], className)}>
       {showImage ? (
-        <img src={src} alt={name ?? ''} onError={() => setFailed(true)} />
+        <img src={src} alt={alt ?? name ?? ''} onError={() => setFailed(true)} />
       ) : (
         <span role="img" aria-label={name}>
           <span aria-hidden="true">{initials(name)}</span>
