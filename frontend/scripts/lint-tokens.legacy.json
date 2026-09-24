@@ -1,8 +1,4 @@
 [
-  "src/features/interviews/live/QuestionsPanel.jsx",
-  "src/features/interviews/live/RecordPage.css",
-  "src/features/interviews/live/RecordPage.jsx",
-  "src/features/interviews/live/TranscriptPanel.jsx",
   "src/features/interviews/new/InterviewTypePage.css",
   "src/features/interviews/new/NewInterviewPage.css",
   "src/features/interviews/new/UploadAudioPage.css",

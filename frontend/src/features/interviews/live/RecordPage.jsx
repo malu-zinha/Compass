@@ -9,8 +9,8 @@ import { useLiveSession } from './useLiveSession';
 import { useMicrophonePcm } from './useMicrophonePcm';
 import TranscriptPanel from './TranscriptPanel';
 import QuestionsPanel from './QuestionsPanel';
-import './RecordPage.css';
-import { useToast } from '../../../components/ui';
+import { Button, Chip, Field, Modal, Spinner, Textarea, useToast } from '../../../components/ui';
+import styles from './RecordPage.module.css';
 
 const RECORDABLE_STATUSES = ['draft', 'recording'];
 const AUTOSAVE_DELAY_MS = 2000;
@@ -168,89 +168,71 @@ function RecordPage() {
     [loadedQuestions, session.suggestions, askedById],
   );
 
+  const isConnecting = session.status === 'connecting' || session.status === 'reconnecting';
+  const errorMessage = session.errorMessage || micError;
+
   return (
-    <div className="record-page-container">
-      {/* Transcrição Panel */}
-      <TranscriptPanel
-        turns={session.turns}
-        status={session.status}
-        errorMessage={session.errorMessage || micError}
-      />
-
-      {/* Right Panel */}
-      <div className="right-panel">
-        {/* Questions Section */}
-        <QuestionsPanel
-          questions={questions}
-          onToggleAsked={handleToggleAsked}
-          loading={loadingQuestions}
-          isLive={session.status === 'live'}
-        />
-
-        {/* Notes Section */}
-        <div className="notes-section">
-          <h3>Anotações</h3>
-          <textarea
-            className="notes-textarea"
-            value={notes}
-            onChange={handleNotesChange}
-            placeholder="Aqui serão anotados detalhes adicionais sobre a entrevista!"
-          />
+    <div className={styles.page}>
+      <div className={styles.bar}>
+        <div className={styles.status}>
+          {session.status === 'live' && (
+            <Chip tone="warning" icon={<span className={styles.pulse} aria-hidden="true" />}>Ao vivo</Chip>
+          )}
+          {isConnecting && <Chip icon={<Spinner size="sm" label="Conectando" />}>Conectando...</Chip>}
+          {errorMessage && <span className={styles.error} role="status">{errorMessage}</span>}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="footer-controls">
-        <div className="timer">
+        <span className={styles.timer} aria-label={`Tempo de gravação ${formatTime(recordingTime)}`}>
           {formatTime(recordingTime)}
-        </div>
-        <button
-          className="end-interview-btn"
-          onClick={handleEndInterview}
-          disabled={isProcessing}
-        >
+        </span>
+        <Button variant="danger" onClick={handleEndInterview} disabled={isProcessing} className={styles.end}>
           {isProcessing ? processingMessage || 'Processando...' : 'Encerrar gravação'}
-        </button>
+        </Button>
       </div>
 
-      {/* Overlay de processamento */}
-      {isProcessing && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '8px',
-            textAlign: 'center',
-            minWidth: '300px'
-          }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #3b82f6',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto'
-              }}></div>
+      <div className={styles.layout}>
+        <section className={styles.panel} aria-labelledby="transcricao-ao-vivo">
+          <h2 id="transcricao-ao-vivo" className={styles.panelTitle}>Transcrição</h2>
+          <TranscriptPanel turns={session.turns} />
+        </section>
+
+        <div className={styles.side}>
+          <section className={styles.panel} aria-labelledby="perguntas-ao-vivo">
+            <h2 id="perguntas-ao-vivo" className={styles.panelTitle}>Perguntas</h2>
+            <div className={styles.panelBody}>
+              <QuestionsPanel
+                questions={questions}
+                onToggleAsked={handleToggleAsked}
+                loading={loadingQuestions}
+                isLive={session.status === 'live'}
+              />
             </div>
-            <p style={{ margin: 0, fontSize: '1rem', color: '#374151' }}>
-              {processingMessage || 'Processando entrevista...'}
-            </p>
-          </div>
+          </section>
+
+          <section className={`${styles.panel} ${styles.notesPanel}`}>
+            <div className={styles.panelBody}>
+              <Field
+                label="Anotações"
+                hint={autoSaveNotes ? 'Salvas automaticamente enquanto você escreve.' : 'Salvas ao encerrar a gravação.'}
+                className={styles.notesField}
+              >
+                <Textarea
+                  value={notes}
+                  onChange={handleNotesChange}
+                  placeholder="Aqui serão anotados detalhes adicionais sobre a entrevista!"
+                  className={styles.notes}
+                />
+              </Field>
+            </div>
+          </section>
         </div>
-      )}
+      </div>
+
+      <Modal open={isProcessing} title="Finalizando a entrevista" size="sm" dismissible={false} onClose={() => {}}>
+        <div className={styles.processing}>
+          <Spinner size="lg" label={processingMessage || 'Processando entrevista...'} />
+          <p>{processingMessage || 'Processando entrevista...'}</p>
+        </div>
+      </Modal>
     </div>
   );
 }

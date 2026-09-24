@@ -1,0 +1,205 @@
+/* Tela cheia abaixo do cabeçalho do fluxo: tudo cabe sem rolar a página. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: calc(100dvh - var(--header-height));
+  padding: var(--space-4);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-6) var(--space-8); }
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.status {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  animation: pulse 1.4s var(--ease-in-out) infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.25; }
+}
+
+.error {
+  color: var(--color-danger-fg);
+  font-size: var(--text-sm);
+}
+
+.timer {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.layout {
+  display: grid;
+  flex: 1;
+  gap: var(--space-4);
+  min-height: 0;
+}
+@media (min-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); }
+}
+
+.side {
+  display: grid;
+  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.panelTitle {
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-base);
+}
+
+.panelBody {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4) var(--space-5);
+  overflow-y: auto;
+}
+
+/* Transcrição */
+.transcript {
+  flex: 1;
+  min-height: 240px;
+  padding: var(--space-5);
+  overflow-y: auto;
+}
+
+.transcriptEmpty,
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.transcriptEmpty { padding-top: var(--space-12); }
+
+.transcriptText {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+}
+
+.interim { color: var(--text-subtle); }
+
+.typing { animation: pulse 1s var(--ease-in-out) infinite; }
+
+/* Perguntas */
+.questionsLoading { display: grid; gap: var(--space-3); }
+.questionSkeleton { height: 72px; }
+
+.questions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+.question:hover { border-color: var(--border-strong); }
+
+.question[aria-pressed='true'] {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+}
+.question[aria-pressed='true'] .questionText {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-subtle);
+}
+
+.questionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.askedMark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-full);
+  color: transparent;
+}
+.question[aria-pressed='true'] .askedMark {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: var(--text-on-accent);
+}
+
+.questionText { line-height: var(--leading-normal); }
+
+/* Anotações */
+.notesPanel .panelBody { display: flex; }
+.notesField { flex: 1; }
+.notes { flex: 1; min-height: 120px; resize: none; }
+
+.processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  text-align: center;
+}
+.processing p { margin: 0; color: var(--text-muted); }
+
+/* No celular a página rola: painéis empilhados em altura natural. */
+@media (max-width: 959px) {
+  .page { height: auto; min-height: calc(100dvh - var(--header-height)); }
+  .side { grid-template-rows: auto auto; }
+  .transcript { max-height: 50vh; }
+}
