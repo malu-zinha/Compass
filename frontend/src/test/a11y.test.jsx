@@ -102,6 +102,7 @@ const { default: LandingPage } = await import('../features/landing/LandingPage')
 const { default: HomePage } = await import('../features/home/HomePage');
 const { default: VagasPage } = await import('../features/vagas/lista/VagasPage');
 const { default: VagaEditorPage } = await import('../features/vagas/editor/VagaEditorPage');
+const { default: VagaPage } = await import('../features/vagas/pagina/VagaPage');
 const { default: PerguntasPage } = await import('../features/perguntas/PerguntasPage');
 const { default: EntrevistasPage } = await import('../features/entrevistas/lista/EntrevistasPage');
 const { default: ComparePage } = await import('../features/entrevistas/comparar/ComparePage');
@@ -140,7 +141,17 @@ describe('acessibilidade das telas (axe)', () => {
     await expectAccessible(container);
   });
 
-  it('Editor de cargo', async () => {
+  it.each([
+    ['candidatos', 'Ranking de candidatos da vaga'],
+    ['perguntas', 'Por que esta vaga?'],
+    ['perfil', 'Autônoma'],
+  ])('Página da vaga — aba %s', async (aba, ready) => {
+    const { container } = renderAt(<VagaPage />, '/vagas/:id', `/vagas/3?aba=${aba}`);
+    await screen.findAllByText(ready);
+    await expectAccessible(container);
+  });
+
+  it('Editor de vaga', async () => {
     const { container } = renderAt(<VagaEditorPage />, '/vagas/:id/editar', '/vagas/3/editar');
     await screen.findByDisplayValue('Frontend');
     await expectAccessible(container);
