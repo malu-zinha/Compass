@@ -51,20 +51,27 @@ Os itens bloqueantes já foram corrigidos na própria branch.
 - `formatDuration(0)` devolve "N/A" em vez de "0s".
 - Duas vulnerabilidades altas do `npm audit` em dependências de desenvolvimento (cadeia do Vite).
 
-## Fase de design (mudanças visuais, conscientemente adiadas)
+## Fase de design — concluída (branch `redesign/frontend`)
 
-- 81 cores hex diferentes nos CSS e quase nenhum uso de variáveis: falta um `tokens.css`.
-- Três abordagens de estilo convivendo (CSS global por página, CSS Modules e estilos inline) e classes globais com o mesmo nome em arquivos diferentes.
-- 33 `alert()`/`confirm()` a serem trocados por toast e modal.
-- Emojis no lugar de ícones (📊, 💼, ⏸) e `PauseIcon` sem uso.
-- `.modal-btn-voltar` sem estilo `:disabled`, `.modal-footer` sem espaçamento entre botões, input de edição do modal sem classe, `.type-card.disabled` sem regra.
-- Página Comparar usa grade inline em vez de uma classe `.compare-grid`; rótulos reaproveitam o chip verde de "positivos".
-- Destaque da fala ativa some nos silêncios e não recentraliza após avançar o áudio.
-- Typo "disponíveleis" no banner do cargo.
+Tudo o que estava listado aqui foi resolvido pelo redesign:
+
+- Cores, fontes, espaçamentos, raios, sombras e movimento vêm de `frontend/src/styles/tokens.css`, com temas claro, escuro e "sistema". `npm run lint:tokens` falha se aparecer cor ou fonte literal fora dele (a lista legada está vazia) e `npm run check:contrast` valida os pares de cor em WCAG AA nos dois temas; os dois rodam no CI.
+- Uma abordagem de estilo só: CSS Modules colocalizados. Os únicos CSS globais são `tokens.css` e `base.css`; não há mais classes globais colididas nem `!important` de cor.
+- Os 34 `alert()`/`confirm()` viraram toast (`useToast`) e `ConfirmDialog` (`useConfirm`).
+- Emojis trocados por ícones; `PauseIcon` em uso no player; ícones herdam `currentColor`.
+- Estados `:disabled` em todas as primitivas (`components/ui`); modais sobre o `Modal` acessível.
+- Comparar tem CSS próprio e colunas de verdade; pontos fortes e de atenção têm tons próprios.
+- O destaque da fala ativa permanece nos silêncios e recentraliza ao avançar o áudio (e o horário de cada fala pula o player para ela).
+- Typo "disponíveleis" corrigido.
+
+Ficou de fora, de propósito:
+
+- `eslint-plugin-jsx-a11y` não declara suporte ao ESLint 10 usado aqui; em vez de forçar com `--legacy-peer-deps`, a acessibilidade é verificada pelo axe (`src/test/a11y.test.jsx`) em cada tela principal. Vale adicionar o plugin quando ele suportar ESLint 10.
+- Teste visual automatizado (Playwright/Storybook) continua fora do escopo.
 
 ## Verificações que dependem de uma pessoa
 
-- Comparar todas as telas com a `main` num navegador (as revisões compararam classes e markup, não pixels).
+- Percorrer as telas nos dois temas num navegador, com teclado e em largura de celular (375px), e com `prefers-reduced-motion` ligado.
 - Gravar uma entrevista ao vivo pelo microfone de ponta a ponta, incluindo reconexão e duas abas na mesma entrevista.
 - Apagar as 18 branches remotas já mergeadas no GitHub.
 - Trocar as chaves de API que foram coladas em conversa.
