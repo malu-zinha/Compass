@@ -30,9 +30,26 @@ Assistente inteligente que auxilia o entrevistador durante a entrevista:
 - Marcação de perguntas feitas durante a entrevista
 
 ### 4. Comparação de Candidatos
-- Seleção de 2 a 3 entrevistas concluídas do **mesmo cargo**
-- Página lado a lado com os resumos de cada candidato
+- Seleção de 2 a 3 entrevistas concluídas da **mesma vaga**, a partir da página da vaga
+- Matriz com a pontuação geral e por competência de cada candidato, com o maior valor de cada linha destacado
 - Botão "Gerar parecer da IA", que compara os candidatos e sugere um ranking (o parecer não é salvo)
+
+### Como o app se organiza
+
+A vaga é o centro: cada vaga reúne o ranking dos seus candidatos, as perguntas dela e o perfil que orienta a análise.
+
+| Página | Endereço | O que tem |
+|---|---|---|
+| Início | `/inicio` | O que precisa de atenção (falhas, em processamento), concluídas recentes e o resumo de cada vaga |
+| Entrevistas | `/entrevistas` | Todas as entrevistas em tabela, com filtros por vaga, status e nome |
+| Vagas | `/vagas` | Lista das vagas com número de entrevistas e melhor pontuação |
+| Vaga | `/vagas/:id` | Abas Candidatos (ranking e comparar), Perguntas e Perfil da vaga |
+| Detalhe | `/entrevista/:id` | Parecer, competências, pontos, perguntas, perfil e anotações, com a transcrição ao lado |
+| Perguntas gerais | `/perguntas` | Perguntas que valem para toda entrevista |
+| Minha conta | `/conta` | Perfil e preferências (inclui o tema claro/escuro) |
+| Nova entrevista | `/nova-entrevista` | Candidato, vaga e formato numa tela; depois gravar ao vivo ou enviar o áudio |
+
+Endereços antigos (`/cargos`, `/ranking`, `/perfil`, `/configuracoes`, …) redirecionam para os novos.
 
 ---
 

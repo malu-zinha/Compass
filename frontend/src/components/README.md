@@ -4,7 +4,7 @@
 components/
 ├── ui/       # Primitivas de interface — base de todas as telas
 ├── brand/    # Logo (mark, full, lockup)
-├── layout/   # AppHeader, Sidebar, AccountMenu, PageHeader
+├── layout/   # AppHeader, Sidebar, AccountMenu, PageHeader (título + caminho + ações)
 ├── icons/    # Ícones SVG
 └── index.js
 ```
@@ -36,8 +36,11 @@ import { Button, Card, Field, Input, useToast, useConfirm } from '../components/
 | `Modal` | `open`, `onClose`, `title`, `footer`; foco preso, Esc, retorno de foco |
 | `useConfirm()` | `await confirm({ title, message, confirmLabel, tone })` → boolean |
 | `useToast()` | `toast.success(msg)`, `toast.error(msg)`, `toast.info(msg)` |
-| `Tabs` | `items=[{ id, label, content }]`, `label`; setas, Home, End |
-| `Accordion` | `title`, `defaultOpen` |
+| `Tabs` | `items=[{ id, label, content }]`, `label`, `value`/`onChange` (com `useTabParam` fica na URL) |
+| `DataTable` | `columns`, `rows`, `rowHref` (linha clicável), `sort`/`onSortChange`; vira cartões no celular |
+| `FilterBar`, `SegmentedControl` | barra de filtros e escolha única entre poucas opções |
+| `Breadcrumbs` | níveis acima da página; use pela prop `breadcrumbs` do `PageHeader` |
+| `SectionIndex` | índice de página longa com a seção visível marcada |
 | `Skeleton`, `Spinner` | carregamento |
 | `EmptyState`, `ErrorPanel`, `ErrorBoundary` | vazio e erro |
 | `ScoreMeter` | `score` 0–1000, `variant` ring · bar; cor pela faixa (`lib/score.js`) |
@@ -46,5 +49,19 @@ import { Button, Card, Field, Input, useToast, useConfirm } from '../components/
 `ToastProvider` e `ConfirmProvider` já envolvem o app em `main.jsx` e os testes em
 `src/test/render.jsx` (`TestProviders`).
 
-Verde e vermelho são **só semânticos** (sucesso/erro, score alto/baixo). Azul é a marca;
-âmbar é "em andamento / atenção".
+## Identidade
+
+- **Sem cor de marca:** a marca é tinta — preto (`#1A1A1A`) no claro, papel (`#F4F2EE`) no escuro. Botão
+  principal, logo e títulos usam tinta; os neutros são quentes ("papel").
+- **Laranja `#DB3F0F` é detalhe, nunca estado:** item ativo da sidebar, aba selecionada, agulha da logo,
+  numerais e realces. Em texto pequeno use `--color-accent-fg` (o laranja puro fica abaixo de AA).
+- **Semântica:** verde = deu certo / forte; vermelho carmim = erro / fraco / destrutivo; azul `#0D6FBA` =
+  informação, em andamento, médio, links e foco do teclado.
+- **Tipografia:** Fraunces nos títulos (eixos SOFT e tamanho óptico), Source Sans 3 no corpo, com algarismos
+  tabulares em todo o app.
+
+## Rotas
+
+Nunca escreva endereço literal: use `src/app/paths.js` (`paths.vaga(id, 'perguntas')`,
+`paths.entrevista(id)`, `paths.comparar(vagaId, ids)`…). Estado de tela que vale compartilhar (filtros,
+aba) mora na URL via `useUrlFilters` / `useTabParam` (`src/lib/urlState.js`).
