@@ -3,7 +3,7 @@ import styles from './Logo.module.css';
 /*
  * A marca do Compass: um anel aberto a nordeste e uma agulha cuja ponta norte
  * sai pela abertura — direção, não só orientação. O anel herda currentColor;
- * a metade norte da agulha usa a cor de marca e a sul fica esmaecida, então o
+ * a metade norte da agulha é o laranja de detalhe e a sul fica esmaecida, então o
  * símbolo funciona nos dois temas sem duplicar arquivo.
  *
  * Mesma geometria de public/favicon.svg — mudou aqui, muda lá.

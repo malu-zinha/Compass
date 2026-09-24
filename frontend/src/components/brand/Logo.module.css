@@ -6,7 +6,7 @@
   line-height: 1;
 }
 
-.north { fill: var(--color-primary); }
+.north { fill: var(--color-accent); }
 .south { fill: currentColor; opacity: 0.35; }
 
 .wordmark {
