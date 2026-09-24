@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAudioUrl } from '../../../api/interviews';
 
-// Encontra o índice do trecho da transcrição correspondente ao tempo atual
-// (em ms). Timestamps da API são sempre em milissegundos.
-function findActiveIndex(transcript, currentTimeMs) {
+// Índice da fala que está tocando em `currentTimeMs` (timestamps da API em ms).
+// Nos silêncios entre duas falas, continua na última que começou: o destaque
+// não some no meio da conversa.
+export function findActiveIndex(transcript, currentTimeMs) {
   if (!transcript || transcript.length === 0) return null;
+  let active = null;
   for (let i = 0; i < transcript.length; i += 1) {
-    const start = transcript[i].start_ms ?? 0;
-    const end = transcript[i].end_ms ?? 0;
-    if (currentTimeMs >= start && currentTimeMs <= end) return i;
-    if (i === transcript.length - 1 && currentTimeMs > end) return i;
+    if ((transcript[i].start_ms ?? 0) <= currentTimeMs) active = i;
+    else break;
   }
-  return null;
+  return active;
 }
 
 // Controla o elemento <audio>: busca a URL assinada, play/pause, seek,

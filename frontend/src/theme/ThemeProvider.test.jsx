@@ -86,3 +86,25 @@ describe('ThemeProvider', () => {
     console.error.mockRestore();
   });
 });
+
+describe('crossfade de tema', () => {
+  it('só liga na troca feita pelo usuário, e desliga sozinho', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(document.documentElement).not.toHaveClass('theme-changing');
+
+    await userEvent.click(screen.getByRole('button', { name: 'escuro' }));
+    expect(document.documentElement).toHaveClass('theme-changing');
+    act(() => vi.advanceTimersByTime(400));
+    expect(document.documentElement).not.toHaveClass('theme-changing');
+    vi.useRealTimers();
+  });
+});
+
+describe('crossfade de tema no StrictMode', () => {
+  it('não liga ao montar, mesmo com o efeito rodando duas vezes', async () => {
+    const { StrictMode } = await import('react');
+    render(<StrictMode><ThemeProvider><Probe /></ThemeProvider></StrictMode>);
+    expect(document.documentElement).not.toHaveClass('theme-changing');
+  });
+});

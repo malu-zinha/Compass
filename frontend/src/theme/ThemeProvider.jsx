@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   applyTheme,
   isPreference,
@@ -27,8 +27,22 @@ export function ThemeProvider({ children }) {
   const theme = resolveTheme(preference, system);
 
   // Layout effect: o atributo muda no mesmo frame da troca, sem um quadro no tema antigo.
+  // Compara com o tema anterior (e não "primeira execução"), para o StrictMode,
+  // que roda o efeito duas vezes ao montar, não disparar o crossfade no carregamento.
+  const previousTheme = useRef(null);
   useLayoutEffect(() => {
+    const root = document.documentElement;
+    let timer;
+    if (previousTheme.current && previousTheme.current !== theme) {
+      root.classList.add('theme-changing');
+      timer = setTimeout(() => root.classList.remove('theme-changing'), 300);
+    }
+    previousTheme.current = theme;
     applyTheme(document, theme);
+    return () => {
+      clearTimeout(timer);
+      root.classList.remove('theme-changing');
+    };
   }, [theme]);
 
   // Assina sempre, mesmo com escolha explícita, para que voltar a "sistema"

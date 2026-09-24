@@ -47,7 +47,11 @@ export default function ScoreMeter({
   }
 
   return (
-    <div className={cx(styles.ring, styles[size], styles[band.tone], className)} {...meterProps}>
+    <div
+      className={cx(styles.ring, styles[size], styles[band.tone], className)}
+      style={{ '--circumference': CIRCUMFERENCE }}
+      {...meterProps}
+    >
       <svg viewBox="0 0 100 100" aria-hidden="true">
         <circle className={styles.ringTrack} cx="50" cy="50" r={RADIUS} />
         <circle

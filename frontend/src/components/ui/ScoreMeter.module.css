@@ -41,6 +41,12 @@
   stroke: var(--meter-color);
   stroke-linecap: round;
   transition: stroke-dashoffset var(--duration-slow) var(--ease-out);
+  animation: draw 700ms var(--ease-out) both;
+}
+
+/* Na primeira pintura o anel "enche" até o valor; depois, mudanças transicionam. */
+@keyframes draw {
+  from { stroke-dashoffset: var(--circumference); }
 }
 
 .ringCenter {
@@ -85,4 +91,9 @@
   border-radius: inherit;
   background: var(--meter-color);
   transition: width var(--duration-slow) var(--ease-out);
+  animation: grow 600ms var(--ease-out) both;
+}
+
+@keyframes grow {
+  from { width: 0; }
 }

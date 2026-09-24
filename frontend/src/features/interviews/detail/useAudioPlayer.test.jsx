@@ -83,3 +83,17 @@ test('falha ao reproduzir avisa por onError', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Reproduzir' }));
   await waitFor(() => expect(onError).toHaveBeenCalledWith('Não foi possível reproduzir o áudio.'));
 });
+
+test('findActiveIndex mantém a última fala durante o silêncio', async () => {
+  const { findActiveIndex } = await import('./useAudioPlayer');
+  const t = [
+    { start_ms: 0, end_ms: 2000 },
+    { start_ms: 5000, end_ms: 8000 },
+  ];
+  expect(findActiveIndex(t, 1000)).toBe(0);
+  expect(findActiveIndex(t, 3500)).toBe(0); // silêncio entre as falas
+  expect(findActiveIndex(t, 6000)).toBe(1);
+  expect(findActiveIndex(t, 99000)).toBe(1);
+  expect(findActiveIndex([{ start_ms: 500, end_ms: 900 }], 100)).toBeNull();
+  expect(findActiveIndex([], 100)).toBeNull();
+});
