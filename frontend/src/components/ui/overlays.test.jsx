@@ -58,6 +58,17 @@ describe('Modal', () => {
   });
 });
 
+describe('Modal não dispensável', () => {
+  it('não tem X e ignora Esc', async () => {
+    const onClose = vi.fn();
+    render(<Modal open onClose={onClose} title="Finalizando" dismissible={false}><p>aguarde</p></Modal>);
+    expect(screen.queryByRole('button', { name: 'Fechar diálogo' })).not.toBeInTheDocument();
+    screen.getByRole('dialog').focus();
+    await userEvent.keyboard('{Escape}');
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
 function ConfirmHarness({ onResult }) {
   const confirm = useConfirm();
   return (

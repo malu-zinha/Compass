@@ -22,7 +22,6 @@ vi.mock('../../../auth/SettingsContext', () => ({ useUserSettings: () => setting
 vi.mock('./useLiveSession', () => ({ useLiveSession: vi.fn() }));
 vi.mock('./useMicrophonePcm', () => ({ useMicrophonePcm: vi.fn() }));
 
-const NOTES_PLACEHOLDER = 'Aqui serão anotados detalhes adicionais sobre a entrevista!';
 const registered = { id: 11, text: 'Fale sobre você', source: 'registered', based_on: '', asked: false };
 let session;
 let mic;
@@ -77,7 +76,7 @@ test('liga o microfone quando a sessão fica ao vivo e usa o token da sessão', 
   expect(useLiveSession).toHaveBeenCalledWith('7', 'tok', expect.any(Object));
   expect(useMicrophonePcm).toHaveBeenCalledWith({ onChunk: session.sendAudio, onError: expect.any(Function) });
   expect(mic.start).toHaveBeenCalledTimes(1);
-  expect(screen.getByText('● AO VIVO')).toBeInTheDocument();
+  expect(screen.getByText('Ao vivo')).toBeInTheDocument();
 });
 
 test('clicar na pergunta marca como feita', async () => {
@@ -85,7 +84,7 @@ test('clicar na pergunta marca como feita', async () => {
   await userEvent.click(await screen.findByText('Fale sobre você'));
 
   expect(setQuestionAsked).toHaveBeenCalledWith('7', 11, true);
-  expect(screen.getByText('Fale sobre você').closest('.question-item')).toHaveClass('selected');
+  expect(screen.getByRole('button', { name: /Fale sobre você/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('lista cadastradas e sugestões da IA sem duplicar ids', async () => {
@@ -106,7 +105,7 @@ test('Encerrar gravação para a sessão e o microfone, salva as anotações e v
   settingsValue.settings = { auto_save_notes: false };
   const router = renderRecordPage();
   await screen.findByText('Fale sobre você');
-  fireEvent.change(screen.getByPlaceholderText(NOTES_PLACEHOLDER), { target: { value: 'Boa comunicação' } });
+  fireEvent.change(screen.getByLabelText('Anotações'), { target: { value: 'Boa comunicação' } });
 
   await userEvent.click(screen.getByRole('button', { name: 'Encerrar gravação' }));
 
@@ -151,7 +150,7 @@ test('com auto_save_notes, salva as anotações 2s depois de digitar', async () 
   renderRecordPage();
   await screen.findByText('Fale sobre você');
 
-  fireEvent.change(screen.getByPlaceholderText(NOTES_PLACEHOLDER), { target: { value: 'Ótimo' } });
+  fireEvent.change(screen.getByLabelText('Anotações'), { target: { value: 'Ótimo' } });
   act(() => { vi.advanceTimersByTime(1500); });
   expect(updateInterview).not.toHaveBeenCalled();
   act(() => { vi.advanceTimersByTime(600); });
@@ -164,7 +163,7 @@ test('sem auto_save_notes, não salva as anotações sozinho', async () => {
   renderRecordPage();
   await screen.findByText('Fale sobre você');
 
-  fireEvent.change(screen.getByPlaceholderText(NOTES_PLACEHOLDER), { target: { value: 'Ótimo' } });
+  fireEvent.change(screen.getByLabelText('Anotações'), { target: { value: 'Ótimo' } });
   act(() => { vi.advanceTimersByTime(5000); });
   expect(updateInterview).not.toHaveBeenCalled();
 });
@@ -175,7 +174,7 @@ test('mostra a mensagem de erro da sessão', async () => {
   renderRecordPage();
   await screen.findByText('Fale sobre você');
 
-  expect(screen.getByText('⚠ Conectando...')).toBeInTheDocument();
+  expect(screen.getByText('Conectando...')).toBeInTheDocument();
   expect(screen.getByText('Falha na transcrição.')).toBeInTheDocument();
   expect(mic.start).not.toHaveBeenCalled();
 });

@@ -10,6 +10,8 @@ const FOCUSABLE =
  * Diálogo modal acessível: foco vai para dentro ao abrir (primeiro campo do
  * corpo, ou initialFocusRef), Tab fica preso no diálogo, Esc e o X chamam
  * onClose, e o foco volta a quem abriu. O fundo não rola enquanto aberto.
+ * dismissible={false} é para espera bloqueante (ex.: finalizando a gravação):
+ * sem X, sem Esc, sem clique fora.
  */
 export default function Modal({
   open,
@@ -22,6 +24,7 @@ export default function Modal({
   role = 'dialog',
   initialFocusRef,
   closeOnOverlay = true,
+  dismissible = true,
   className,
 }) {
   const titleId = useId();
@@ -55,7 +58,7 @@ export default function Modal({
   const handleKeyDown = (event) => {
     if (event.key === 'Escape') {
       event.stopPropagation();
-      onClose?.();
+      if (dismissible) onClose?.();
       return;
     }
     if (event.key !== 'Tab') return;
@@ -79,7 +82,7 @@ export default function Modal({
     <div
       className={styles.overlay}
       onMouseDown={(e) => {
-        if (closeOnOverlay && e.target === e.currentTarget) onClose?.();
+        if (dismissible && closeOnOverlay && e.target === e.currentTarget) onClose?.();
       }}
     >
       <div
@@ -94,9 +97,11 @@ export default function Modal({
       >
         <header className={styles.header}>
           <h2 id={titleId} className={styles.title}>{title}</h2>
-          <button type="button" className={styles.close} onClick={onClose} aria-label="Fechar diálogo">
-            <span aria-hidden="true">×</span>
-          </button>
+          {dismissible && (
+            <button type="button" className={styles.close} onClick={onClose} aria-label="Fechar diálogo">
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
         </header>
         <div ref={bodyRef} className={styles.body}>
           {description && <p id={descId} className={styles.description}>{description}</p>}
