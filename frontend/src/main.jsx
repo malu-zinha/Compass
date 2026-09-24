@@ -2,16 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './app/App';
-import { AuthProvider } from './auth/AuthContext';
-import { SettingsProvider } from './auth/SettingsContext';
+import AppProviders from './app/AppProviders';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
-    </AuthProvider>
+    <AppProviders>
+      <App />
+    </AppProviders>
   </React.StrictMode>
 );

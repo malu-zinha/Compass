@@ -1,47 +1,50 @@
 # Componentes
 
-Estrutura organizada dos componentes reutilizáveis do projeto.
-
-## 📁 Estrutura
-
 ```
 components/
-├── layout/           # Componentes de layout (Header, Sidebar)
-├── common/           # Componentes comuns reutilizáveis (InfoModal)
-├── icons/            # Todos os ícones SVG
-└── index.js          # Exportação centralizada
+├── ui/       # Primitivas de interface — base de todas as telas
+├── brand/    # Logo (mark, full, lockup)
+├── layout/   # AppHeader, Sidebar, AccountMenu, PageHeader
+├── icons/    # Ícones SVG
+└── index.js
 ```
 
-## 🎯 Como Usar
+## Regras
 
-### Importação Direta
+- **Nenhuma cor, fonte ou sombra literal.** Tudo vem de `src/styles/tokens.css`.
+  `npm run lint:tokens` falha se aparecer hex, `rgb()`/`hsl()` ou `font-family` literal.
+- **Estilo em CSS Module colocalizado** (`Button.jsx` + `Button.module.css`).
+- **Toda primitiva aceita `className`** e repassa props extras ao elemento raiz.
+- **Ícones herdam `currentColor`**: a cor vem do CSS de quem usa, nunca de prop.
+  São decorativos (`aria-hidden`) por padrão.
+
+## ui/
+
 ```javascript
-import { Header, Sidebar } from '../components/layout';
-import { InfoModal } from '../components/common';
-import { CheckIcon, UserIcon } from '../components/icons';
+import { Button, Card, Field, Input, useToast, useConfirm } from '../components/ui';
 ```
 
-### Importação Geral
-```javascript
-import { Header, Sidebar, InfoModal, CheckIcon } from '../components';
-```
+| Primitiva | Uso |
+|---|---|
+| `Button` | `variant` primary · secondary · ghost · danger; `size` sm · md · lg; `loading`, `icon`, `iconOnly` (exige `aria-label`), `as` |
+| `Card` | `variant` flat · raised · interactive; `padding` none · sm · md · lg; `as` |
+| `Chip` | `tone` neutral · info · success · warning · danger; `onRemove` |
+| `StatusBadge` | `status` da entrevista → rótulo pt-BR e tom (`lib/status.js`) |
+| `Field` | rótulo, `hint`, `error` e `required`, ligados ao controle filho |
+| `Input`, `Textarea`, `Select` | controles; leem id e `aria-*` do `Field` |
+| `Checkbox`, `Switch` | `Switch` é `role="switch"`; `onChange(boolean)` |
+| `Modal` | `open`, `onClose`, `title`, `footer`; foco preso, Esc, retorno de foco |
+| `useConfirm()` | `await confirm({ title, message, confirmLabel, tone })` → boolean |
+| `useToast()` | `toast.success(msg)`, `toast.error(msg)`, `toast.info(msg)` |
+| `Tabs` | `items=[{ id, label, content }]`, `label`; setas, Home, End |
+| `Accordion` | `title`, `defaultOpen` |
+| `Skeleton`, `Spinner` | carregamento |
+| `EmptyState`, `ErrorPanel`, `ErrorBoundary` | vazio e erro |
+| `ScoreMeter` | `score` 0–1000, `variant` ring · bar; cor pela faixa (`lib/score.js`) |
+| `Avatar` | `src`, `name`; cai nas iniciais |
 
-## 📦 Componentes Disponíveis
+`ToastProvider` e `ConfirmProvider` já envolvem o app em `main.jsx` e os testes em
+`src/test/render.jsx` (`TestProviders`).
 
-### Layout
-- **Header** - Cabeçalho com título e botão de ação
-- **Sidebar** - Barra lateral de navegação
-
-### Common
-- **InfoModal** - Modal de informações
-
-### Icons
-Todos os ícones SVG do projeto estão disponíveis em `components/icons/`:
-- BriefcaseIcon, CalendarIcon, ChartIcon, CheckIcon
-- ChevronDownIcon, ChevronRightIcon, ClockIcon, CompareIcon
-- FileTextIcon, HomeIcon, InfoIcon
-- InterviewsIcon, JobsIcon, LogoutIcon, MenuIcon
-- MicrophoneIcon, PauseIcon, PlayIcon
-- PlusIcon, QuestionsIcon, SettingsIcon
-- UserIcon, VolumeIcon
-
+Verde e vermelho são **só semânticos** (sucesso/erro, score alto/baixo). Azul é a marca;
+âmbar é "em andamento / atenção".

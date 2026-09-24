@@ -81,7 +81,7 @@ O frontend estará disponível em `http://localhost:3000`.
 
 ### Primeiro acesso
 
-Não existem credenciais fixas. Crie sua conta pela tela de login, em **"Cadastre-se"**.
+Não existem credenciais fixas. Crie sua conta pela tela de entrada, em **"Criar conta"**.
 
 ### Testes
 
@@ -89,6 +89,13 @@ Não existem credenciais fixas. Crie sua conta pela tela de login, em **"Cadastr
 cd back && pytest
 cd ../frontend && npm test -- --run
 ```
+
+No frontend, além de `npm run lint` e dos testes, dois portões rodam no CI:
+
+- `npm run lint:tokens` — falha se aparecer cor (hex, `rgb()`, `hsl()`) ou `font-family` literal fora de `src/styles/tokens.css`. Todo estilo usa os tokens do design system.
+- `npm run check:contrast` — mede o contraste WCAG de cada par de tokens usado junto, nos temas claro e escuro, e falha abaixo de AA.
+
+O design system (tokens, temas, primitivas em `src/components/ui`) está descrito em `frontend/src/components/README.md`.
 
 ---
 
@@ -123,6 +130,7 @@ cd ../frontend && npm test -- --run
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:8000` | URL base da API do backend |
 | `VITE_WS_URL` | `ws://localhost:8000` | URL base do WebSocket do backend (entrevista ao vivo) |
+| `VITE_MAX_UPLOAD_MB` | `200` | Limite de upload de áudio checado no navegador; mantenha igual ao `MAX_UPLOAD_MB` do backend |
 
 ---
 

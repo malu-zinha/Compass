@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAudioUrl } from '../../../api/interviews';
 
-// Encontra o índice do trecho da transcrição correspondente ao tempo atual
-// (em ms). Timestamps da API são sempre em milissegundos.
-function findActiveIndex(transcript, currentTimeMs) {
+// Índice da fala que está tocando em `currentTimeMs` (timestamps da API em ms).
+// Nos silêncios entre duas falas, continua na última que começou: o destaque
+// não some no meio da conversa.
+export function findActiveIndex(transcript, currentTimeMs) {
   if (!transcript || transcript.length === 0) return null;
+  let active = null;
   for (let i = 0; i < transcript.length; i += 1) {
-    const start = transcript[i].start_ms ?? 0;
-    const end = transcript[i].end_ms ?? 0;
-    if (currentTimeMs >= start && currentTimeMs <= end) return i;
-    if (i === transcript.length - 1 && currentTimeMs > end) return i;
+    if ((transcript[i].start_ms ?? 0) <= currentTimeMs) active = i;
+    else break;
   }
-  return null;
+  return active;
 }
 
 // Controla o elemento <audio>: busca a URL assinada, play/pause, seek,
 // índice da mensagem ativa (para o auto-scroll da transcrição) e duração
 // (com fallback para audio_duration_seconds quando o áudio ainda não
 // reportou a própria duração).
-export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration) {
+export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration, { onError } = {}) {
   const audioRef = useRef(null);
   const hasRetriedRef = useRef(false);
   const [url, setUrl] = useState(null);
@@ -93,21 +93,18 @@ export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration) {
         await audio.play();
       }
     } catch {
-      alert('Não foi possível reproduzir o áudio.');
+      onError?.('Não foi possível reproduzir o áudio.');
     }
   };
 
-  const handleProgressClick = (event) => {
-    const progressBar = event.currentTarget;
-    const clickX = event.clientX - progressBar.getBoundingClientRect().left;
-    const width = progressBar.offsetWidth;
+  // Pula para `seconds` (barra de progresso, timestamps da transcrição).
+  const seek = (seconds) => {
     const audio = audioRef.current;
-    if (audio && duration && width > 0) {
-      const percentage = Math.min(Math.max(clickX / width, 0), 1);
-      audio.currentTime = percentage * duration;
-      setCurrentTime(audio.currentTime);
-      setActiveMessageIndex(findActiveIndex(transcript, audio.currentTime * 1000));
-    }
+    if (!audio || !Number.isFinite(seconds)) return;
+    const target = Math.min(Math.max(seconds, 0), duration || seconds);
+    audio.currentTime = target;
+    setCurrentTime(target);
+    setActiveMessageIndex(findActiveIndex(transcript, target * 1000));
   };
 
   return {
@@ -119,7 +116,7 @@ export function useAudioPlayer(id, hasAudio, transcript, fallbackDuration) {
     activeMessageIndex,
     audioError,
     togglePlayPause,
-    handleProgressClick,
+    seek,
     audioHandlers: {
       onTimeUpdate: handleTimeUpdate,
       onLoadedMetadata: handleLoadedMetadata,

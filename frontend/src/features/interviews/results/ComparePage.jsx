@@ -1,68 +1,76 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
-import { getInterview } from '../../../api/interviews';
 import { compareInterviews } from '../../../api/comparisons';
-import { scoreToPercent } from '../../../lib/format';
-// Mesmas classes de cartão do ranking; importado aqui para funcionar mesmo
-// quando esta é a primeira página carregada.
-import './ResultsPage.css';
+import { getInterview } from '../../../api/interviews';
+import { PageHeader } from '../../../components/layout';
+import { Button, Card, Chip, ScoreMeter, Skeleton, useToast } from '../../../components/ui';
+import { ChartIcon } from '../../../components/icons';
+import { SUBSCORES } from '../../../lib/score';
+import PointsList from './PointsList';
+import styles from './ComparePage.module.css';
 
 const MIN_COMPARE = 2;
 const MAX_COMPARE = 3;
-const SUBSCORES = [
-  ['technical', 'Técnico'],
-  ['communication', 'Comunicação'],
-  ['work_culture', 'Cultura de Trabalho'],
-  ['experience', 'Experiência'],
-];
 
 function parseIds(value) {
   const ids = (value || '').split(',').map(Number).filter((id) => Number.isInteger(id) && id > 0);
   return [...new Set(ids)];
 }
 
-function CardSection({ label, tone = 'positives', lines, bracket = false }) {
-  const items = lines && lines.length > 0 ? lines : ['Nenhuma informação coletada'];
-  return (
-    <div className="card-section">
-      <div className={`section-label ${tone}`}>{label}</div>
-      {items.map((line, idx) => (
-        <div key={idx} className="section-text">{bracket && lines?.length ? `[${line}]` : line}</div>
-      ))}
-    </div>
-  );
-}
-
-function CompareCard({ interview }) {
+function CompareColumn({ interview, leader }) {
   const analysis = interview.analysis || {};
   const subscores = analysis.score?.subscores || {};
   return (
-    <div className="interview-card">
-      <div className="card-header">
-        <h3 className="card-title">{interview.candidate_name}</h3>
-        <span className="card-email">{interview.position_name}</span>
-      </div>
-      <CardSection
-        label={`${scoreToPercent(interview.score)}% match`}
-        lines={SUBSCORES.map(([key, label]) => `${label}: ${scoreToPercent(subscores[key])}%`)}
-      />
-      <CardSection label="Pontos positivos" lines={analysis.positives} bracket />
-      <CardSection label="Pontos negativos" tone="negatives" lines={analysis.negatives} bracket />
-      <CardSection label="Habilidades" lines={analysis.skills} />
-      <CardSection
-        label="Aderência ao perfil ideal"
-        lines={analysis.ideal_profile_fit ? [analysis.ideal_profile_fit] : []}
-      />
-    </div>
+    <Card as="article" className={`${styles.column} ${leader ? styles.leader : ''}`}>
+      <header className={styles.columnHead}>
+        <div className={styles.identity}>
+          {leader && <Chip tone="info" className={styles.leaderChip}>Maior pontuação</Chip>}
+          <h3 className={styles.name}>{interview.candidate_name}</h3>
+          <span className={styles.meta}>{interview.position_name}</span>
+        </div>
+        <ScoreMeter score={interview.score} label={`Pontuação geral de ${interview.candidate_name}`} size="md" />
+      </header>
+
+      <section className={styles.block}>
+        <h4 className={styles.blockTitle}>Por competência</h4>
+        <div className={styles.bars}>
+          {SUBSCORES.map(([key, label]) => (
+            <ScoreMeter key={key} score={subscores[key]} label={label} variant="bar" />
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.block}>
+        <h4 className={styles.blockTitle}>Pontos fortes</h4>
+        <PointsList items={analysis.positives || []} empty="Nenhuma informação coletada" />
+      </section>
+
+      <section className={styles.block}>
+        <h4 className={styles.blockTitle}>Pontos de atenção</h4>
+        <PointsList items={analysis.negatives || []} tone="negative" empty="Nenhuma informação coletada" />
+      </section>
+
+      <section className={styles.block}>
+        <h4 className={styles.blockTitle}>Habilidades</h4>
+        {analysis.skills?.length ? (
+          <ul className={styles.chips}>{analysis.skills.map((s) => <li key={s}><Chip>{s}</Chip></li>)}</ul>
+        ) : (
+          <p className={styles.muted}>Nenhuma informação coletada</p>
+        )}
+      </section>
+
+      <section className={styles.block}>
+        <h4 className={styles.blockTitle}>Aderência ao perfil ideal</h4>
+        <p className={styles.text}>{analysis.ideal_profile_fit || 'Nenhuma informação coletada'}</p>
+      </section>
+    </Card>
   );
 }
 
-function ComparePage() {
+export default function ComparePage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { openSidebar } = useLayout();
   const idsParam = searchParams.get('ids');
   const ids = useMemo(() => parseIds(idsParam), [idsParam]);
   const validIds = ids.length >= MIN_COMPARE && ids.length <= MAX_COMPARE;
@@ -80,20 +88,16 @@ function ComparePage() {
     setLoading(true);
     setComparison(null);
     Promise.all(ids.map((id) => getInterview(id)))
-      .then((data) => {
-        if (active) setInterviews(data);
-      })
+      .then((data) => { if (active) setInterviews(data); })
       .catch((error) => {
         if (!active) return;
         console.error('Erro ao carregar entrevistas para comparar:', error);
-        alert(error.detail || 'Erro ao carregar as entrevistas. Tente novamente.');
+        toast.error(error.detail || 'Erro ao carregar as entrevistas. Tente novamente.');
         navigate('/ranking', { replace: true });
       })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [ids, validIds, navigate]);
+  }, [ids, validIds, navigate, toast]);
 
   const handleGenerate = async () => {
     try {
@@ -101,7 +105,7 @@ function ComparePage() {
       setComparison(await compareInterviews(ids));
     } catch (error) {
       console.error('Erro ao gerar parecer da IA:', error);
-      alert(error.detail || 'Erro ao gerar o parecer da IA. Tente novamente.');
+      toast.error(error.detail || 'Erro ao gerar o parecer da IA. Tente novamente.');
     } finally {
       setGenerating(false);
     }
@@ -111,53 +115,62 @@ function ComparePage() {
     interviews.find((item) => item.id === interviewId)?.candidate_name || `Entrevista ${interviewId}`
   );
 
-  if (!validIds || loading) {
-    return <div className="loading">Carregando...</div>;
-  }
-
+  const leaderId = interviews.reduce(
+    (best, item) => ((item.score ?? -1) > (best?.score ?? -1) ? item : best),
+    null,
+  )?.id;
   const ranking = comparison ? [...comparison.ranking].sort((a, b) => a.rank - b.rank) : [];
 
   return (
-    <div className="results-page">
-      <Header title="Comparar candidatos" onMenuClick={openSidebar} />
+    <div className={styles.page}>
+      <PageHeader title="Comparar candidatos" />
 
-      <div className="results-container" style={{ gridTemplateColumns: '1fr' }}>
-        <div
-          className="interviews-grid"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}
-        >
-          {interviews.map((interview) => (
-            <CompareCard key={interview.id} interview={interview} />
+      {!validIds || loading ? (
+        <div className={styles.columns} aria-busy="true">
+          {[0, 1, 2].slice(0, Math.max(ids.length, 2)).map((i) => (
+            <Skeleton key={i} variant="block" className={styles.skeleton} />
           ))}
         </div>
-
-        <div className="interviews-grid">
-          <button className="btn-ver-detalhes" onClick={handleGenerate} disabled={generating}>
-            {generating ? 'Gerando parecer...' : 'Gerar parecer da IA'}
-          </button>
-
-          {comparison && (
-            <div className="interview-card">
-              <div className="card-header">
-                <h3 className="card-title">Parecer da IA</h3>
-              </div>
-              <div className="card-section">
-                <div className="section-text">{comparison.summary}</div>
-              </div>
-              <div className="card-section">
-                <div className="section-label positives">Ranking</div>
-                {ranking.map((item) => (
-                  <div key={item.interview_id} className="section-text">
-                    {`${item.rank}. ${nameOf(item.interview_id)} — ${item.rationale}`}
-                  </div>
-                ))}
-              </div>
+      ) : (
+        <>
+          <section aria-labelledby="lado-a-lado">
+            <h2 id="lado-a-lado" className="sr-only">Candidatos lado a lado</h2>
+            <div className={styles.columns}>
+              {interviews.map((item) => (
+                <CompareColumn key={item.id} interview={item} leader={item.id === leaderId && item.score != null} />
+              ))}
             </div>
-          )}
-        </div>
-      </div>
+          </section>
+
+          <Card as="section" aria-labelledby="parecer" className={styles.verdict}>
+            <div className={styles.verdictHead}>
+              <div>
+                <h2 id="parecer" className={styles.verdictTitle}>Parecer da IA</h2>
+                <p className={styles.muted}>Uma leitura comparativa das entrevistas, com ranking justificado.</p>
+              </div>
+              <Button variant="primary" icon={<ChartIcon size={16} />} onClick={handleGenerate} loading={generating}>
+                {generating ? 'Gerando parecer...' : comparison ? 'Gerar de novo' : 'Gerar parecer da IA'}
+              </Button>
+            </div>
+
+            {comparison && (
+              <div className={styles.verdictBody}>
+                <p className={styles.summary}>{comparison.summary}</p>
+                <ol className={styles.ranking}>
+                  {ranking.map((item) => (
+                    <li key={item.interview_id}>
+                      <span className={`${styles.rank} ${item.rank === 1 ? styles.first : ''}`}>{item.rank}</span>
+                      <span>
+                        <strong>{nameOf(item.interview_id)}</strong> — {item.rationale}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }
-
-export default ComparePage;

@@ -19,10 +19,10 @@ test('mantém Continuar desabilitado até marcar o consentimento e salva o rascu
 
   renderWithRouter(<NewInterviewPage />, '/nova-entrevista', ['/tipo-entrevista']);
 
-  await userEvent.type(screen.getByLabelText('Nome do candidato'), 'Carla');
-  await userEvent.type(screen.getByLabelText('E-mail'), 'c@x.com');
-  await userEvent.type(screen.getByLabelText('Número'), '11999999999');
-  await userEvent.selectOptions(await screen.findByLabelText('Cargo'), '3');
+  await userEvent.type(screen.getByLabelText(/^Nome do candidato/), 'Carla');
+  await userEvent.type(screen.getByLabelText(/^E-mail/), 'c@x.com');
+  await userEvent.type(screen.getByLabelText(/^Telefone/), '11999999999');
+  await userEvent.selectOptions(await screen.findByLabelText(/^Cargo/), '3');
 
   const continueButton = screen.getByRole('button', { name: 'Continuar' });
   expect(continueButton).toBeDisabled();

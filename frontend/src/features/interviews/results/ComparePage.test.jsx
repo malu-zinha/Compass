@@ -2,8 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../../auth/AuthContext';
-import { fakeAuthValue, LayoutOutlet } from '../../../test/render';
+import { TestProviders, fakeAuthValue, LayoutOutlet } from '../../../test/render';
 import { getInterview } from '../../../api/interviews';
 import { compareInterviews } from '../../../api/comparisons';
 import ComparePage from './ComparePage';
@@ -40,16 +39,15 @@ function renderCompare(path) {
     },
   ], { initialEntries: [path] });
   const view = render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders auth={fakeAuthValue()}>
       <RouterProvider router={router} />
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return { router, ...view };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
   getInterview.mockImplementation((id) => Promise.resolve(detail(id)));
 });
 
@@ -62,11 +60,15 @@ test('renderiza uma coluna por id e gera o parecer da IA', async () => {
   expect(await screen.findAllByRole('heading', { level: 3 })).toHaveLength(3);
   expect(getInterview.mock.calls).toEqual([[1], [2], [3]]);
   expect(screen.getByRole('heading', { name: 'Candidato 2' })).toBeInTheDocument();
-  expect(screen.getByText('[Positivo 1]')).toBeInTheDocument();
-  expect(screen.getByText('[Negativo 3]')).toBeInTheDocument();
+  expect(screen.getByText('Positivo 1')).toBeInTheDocument();
+  expect(screen.getByText('Negativo 3')).toBeInTheDocument();
   expect(screen.getByText('Skill 2')).toBeInTheDocument();
   expect(screen.getByText('Aderência 3')).toBeInTheDocument();
-  expect(screen.getAllByText('Técnico: 90%')).toHaveLength(3);
+  const tecnico = screen.getAllByRole('meter', { name: 'Técnico' });
+  expect(tecnico).toHaveLength(3);
+  tecnico.forEach((m) => expect(m).toHaveAttribute('aria-valuetext', '90% — Forte'));
+  expect(screen.getByRole('meter', { name: 'Pontuação geral de Candidato 3' })).toBeInTheDocument();
+  expect(screen.getByText('Maior pontuação')).toBeInTheDocument();
 
   await userEvent.click(screen.getByRole('button', { name: 'Gerar parecer da IA' }));
   expect(compareInterviews).toHaveBeenCalledWith([1, 2, 3]);
@@ -82,18 +84,21 @@ test('renderiza uma coluna por id e gera o parecer da IA', async () => {
   });
 
   expect(await screen.findByText('O candidato 2 se destaca.')).toBeInTheDocument();
-  expect(screen.getByText('1. Candidato 2 — Mais experiência')).toBeInTheDocument();
-  expect(screen.getByText('2. Candidato 1 — Boa comunicação')).toBeInTheDocument();
-  expect(screen.getByText('3. Candidato 3 — Pouca vivência')).toBeInTheDocument();
+  const items = screen.getAllByRole('listitem').filter((li) => li.textContent.includes(' — '));
+  expect(items.map((li) => li.textContent)).toEqual([
+    '1Candidato 2 — Mais experiência',
+    '2Candidato 1 — Boa comunicação',
+    '3Candidato 3 — Pouca vivência',
+  ]);
 });
 
-test('erro ao gerar o parecer mostra o detail em alert', async () => {
+test('erro ao gerar o parecer mostra o detail em toast', async () => {
   compareInterviews.mockRejectedValue({ detail: 'Selecione entrevistas do mesmo cargo.' });
   renderCompare('/comparar?ids=1,2');
 
   await userEvent.click(await screen.findByRole('button', { name: 'Gerar parecer da IA' }));
 
-  await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Selecione entrevistas do mesmo cargo.'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Selecione entrevistas do mesmo cargo.');
   expect(screen.getByRole('button', { name: 'Gerar parecer da IA' })).toBeEnabled();
 });
 

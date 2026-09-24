@@ -16,9 +16,10 @@ import RankingSelectPage from '../features/interviews/results/RankingSelectPage'
 import QuestionsPage from '../features/questions/QuestionsPage';
 import ProfilePage from '../features/profile/ProfilePage';
 import SettingsPage from '../features/settings/SettingsPage';
+import NotFoundPage from '../features/not-found/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
-import './App.css';
+import FlowLayout from './FlowLayout';
 
 export const ROUTES = {
   home: '/',
@@ -44,32 +45,33 @@ export const ROUTES = {
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path={ROUTES.home} element={<LandingPage />} />
-          <Route path={ROUTES.login} element={<AuthScreen />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path={ROUTES.inicio} element={<HomePage />} />
-              <Route path={ROUTES.ranking} element={<RankingSelectPage />} />
-              <Route path={ROUTES.entrevistas} element={<ResultsPage />} />
-              <Route path={ROUTES.entrevistasPorCargo} element={<ResultsPage />} />
-              <Route path={ROUTES.comparar} element={<ComparePage />} />
-              <Route path={ROUTES.entrevista} element={<InterviewDetailPage />} />
-              <Route path={ROUTES.cargos} element={<JobsPage />} />
-              <Route path={ROUTES.cargosNovo} element={<JobEditorPage />} />
-              <Route path={ROUTES.cargosEditar} element={<JobEditorPage />} />
-              <Route path={ROUTES.perguntas} element={<QuestionsPage />} />
-              <Route path={ROUTES.perfil} element={<ProfilePage />} />
-              <Route path={ROUTES.configuracoes} element={<SettingsPage />} />
-            </Route>
+      <Routes>
+        <Route path={ROUTES.home} element={<LandingPage />} />
+        <Route path={ROUTES.login} element={<AuthScreen />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path={ROUTES.inicio} element={<HomePage />} />
+            <Route path={ROUTES.ranking} element={<RankingSelectPage />} />
+            <Route path={ROUTES.entrevistas} element={<ResultsPage />} />
+            <Route path={ROUTES.entrevistasPorCargo} element={<ResultsPage />} />
+            <Route path={ROUTES.comparar} element={<ComparePage />} />
+            <Route path={ROUTES.entrevista} element={<InterviewDetailPage />} />
+            <Route path={ROUTES.cargos} element={<JobsPage />} />
+            <Route path={ROUTES.cargosNovo} element={<JobEditorPage />} />
+            <Route path={ROUTES.cargosEditar} element={<JobEditorPage />} />
+            <Route path={ROUTES.perguntas} element={<QuestionsPage />} />
+            <Route path={ROUTES.perfil} element={<ProfilePage />} />
+            <Route path={ROUTES.configuracoes} element={<SettingsPage />} />
+          </Route>
+          <Route element={<FlowLayout />}>
             <Route path={ROUTES.novaEntrevista} element={<NewInterviewPage />} />
             <Route path={ROUTES.tipoEntrevista} element={<InterviewTypePage />} />
             <Route path={ROUTES.upload} element={<UploadAudioPage />} />
             <Route path={ROUTES.gravar} element={<RecordPage />} />
           </Route>
-        </Routes>
-      </div>
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
     </Router>
   );
 }

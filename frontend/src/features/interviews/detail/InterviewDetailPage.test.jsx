@@ -1,9 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../../auth/AuthContext';
-import { fakeAuthValue, LayoutOutlet } from '../../../test/render';
+import { TestProviders, fakeAuthValue, LayoutOutlet } from '../../../test/render';
 import InterviewDetailPage from './InterviewDetailPage';
 
 vi.mock('./useInterview', () => ({ useInterview: vi.fn() }));
@@ -54,20 +53,18 @@ function renderDetail(path = '/entrevista/1') {
     },
   ], { initialEntries: [path] });
   const view = render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders auth={fakeAuthValue()}>
       <RouterProvider router={router} />
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return { router, ...view };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
-  window.confirm = vi.fn().mockReturnValue(true);
 });
 
-test('(a) done com analysis.qa_pairs mostra o acordeão e, ao expandir, a pergunta', async () => {
+test('(a) done com analysis.qa_pairs mostra as perguntas na aba Perguntas', async () => {
   const { useInterview } = await import('./useInterview');
   useInterview.mockReturnValue({
     interview: {
@@ -85,9 +82,10 @@ test('(a) done com analysis.qa_pairs mostra o acordeão e, ao expandir, a pergun
 
   renderDetail();
 
-  const header = screen.getByRole('button', { name: /Perguntas e respostas/ });
+  expect(screen.getByRole('tab', { name: 'Resumo' })).toHaveAttribute('aria-selected', 'true');
   expect(screen.queryByText('Qual sua experiência com Python?')).not.toBeInTheDocument();
-  await userEvent.click(header);
+  await userEvent.click(screen.getByRole('tab', { name: 'Perguntas' }));
+  expect(screen.getByRole('heading', { name: 'Perguntas e respostas' })).toBeInTheDocument();
   expect(screen.getByText('Qual sua experiência com Python?')).toBeInTheDocument();
   expect(screen.getByText(/Cinco anos\./)).toBeInTheDocument();
 });
@@ -154,10 +152,11 @@ test('(c) Excluir entrevista com confirm true chama deleteInterview e navega par
 
   const { router } = renderDetail();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Informações' }));
   await userEvent.click(screen.getByRole('button', { name: 'Excluir entrevista' }));
 
-  expect(window.confirm).toHaveBeenCalledWith('Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.');
+  const dialog = screen.getByRole('alertdialog', { name: 'Excluir entrevista' });
+  expect(dialog).toHaveTextContent('Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.');
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Excluir' }));
   await waitFor(() => expect(deleteInterview).toHaveBeenCalledWith('1'));
   await waitFor(() => expect(router.state.location.pathname).toBe('/entrevistas'));
 });

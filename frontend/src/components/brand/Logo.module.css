@@ -1,0 +1,24 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.north { fill: var(--color-primary); }
+.south { fill: currentColor; opacity: 0.35; }
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.full .wordmark { font-size: var(--text-xl); }
+
+.lockup {
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.lockup .wordmark { font-size: var(--text-3xl); }

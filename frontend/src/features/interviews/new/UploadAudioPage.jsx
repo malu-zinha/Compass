@@ -1,97 +1,68 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createInterview, deleteInterview, uploadInterviewAudio } from '../../../api/interviews';
-import { FolderIcon, CheckIcon } from '../../../components/icons';
+import { Button, Card, Field, Textarea, useToast } from '../../../components/ui';
+import { CheckIcon, UploadIcon } from '../../../components/icons';
 import { useInterviewDraft } from './useInterviewDraft';
-import './UploadAudioPage.css';
+import flow from './flow.module.css';
+import styles from './UploadAudioPage.module.css';
 
-function UploadAudioPage() {
+const VALID_TYPES = ['audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
+const VALID_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
+// Espelha MAX_UPLOAD_MB do backend (padrão 200): recusar aqui poupa um upload inteiro.
+export const MAX_UPLOAD_MB = Number(import.meta.env.VITE_MAX_UPLOAD_MB) || 200;
+
+export function formatFileSize(bytes) {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${Math.round((bytes / 1024 ** i) * 10) / 10} ${units[i]}`;
+}
+
+export function validateAudio(file) {
+  const extension = `.${file.name.split('.').pop().toLowerCase()}`;
+  if (!VALID_TYPES.includes(file.type) && !VALID_EXTENSIONS.includes(extension)) {
+    return 'Formato não aceito. Envie MP3, WAV, M4A, WebM ou OGG.';
+  }
+  if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+    return `O arquivo tem ${formatFileSize(file.size)}; o limite é ${MAX_UPLOAD_MB} MB.`;
+  }
+  return null;
+}
+
+export default function UploadAudioPage() {
+  const toast = useToast();
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
+  const inputRef = useRef(null);
   const { draft, clearDraft } = useInterviewDraft();
   // Evita que o redirecionamento por "sem rascunho" dispare de novo quando o
   // próprio clearDraft() do fluxo de sucesso zera o draft.
-  const isNavigatingAwayRef = useRef(false);
+  const leavingRef = useRef(false);
 
-  const [audioFile, setAudioFile] = useState(null);
+  const [file, setFile] = useState(null);
+  const [fileError, setFileError] = useState(null);
   const [notes, setNotes] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState('');
 
   useEffect(() => {
-    if (!draft && !isNavigatingAwayRef.current) {
-      navigate('/nova-entrevista');
-    }
+    if (!draft && !leavingRef.current) navigate('/nova-entrevista');
   }, [draft, navigate]);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    handleFileSelect(file);
-  };
-
-  const handleFileSelect = (file) => {
-    if (!file) return;
-
-    const validTypes = ['audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
-    const validExtensions = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
-
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    const isValidType = validTypes.includes(file.type) || validExtensions.includes(fileExtension);
-
-    if (!isValidType) {
-      alert('Por favor, selecione um arquivo de áudio válido (.mp3, .wav, .m4a, .webm, .ogg)');
-      return;
-    }
-
-    setAudioFile(file);
-  };
-
-  const handleFileInputChange = (e) => {
-    const file = e.target.files[0];
-    handleFileSelect(file);
-  };
-
-  const handleClickUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  const selectFile = (candidate) => {
+    if (!candidate) return;
+    const error = validateAudio(candidate);
+    setFileError(error);
+    setFile(error ? null : candidate);
   };
 
   const handleUpload = async () => {
-    if (!audioFile) {
-      alert('Por favor, selecione um arquivo de áudio');
-      return;
-    }
-
-    if (!draft) {
-      alert('Dados da entrevista não encontrados!');
-      return;
-    }
-
-    setIsUploading(true);
+    if (!file || !draft) return;
+    setUploading(true);
     let createdId = null;
-
     try {
-      setUploadProgress('Criando entrevista...');
+      setProgress('Criando entrevista...');
       const created = await createInterview({
         position_id: draft.position_id,
         candidate_name: draft.candidate_name,
@@ -103,10 +74,10 @@ function UploadAudioPage() {
       });
       createdId = created.id;
 
-      setUploadProgress('Fazendo upload do áudio...');
-      await uploadInterviewAudio(createdId, audioFile);
+      setProgress('Enviando o áudio...');
+      await uploadInterviewAudio(createdId, file);
 
-      isNavigatingAwayRef.current = true;
+      leavingRef.current = true;
       clearDraft();
       navigate(`/entrevista/${createdId}`);
     } catch (error) {
@@ -118,109 +89,81 @@ function UploadAudioPage() {
           // A entrevista órfã não pôde ser removida; nada mais a fazer aqui.
         }
       }
-      alert(error.detail || 'Erro ao processar o áudio. Verifique se o backend está rodando.');
-      setIsUploading(false);
-      setUploadProgress('');
+      toast.error(error.detail || 'Erro ao processar o áudio. Verifique se o backend está rodando.');
+      setUploading(false);
+      setProgress('');
     }
   };
 
-  const handleBack = () => {
-    navigate('/tipo-entrevista');
-  };
+  if (!draft) return null;
 
-  if (!draft) {
-    return <div>Carregando...</div>;
-  }
+  const zoneClass = [
+    styles.dropzone,
+    dragging && styles.dragging,
+    file && styles.hasFile,
+    fileError && styles.invalid,
+    uploading && styles.busy,
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className="upload-audio-container">
-      <div className="upload-audio-content">
-        <button className="back-button" onClick={handleBack} disabled={isUploading}>
-          ← Voltar
-        </button>
+    <div className={flow.page}>
+      <div className={flow.wrap}>
+        <div className={flow.intro}>
+          <h1 className={flow.title}>Enviar áudio</h1>
+          <p className={flow.subtitle}>A gravação da entrevista com {draft.candidate_name}.</p>
+        </div>
 
-        <h1 className="upload-title">Upload de Áudio</h1>
-        <p className="upload-subtitle">
-          Envie o arquivo de áudio da entrevista com {draft.candidate_name}
-        </p>
-
-        <div
-          className={`upload-dropzone ${isDragging ? 'dragging' : ''} ${audioFile ? 'has-file' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={!isUploading ? handleClickUpload : undefined}
-          style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}
+        {/* O <label> inteiro abre o seletor; o input é focável por teclado e anuncia o nome. */}
+        <label
+          className={zoneClass}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            if (!uploading) selectFile(e.dataTransfer.files[0]);
+          }}
         >
           <input
-            ref={fileInputRef}
+            ref={inputRef}
             type="file"
             accept=".mp3,.wav,.m4a,.webm,.ogg,audio/*"
-            onChange={handleFileInputChange}
-            style={{ display: 'none' }}
-            disabled={isUploading}
+            className="sr-only"
+            aria-label="Arquivo de áudio"
+            aria-describedby="upload-regras"
+            onChange={(e) => { selectFile(e.target.files[0]); e.target.value = ''; }}
+            disabled={uploading}
           />
-
-          {!audioFile ? (
+          <span className={styles.icon} aria-hidden="true">
+            {file ? <CheckIcon size={28} /> : <UploadIcon size={28} />}
+          </span>
+          {file ? (
             <>
-              <div className="upload-icon">
-                <FolderIcon size={64} color="#371C68" />
-              </div>
-              <p className="upload-text">Arraste o arquivo de áudio aqui</p>
-              <p className="upload-subtext">ou clique para selecionar</p>
-              <p className="upload-formats">Formatos aceitos: MP3, WAV, M4A, WebM, OGG</p>
+              <span className={styles.filename}>{file.name}</span>
+              <span className={styles.meta}>{formatFileSize(file.size)} · clique para trocar</span>
             </>
           ) : (
             <>
-              <div className="upload-icon success">
-                <CheckIcon size={48} color="#16a34a" />
-              </div>
-              <p className="upload-filename">{audioFile.name}</p>
-              <p className="upload-filesize">{formatFileSize(audioFile.size)}</p>
-              {!isUploading && (
-                <button
-                  className="change-file-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleClickUpload();
-                  }}
-                >
-                  Alterar arquivo
-                </button>
-              )}
+              <span className={styles.lead}>{dragging ? 'Solte para enviar' : 'Arraste o áudio aqui ou clique para escolher'}</span>
+              <span id="upload-regras" className={styles.meta}>MP3, WAV, M4A, WebM ou OGG, até {MAX_UPLOAD_MB} MB</span>
             </>
           )}
+          {fileError && <span className={styles.error} role="alert">{fileError}</span>}
+        </label>
+
+        <Card>
+          <Field label="Anotações (opcional)" hint="Contexto que ajuda a análise: impressões, pontos a investigar.">
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} disabled={uploading} />
+          </Field>
+        </Card>
+
+        <div className={flow.footer}>
+          <Button variant="ghost" onClick={() => navigate('/tipo-entrevista')} disabled={uploading}>Voltar</Button>
+          <Button variant="primary" size="lg" onClick={handleUpload} disabled={!file} loading={uploading}>
+            {uploading ? progress || 'Processando...' : 'Enviar e Processar'}
+          </Button>
         </div>
-
-        <div className="notes-section">
-          <label htmlFor="notes">Anotações (opcional)</label>
-          <textarea
-            id="notes"
-            className="notes-textarea"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Adicione observações sobre a entrevista..."
-            rows={4}
-            disabled={isUploading}
-          />
-        </div>
-
-        <button
-          className="submit-btn"
-          onClick={handleUpload}
-          disabled={!audioFile || isUploading}
-        >
-          {isUploading ? uploadProgress || 'Processando...' : 'Enviar e Processar'}
-        </button>
-
-        {isUploading && (
-          <p className="upload-info" style={{ marginTop: '1rem', textAlign: 'center', color: '#6b7280' }}>
-            {uploadProgress}
-          </p>
-        )}
       </div>
     </div>
   );
 }
-
-export default UploadAudioPage;

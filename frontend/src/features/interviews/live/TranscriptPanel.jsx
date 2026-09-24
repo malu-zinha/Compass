@@ -1,57 +1,33 @@
 import { useEffect, useRef } from 'react';
+import styles from './RecordPage.module.css';
 
-const STATUS_STYLE = { fontSize: '0.8rem', marginLeft: '0.5rem' };
-const WARNING_STYLE = { color: '#eab308', ...STATUS_STYLE };
-
-function TranscriptPanel({ turns, status, errorMessage }) {
-  // Ref para auto-scroll da transcrição
-  const transcriptionContentRef = useRef(null);
+/* Transcrição ao vivo: texto corrido, trechos provisórios esmaecidos, rolagem acompanha o fim. */
+export default function TranscriptPanel({ turns }) {
+  const contentRef = useRef(null);
 
   useEffect(() => {
-    if (transcriptionContentRef.current && turns.length > 0) {
-      transcriptionContentRef.current.scrollTop = transcriptionContentRef.current.scrollHeight;
+    if (contentRef.current && turns.length > 0) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
     }
   }, [turns]);
 
-  const isConnecting = status === 'connecting' || status === 'reconnecting';
-
   return (
-    <div className="transcription-panel">
-      <div className="transcription-card">
-        <h3>
-          Transcrição
-          {status === 'live' && <span style={{ color: '#16a34a', ...STATUS_STYLE }}>● AO VIVO</span>}
-          {isConnecting && <span style={WARNING_STYLE}>⚠ Conectando...</span>}
-        </h3>
-        {errorMessage && <span style={WARNING_STYLE}>{errorMessage}</span>}
-        <div className="transcription-content" ref={transcriptionContentRef}>
-          {turns.length === 0 ? (
-            <div className="transcription-empty">
-              Aguardando transcrição em tempo real...
-            </div>
-          ) : (
-            <div className="transcription-text-block">
-              {turns.map((turn, index) => {
-                const isLastItem = index === turns.length - 1;
-                const showTypingIndicator = !turn.is_final && isLastItem;
-
-                return (
-                  <span
-                    key={`${turn.generation}-${turn.turn_id}`}
-                    className={`transcription-segment ${turn.is_final ? 'final' : 'transcribing'}`}
-                  >
-                    {turn.text}
-                    {showTypingIndicator && <span className="typing-indicator">...</span>}
-                    {' '}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+    <div className={styles.transcript} ref={contentRef} aria-live="polite" aria-atomic="false">
+      {turns.length === 0 ? (
+        <p className={styles.transcriptEmpty}>Aguardando transcrição em tempo real...</p>
+      ) : (
+        <p className={styles.transcriptText}>
+          {turns.map((turn, index) => {
+            const typing = !turn.is_final && index === turns.length - 1;
+            return (
+              <span key={`${turn.generation}-${turn.turn_id}`} className={turn.is_final ? undefined : styles.interim}>
+                {turn.text}
+                {typing && <span className={styles.typing} aria-hidden="true">…</span>}{' '}
+              </span>
+            );
+          })}
+        </p>
+      )}
     </div>
   );
 }
-
-export default TranscriptPanel;

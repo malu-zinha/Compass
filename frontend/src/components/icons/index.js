@@ -24,3 +24,6 @@ export { default as UploadIcon } from './UploadIcon';
 export { default as UserIcon } from './UserIcon';
 export { default as VolumeIcon } from './VolumeIcon';
 
+export { default as SunIcon } from './SunIcon';
+export { default as MoonIcon } from './MoonIcon';
+export { default as MonitorIcon } from './MonitorIcon';

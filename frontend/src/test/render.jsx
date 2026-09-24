@@ -2,6 +2,8 @@ import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, Outlet, createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { vi } from 'vitest';
 import { AuthContext } from '../auth/AuthContext';
+import { ThemeProvider } from '../theme/ThemeProvider';
+import { ConfirmProvider, ToastProvider } from '../components/ui';
 
 export const fakeUser = {
   id: 1,
@@ -13,7 +15,20 @@ export const fakeUser = {
 };
 
 export function LayoutOutlet() {
-  return <Outlet context={{ openSidebar: vi.fn() }} />;
+  return <Outlet />;
+}
+
+// Providers globais do app (os de main.jsx), com o AuthContext falso no lugar do real.
+export function TestProviders({ auth = fakeAuthValue(), children }) {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+        </ConfirmProvider>
+      </ToastProvider>
+    </ThemeProvider>
+  );
 }
 
 export function fakeAuthValue(overrides = {}) {
@@ -29,11 +44,11 @@ export function fakeAuthValue(overrides = {}) {
   };
 }
 
-// Renders `ui` inside a fake AuthContext and a layout route that supplies
-// `context={{ openSidebar }}` via an <Outlet>, so useLayout() works.
+// Renders `ui` inside the app providers and a layout route (<Outlet>), without
+// the real AppLayout: PageHeader falls back to rendering inline.
 export function renderWithLayout(ui, path = '/') {
   return render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route element={<LayoutOutlet />}>
@@ -41,7 +56,7 @@ export function renderWithLayout(ui, path = '/') {
           </Route>
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
 }
 
@@ -58,9 +73,9 @@ export function renderWithRouter(ui, path = '/', extraPaths = []) {
     { initialEntries: [path] },
   );
   const view = render(
-    <AuthContext.Provider value={fakeAuthValue()}>
+    <TestProviders>
       <RouterProvider router={router} />
-    </AuthContext.Provider>,
+    </TestProviders>,
   );
   return { router, ...view };
 }

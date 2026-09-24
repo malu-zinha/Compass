@@ -1,48 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../../../components/layout';
-import { useLayout } from '../../../app/AppLayout';
-import CalendarIcon from '../../../components/icons/CalendarIcon';
-import ClockIcon from '../../../components/icons/ClockIcon';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { listInterviews } from '../../../api/interviews';
 import { getPosition } from '../../../api/positions';
 import { useUserSettings } from '../../../auth/SettingsContext';
-import { formatDate, formatDuration, scoreToPercent } from '../../../lib/format';
+import { PageHeader } from '../../../components/layout';
+import {
+  Button, Card, Chip, EmptyState, ScoreMeter, Skeleton, StatusBadge, useToast,
+} from '../../../components/ui';
+import { CalendarIcon, ClockIcon, CompareIcon, InterviewsIcon } from '../../../components/icons';
+import { formatDate, formatDuration } from '../../../lib/format';
 import { PROCESSING_STATUSES } from '../../../lib/transcript';
-import './ResultsPage.css';
+import { vacanciesLabel } from './RankingSelectPage';
+import PointsList from './PointsList';
+import styles from './ResultsPage.module.css';
 
 const PER_PAGE = 20;
 const RANKING_SIZE = 5;
 const MAX_COMPARE = 3;
 const PENDING_STATUSES = ['draft', ...PROCESSING_STATUSES];
 
-// Pontos positivos/negativos só existem com a análise concluída.
-function cardPoints(interview, key) {
-  if (interview.status === 'done') return interview[key] || [];
-  if (interview.status === 'error') return ['Falha no processamento'];
-  if (PENDING_STATUSES.includes(interview.status)) return ['Aguardando análise'];
-  return [];
+function pendingText(status) {
+  if (status === 'error') return 'Falha no processamento';
+  if (PENDING_STATUSES.includes(status)) return 'Aguardando análise';
+  return null;
 }
 
-function toCard(interview, settings) {
-  return {
-    id: interview.id,
-    positionId: interview.position_id,
-    status: interview.status,
-    name: interview.candidate_name,
-    email: interview.candidate_email,
-    date: formatDate(interview.created_at, settings),
-    duration: formatDuration(interview.audio_duration_seconds),
-    match: scoreToPercent(interview.score),
-    positives: cardPoints(interview, 'positives'),
-    negatives: cardPoints(interview, 'negatives'),
-  };
+function InterviewCard({ interview, settings, showPosition, selecting, selected, selectable, onToggle }) {
+  const pending = pendingText(interview.status);
+  const canCompare = interview.status === 'done';
+  return (
+    <Card as="article" className={`${styles.card} ${selected ? styles.cardSelected : ''}`}>
+      {selecting && canCompare && (
+        <input
+          type="checkbox"
+          className={styles.check}
+          aria-label={`Selecionar ${interview.candidate_name}`}
+          checked={selected}
+          disabled={!selectable}
+          onChange={onToggle}
+        />
+      )}
+      <div className={styles.cardHead}>
+        <div className={styles.identity}>
+          <h3 className={styles.name}>
+            <Link to={`/entrevista/${interview.id}`} className={styles.stretched}>
+              {interview.candidate_name}
+            </Link>
+          </h3>
+          <span className={styles.meta}>
+            {showPosition && `${interview.position_name} · `}{formatDate(interview.created_at, settings)}
+          </span>
+        </div>
+        <ScoreMeter score={interview.score} label={`Pontuação de ${interview.candidate_name}`} size="sm" />
+      </div>
+
+      {pending ? (
+        <div className={styles.pending}>
+          <StatusBadge status={interview.status} />
+          <span>{pending}</span>
+        </div>
+      ) : (
+        <div className={styles.points}>
+          <div>
+            <h4 className={styles.pointsTitle}>Pontos fortes</h4>
+            <PointsList items={interview.positives || []} limit={2} />
+          </div>
+          <div>
+            <h4 className={styles.pointsTitle}>Pontos de atenção</h4>
+            <PointsList items={interview.negatives || []} tone="negative" limit={2} />
+          </div>
+        </div>
+      )}
+    </Card>
+  );
 }
 
-function ResultsPage() {
+export default function ResultsPage() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { positionId } = useParams();
-  const { openSidebar } = useLayout();
   const { settings } = useUserSettings();
   const positionFilter = positionId ? Number(positionId) : undefined;
   const [position, setPosition] = useState(null);
@@ -70,7 +106,7 @@ function ResultsPage() {
       .catch((error) => {
         if (!active) return;
         console.error('Erro ao carregar entrevistas:', error);
-        alert(error.detail || 'Erro ao carregar entrevistas. Verifique se o backend está rodando.');
+        toast.error(error.detail || 'Erro ao carregar entrevistas. Verifique se o backend está rodando.');
         setList({ items: [], page: 1, pages: 1 });
         setRanking([]);
       })
@@ -78,19 +114,15 @@ function ResultsPage() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [positionFilter]);
+  }, [positionFilter, toast]);
 
   useEffect(() => {
     if (!positionFilter) return undefined;
     let active = true;
     getPosition(positionFilter)
-      .then((data) => {
-        if (active) setPosition(data);
-      })
-      .catch((error) => {
-        // Não bloqueia a página: sem o cargo, o título volta ao padrão.
-        console.error('Erro ao carregar cargo:', error);
-      });
+      .then((data) => { if (active) setPosition(data); })
+      // Não bloqueia a página: sem o cargo, o título volta ao padrão.
+      .catch((error) => console.error('Erro ao carregar cargo:', error));
     return () => { active = false; };
   }, [positionFilter]);
 
@@ -105,207 +137,149 @@ function ResultsPage() {
       setList((prev) => {
         // Entrevistas criadas entre uma página e outra deslocam a lista; evita repetir cartões.
         const known = new Set(prev.items.map((item) => item.id));
-        const items = [...prev.items, ...next.items.filter((item) => !known.has(item.id))];
-        return { items, page: next.page, pages: next.pages };
+        return {
+          items: [...prev.items, ...next.items.filter((item) => !known.has(item.id))],
+          page: next.page,
+          pages: next.pages,
+        };
       });
     } catch (error) {
       console.error('Erro ao carregar mais entrevistas:', error);
-      alert(error.detail || 'Erro ao carregar mais entrevistas. Tente novamente.');
+      toast.error(error.detail || 'Erro ao carregar mais entrevistas. Tente novamente.');
     } finally {
       setLoadingMore(false);
     }
   };
 
-  const handleToggleSelecting = () => {
+  const toggleSelecting = () => {
     setSelecting((prev) => !prev);
     setSelected([]);
   };
 
-  const isSelected = (card) => selected.some((item) => item.id === card.id);
+  const isSelected = (item) => selected.some((s) => s.id === item.id);
 
   // Até 3 entrevistas, todas do mesmo cargo da primeira escolhida.
-  const canSelect = (card) => {
-    if (isSelected(card)) return true;
+  const canSelect = (item) => {
+    if (isSelected(item)) return true;
     if (selected.length >= MAX_COMPARE) return false;
-    return selected.length === 0 || selected[0].positionId === card.positionId;
+    return selected.length === 0 || selected[0].positionId === item.position_id;
   };
 
-  const handleToggleSelected = (card) => {
-    setSelected((prev) => (prev.some((item) => item.id === card.id)
-      ? prev.filter((item) => item.id !== card.id)
-      : [...prev, { id: card.id, positionId: card.positionId }]));
+  const toggleSelected = (item) => {
+    setSelected((prev) => (prev.some((s) => s.id === item.id)
+      ? prev.filter((s) => s.id !== item.id)
+      : [...prev, { id: item.id, positionId: item.position_id }]));
   };
 
-  const handleCompareSelected = () => {
-    navigate(`/comparar?ids=${selected.map((item) => item.id).join(',')}`);
-  };
-
-  const handleViewDetails = (id) => {
-    navigate(`/entrevista/${id}`);
-  };
-
-  if (loading) {
-    return <div className="loading">Carregando...</div>;
-  }
-
-  const cards = list.items.map((interview) => toCard(interview, settings));
-  const rankedCards = ranking.map((interview) => toCard(interview, settings));
+  const title = selectedPosition ? `Ranking — ${selectedPosition.name}` : 'Entrevistas';
 
   return (
-    <div className="results-page">
-      <Header
-        title={selectedPosition ? `Ranking - ${selectedPosition.name}` : "Análise de candidatos"}
-        showComparar={true}
-        compareLabel={selecting ? 'Cancelar' : 'Comparar'}
-        onCompareClick={handleToggleSelecting}
-        onMenuClick={openSidebar}
-      />
-      
-      {selectedPosition && (
-        <div style={{ 
-          padding: '1rem 2rem', 
-          background: '#E9F2FF', 
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            <strong>{selectedPosition.name}</strong>
-            {selectedPosition.vacancies > 0 && (
-              <span style={{ marginLeft: '1rem', color: '#666' }}>
-                {selectedPosition.vacancies} vaga{selectedPosition.vacancies !== 1 ? 's' : ''} disponível{selectedPosition.vacancies !== 1 ? 'eis' : ''}
-              </span>
-            )}
-          </div>
-          <button 
-            onClick={() => navigate('/ranking')}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'white',
-              border: '1px solid #3b82f6',
-              borderRadius: '6px',
-              color: '#3b82f6',
-              cursor: 'pointer',
-              fontSize: '0.9rem'
-            }}
+    <div className={styles.page}>
+      <PageHeader
+        title={title}
+        actions={
+          <Button
+            variant={selecting ? 'ghost' : 'secondary'}
+            icon={selecting ? undefined : <CompareIcon size={16} />}
+            onClick={toggleSelecting}
           >
-            Trocar cargo
-          </button>
+            {selecting ? 'Cancelar' : 'Comparar'}
+          </Button>
+        }
+      />
+
+      {selectedPosition && (
+        <div className={styles.positionBar}>
+          <span className={styles.positionName}>{selectedPosition.name}</span>
+          {selectedPosition.vacancies > 0 && <Chip tone="info">{vacanciesLabel(selectedPosition.vacancies)}</Chip>}
+          <Button as={Link} to="/ranking" variant="ghost" size="sm" className={styles.switch}>Trocar cargo</Button>
         </div>
       )}
-      
-      <div className="results-container">
-        {/* Coluna Esquerda - Entrevistados */}
-        <div className="interviews-grid-section">
-          <h2 className="section-title">Entrevistados</h2>
-          
-          <div className="interviews-grid">
-            {selecting && selected.length >= 2 && (
-              <button className="btn-ver-detalhes" onClick={handleCompareSelected}>
-                Comparar selecionados ({selected.length})
-              </button>
-            )}
 
-            {cards.length === 0 ? (
-              <div className="empty-message">
-                <p>Nenhuma entrevista realizada</p>
+      <div className={styles.layout}>
+        <section aria-labelledby="entrevistados" className={styles.listCol}>
+          <h2 id="entrevistados" className={styles.sectionTitle}>Entrevistados</h2>
+
+          {loading ? (
+            <div className={styles.cards} aria-busy="true">
+              {[0, 1, 2, 3].map((i) => <Skeleton key={i} variant="block" className={styles.cardSkeleton} />)}
+            </div>
+          ) : list.items.length === 0 ? (
+            <EmptyState
+              icon={<InterviewsIcon size={24} />}
+              title="Nenhuma entrevista realizada"
+              description="As entrevistas aparecem aqui assim que forem gravadas ou enviadas."
+              action={<Button as={Link} to="/nova-entrevista" variant="primary">Nova entrevista</Button>}
+            />
+          ) : (
+            <>
+              <div className={styles.cards}>
+                {list.items.map((item) => (
+                  <InterviewCard
+                    key={item.id}
+                    interview={item}
+                    settings={settings}
+                    showPosition={!positionFilter}
+                    selecting={selecting}
+                    selected={isSelected(item)}
+                    selectable={canSelect(item)}
+                    onToggle={() => toggleSelected(item)}
+                  />
+                ))}
               </div>
-            ) : (
-              cards.map((interview) => (
-                <div key={interview.id} className="interview-card">
-                  <div className="card-header">
-                    {selecting && interview.status === 'done' && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Selecionar ${interview.name}`}
-                        checked={isSelected(interview)}
-                        disabled={!canSelect(interview)}
-                        onChange={() => handleToggleSelected(interview)}
-                      />
-                    )}
-                    <h3 className="card-title">{interview.name}</h3>
-                    <span className="card-email">{interview.email}</span>
-                  </div>
-                  
-                  <div className="card-section">
-                    <div className="section-label positives">Pontos positivos</div>
-                    {interview.positives.map((point, idx) => (
-                      <div key={idx} className="section-text">[{point}]</div>
-                    ))}
-                  </div>
-                  
-                  <div className="card-section">
-                    <div className="section-label negatives">Pontos negativos</div>
-                    {interview.negatives.map((point, idx) => (
-                      <div key={idx} className="section-text">[{point}]</div>
-                    ))}
-                  </div>
-                  
-                  <button 
-                    className="btn-ver-detalhes"
-                    onClick={() => handleViewDetails(interview.id)}
-                  >
-                    Ver detalhes
-                  </button>
-                </div>
-              ))
-            )}
+              {list.page < list.pages && (
+                <Button variant="secondary" onClick={handleLoadMore} loading={loadingMore} className={styles.more}>
+                  Carregar mais
+                </Button>
+              )}
+            </>
+          )}
+        </section>
 
-            {list.page < list.pages && (
-              <button className="btn-ver-detalhes" onClick={handleLoadMore} disabled={loadingMore}>
-                {loadingMore ? 'Carregando...' : 'Carregar mais'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Coluna Direita - Ranking */}
-        <div className="ranking-section">
-          <h2 className="section-title">Ranking</h2>
-          
-          <div className="ranking-list">
-            {rankedCards.length === 0 ? (
-              <div className="empty-message">
-                <p>Nenhum candidato disponível</p>
-              </div>
+        <aside aria-labelledby="ranking-titulo" className={styles.rankingCol}>
+          <Card padding="none">
+            <h2 id="ranking-titulo" className={`${styles.sectionTitle} ${styles.rankingTitle}`}>Top {RANKING_SIZE}</h2>
+            {loading ? (
+              <div className={styles.rankingLoading}>{[0, 1, 2].map((i) => <Skeleton key={i} variant="line" />)}</div>
+            ) : ranking.length === 0 ? (
+              <p className={styles.rankingEmpty}>Nenhum candidato com análise concluída.</p>
             ) : (
-              rankedCards.map((interview, index) => (
-                <div key={interview.id} className="ranking-item">
-                  <div className="ranking-header">
-                    <div className="ranking-number">{index + 1}</div>
-                    <div className="ranking-info">
-                      <div className="ranking-name">{interview.name}</div>
-                      <div className="ranking-email">{interview.email}</div>
-                    </div>
-                    <div className="ranking-match">{interview.match}% match</div>
-                  </div>
-                  
-                  <div className="ranking-meta">
-                    <span className="ranking-meta-item">
-                      <CalendarIcon size={16} color="#666" />
-                      <span>{interview.date}</span>
-                    </span>
-                    <span className="ranking-meta-item">
-                      <ClockIcon size={16} color="#666" />
-                      <span>{interview.duration}</span>
-                    </span>
-                  </div>
-                  
-                  <button 
-                    className="btn-ver-detalhes-small"
-                    onClick={() => handleViewDetails(interview.id)}
-                  >
-                    Ver detalhes
-                  </button>
-                </div>
-              ))
+              <ol className={styles.ranking}>
+                {ranking.map((item, index) => (
+                  <li key={item.id}>
+                    <Link to={`/entrevista/${item.id}`} className={styles.rankRow}>
+                      <span className={`${styles.rank} ${index === 0 ? styles.first : ''}`}>{index + 1}</span>
+                      <span className={styles.rankBody}>
+                        <span className={styles.rankName}>{item.candidate_name}</span>
+                        <ScoreMeter score={item.score} label={`Pontuação de ${item.candidate_name}`} variant="bar" showLabel={false} />
+                        <span className={styles.rankMeta}>
+                          <span><CalendarIcon size={14} />{formatDate(item.created_at, settings)}</span>
+                          <span><ClockIcon size={14} />{formatDuration(item.audio_duration_seconds)}</span>
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
             )}
-          </div>
-        </div>
+          </Card>
+        </aside>
       </div>
+
+      {selecting && (
+        <div className={styles.compareBar} role="region" aria-label="Comparação">
+          <span className={styles.compareText}>
+            <strong>{selected.length}</strong> de {MAX_COMPARE} selecionadas · mesmo cargo
+          </span>
+          <Button
+            variant="primary"
+            disabled={selected.length < 2}
+            onClick={() => navigate(`/comparar?ids=${selected.map((s) => s.id).join(',')}`)}
+          >
+            Comparar selecionados ({selected.length})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
-
-export default ResultsPage;

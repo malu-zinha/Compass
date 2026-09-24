@@ -41,7 +41,6 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true });
   vi.stubGlobal('AudioContext', FakeAudioContext);
   vi.stubGlobal('AudioWorkletNode', FakeAudioWorkletNode);
-  window.alert = vi.fn();
 });
 
 afterEach(() => {
@@ -112,13 +111,14 @@ test('desmontar o componente libera o microfone', async () => {
 test('guarda o erro quando não há permissão de microfone', async () => {
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   getUserMedia.mockRejectedValue(Object.assign(new Error('denied'), { name: 'NotAllowedError' }));
-  const { result } = renderHook(() => useMicrophonePcm({ onChunk: vi.fn() }));
+  const onError = vi.fn();
+  const { result } = renderHook(() => useMicrophonePcm({ onChunk: vi.fn(), onError }));
 
   await act(async () => { await result.current.start(); });
 
   expect(result.current.error).toBe('Erro ao acessar o microfone. Verifique as permissões.');
   expect(context).toBeNull();
   expect(consoleError).toHaveBeenCalled();
-  expect(window.alert).toHaveBeenCalledTimes(1);
-  expect(window.alert).toHaveBeenCalledWith('Erro ao acessar o microfone. Verifique as permissões.');
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError).toHaveBeenCalledWith('Erro ao acessar o microfone. Verifique as permissões.');
 });

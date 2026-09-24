@@ -2,14 +2,38 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#f7f8fa" />
+    <!--
+      Anti-piscada: aplica o tema antes do primeiro paint, para quem usa o
+      escuro não ver um flash branco a cada carregamento. Espelha
+      readStoredPreference/systemTheme de src/theme/theme.js — mudou lá, muda aqui.
+    -->
+    <script>
+      (function () {
+        var pref = 'system';
+        try {
+          var stored = localStorage.getItem('compass.theme');
+          if (stored === 'light' || stored === 'dark' || stored === 'system') pref = stored;
+        } catch (e) {}
+        var dark = false;
+        try {
+          dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (e) {}
+        var theme = pref === 'system' ? (dark ? 'dark' : 'light') : pref;
+        document.documentElement.dataset.theme = theme;
+        if (theme === 'dark') {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#14171c');
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="Compass — plataforma inteligente de apoio a entrevistas"
     />
-    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Compass</title>
   </head>

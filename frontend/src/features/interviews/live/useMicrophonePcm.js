@@ -19,13 +19,15 @@ function teardown(graph) {
 
 // Captura o microfone e entrega frames PCM16 LE, 16 kHz, mono (~100 ms) ao `onChunk`,
 // via AudioWorklet (public/pcm-worklet.js). `start()` resolve `true` quando a captura começou.
-export function useMicrophonePcm({ onChunk } = {}) {
+export function useMicrophonePcm({ onChunk, onError } = {}) {
   const [error, setError] = useState(null);
   const onChunkRef = useRef(onChunk);
+  const onErrorRef = useRef(onError);
   const graphRef = useRef(null); // recursos da captura ativa (ou sendo montada)
   const attemptRef = useRef(0);
 
   useEffect(() => { onChunkRef.current = onChunk; }, [onChunk]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
 
   const stop = useCallback(() => {
     attemptRef.current += 1;
@@ -66,8 +68,8 @@ export function useMicrophonePcm({ onChunk } = {}) {
         graphRef.current = null;
         setError(MIC_ERROR);
         // A mensagem inline pode passar despercebida numa gravação de até 40 minutos;
-        // o alert garante que o entrevistador perceba na hora que o microfone falhou.
-        alert(MIC_ERROR);
+        // onError deixa quem chamou avisar na hora (toast) que o microfone falhou.
+        onErrorRef.current?.(MIC_ERROR);
       }
       return false;
     }

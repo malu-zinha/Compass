@@ -3,8 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { AuthContext } from '../../auth/AuthContext';
-import { fakeAuthValue, fakeUser, LayoutOutlet } from '../../test/render';
+import { TestProviders, fakeAuthValue, fakeUser, LayoutOutlet } from '../../test/render';
 import { apiUrl } from '../../api/client';
 import ProfilePage from './ProfilePage';
 
@@ -33,7 +32,7 @@ function renderProfile(initialUser = user) {
     const [currentUser, setCurrentUser] = useState(initialUser);
     const handleSetUser = (updated) => { setUser(updated); setCurrentUser(updated); };
     return (
-      <AuthContext.Provider value={fakeAuthValue({ user: currentUser, setUser: handleSetUser })}>
+      <TestProviders auth={fakeAuthValue({ user: currentUser, setUser: handleSetUser })}>
         <MemoryRouter initialEntries={['/perfil']}>
           <Routes>
             <Route element={<LayoutOutlet />}>
@@ -41,7 +40,7 @@ function renderProfile(initialUser = user) {
             </Route>
           </Routes>
         </MemoryRouter>
-      </AuthContext.Provider>
+      </TestProviders>
     );
   }
   const view = render(<Harness />);
@@ -50,7 +49,6 @@ function renderProfile(initialUser = user) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.alert = vi.fn();
 });
 
 test('(a) os campos começam com os valores de useAuth().user, sem dado fixo', () => {
@@ -112,7 +110,7 @@ test('(d) escolher arquivo em Alterar foto chama uploadAvatar e renderiza a img'
   const { setUser } = renderProfile();
 
   const file = new File(['x'], 'foto.png', { type: 'image/png' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Alterar foto'), file);
 
   expect(uploadAvatar).toHaveBeenCalledWith(file);
   const img = await screen.findByAltText('Foto de perfil');
@@ -120,14 +118,14 @@ test('(d) escolher arquivo em Alterar foto chama uploadAvatar e renderiza a img'
   expect(setUser).toHaveBeenCalledWith(updated);
 });
 
-test('erro no upload da foto mostra o detail em alert', async () => {
+test('erro no upload da foto mostra o detail em toast', async () => {
   const { uploadAvatar } = await import('../../api/users');
   uploadAvatar.mockRejectedValue({ detail: 'O arquivo excede o limite de 2 MB.' });
 
   renderProfile();
 
   const file = new File(['x'], 'foto.png', { type: 'image/png' });
-  await userEvent.upload(document.querySelector('input[type=file]'), file);
+  await userEvent.upload(screen.getByLabelText('Alterar foto'), file);
 
-  expect(window.alert).toHaveBeenCalledWith('O arquivo excede o limite de 2 MB.');
+  expect(await screen.findByRole('alert')).toHaveTextContent('O arquivo excede o limite de 2 MB.');
 });

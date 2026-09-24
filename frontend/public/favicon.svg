@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Mesma geometria de src/components/brand/Logo.jsx. -->
+  <style>
+    .ring { stroke: #22262c; }
+    .north { fill: #1a5fe0; }
+    .south { fill: #22262c; opacity: .35; }
+    @media (prefers-color-scheme: dark) {
+      .ring { stroke: #eff1f5; }
+      .north { fill: #5b96ff; }
+      .south { fill: #eff1f5; }
+    }
+  </style>
+  <path class="ring" d="M27.78 10.51A13 13 0 1 1 21.49 4.22" stroke-width="2.5" stroke-linecap="round"/>
+  <path class="north" d="M26.6 5.4 18.26 18.26 13.74 13.74Z"/>
+  <path class="south" d="M9.64 22.36 13.74 13.74 18.26 18.26Z"/>
+</svg>

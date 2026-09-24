@@ -1,0 +1,45 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.mark {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+}
+.positive .mark { background: var(--color-success-bg); color: var(--color-success-fg); }
+.negative .mark { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+
+.dash {
+  width: 8px;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+.more {
+  padding-left: 28px;
+  color: var(--text-muted);
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+}

@@ -1,0 +1,321 @@
+/*
+ * COMPASS — base global
+ *
+ * Substitui os dois resets `*` que conflitavam (index.css e App.css) por um só,
+ * e cria a base tipográfica que faltava: antes, cada uma das ~19 folhas repetia
+ * `font-family`, 137 vezes no total, porque nenhum elemento tinha estilo padrão.
+ *
+ * Junto com tokens.css, este é o único CSS global do projeto. Todo o resto é
+ * CSS Module colocalizado.
+ */
+
+/* ===================================================================
+ * Reset
+ * =================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+ * Zera margem apenas onde o navegador aplica uma que nunca queremos. Um
+ * `* { margin: 0; padding: 0 }` também apagaria o recuo de lista e o padding de
+ * campos nativos, que depois voltam à mão em cada componente.
+ */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ===================================================================
+ * Documento
+ * =================================================================== */
+
+html {
+  /* Ancoragem por # respeita o header fixo */
+  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
+
+  /*
+   * A troca de tema anima aqui, no fundo e no texto. Componentes não repetem
+   * esta transição: herdam o efeito por serem transparentes ou por animarem a
+   * própria cor com a mesma duração.
+   */
+  transition:
+    background-color var(--duration-slow) var(--ease-in-out),
+    color var(--duration-slow) var(--ease-in-out);
+}
+
+#root {
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* ===================================================================
+ * Tipografia
+ * =================================================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+  color: var(--color-text);
+}
+
+h1 {
+  font-size: var(--text-2xl);
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-lg);
+}
+h4,
+h5,
+h6 {
+  font-size: var(--text-base);
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--color-primary-fg);
+  text-decoration-color: var(--color-primary-border);
+  text-underline-offset: 0.2em;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+strong,
+b {
+  font-weight: var(--weight-semibold);
+}
+
+small {
+  font-size: var(--text-sm);
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Números tabulares onde o alinhamento importa: score, duração, data. */
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===================================================================
+ * Mídia e formulários
+ * =================================================================== */
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+svg {
+  /* Os ícones herdam a cor do texto ao redor — é o que permite tematizar. */
+  fill: none;
+  flex-shrink: 0;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::placeholder {
+  color: var(--text-subtle);
+  opacity: 1; /* Firefox aplica opacidade própria */
+}
+
+/* ===================================================================
+ * Foco
+ * =================================================================== */
+
+/*
+ * `outline` em vez de `box-shadow`: acompanha o raio do elemento, funciona em
+ * formas irregulares e não é recortado por `overflow: hidden` do ancestral.
+ * `:focus-visible` mostra o anel para teclado sem poluir o clique de mouse.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ===================================================================
+ * Barra de rolagem
+ * =================================================================== */
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: content-box;
+}
+
+/* ===================================================================
+ * Utilitários de acessibilidade
+ * =================================================================== */
+
+/* Visível só para leitor de tela. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pular para o conteúdo: escondido até receber foco por teclado. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-toast);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-raised);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/*
+ * Troca de tema: por um instante, cores de fundo, texto e borda fazem
+ * crossfade em vez de piscar. A classe é posta e tirada pelo ThemeProvider só
+ * quando o usuário troca — nunca no carregamento.
+ */
+.theme-changing,
+.theme-changing *,
+.theme-changing *::before,
+.theme-changing *::after {
+  transition:
+    background-color var(--duration-slow) var(--ease-out),
+    border-color var(--duration-slow) var(--ease-out),
+    color var(--duration-slow) var(--ease-out),
+    fill var(--duration-slow) var(--ease-out) !important;
+}
+
+/* ===================================================================
+ * Movimento reduzido
+ *
+ * Um só lugar desliga a animação do app inteiro. Nenhum componente repete
+ * esta media query.
+ * =================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
