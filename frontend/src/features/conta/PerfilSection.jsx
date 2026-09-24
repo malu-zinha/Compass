@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../../api/client';
 import { updateMe, uploadAvatar } from '../../api/users';
 import { useAuth } from '../../auth/AuthContext';
-import { PageHeader } from '../../components/layout';
 import { Avatar, Button, Card, Field, Input, useToast } from '../../components/ui';
 import { LogoutIcon } from '../../components/icons';
-import styles from './ProfilePage.module.css';
+import styles from './PerfilSection.module.css';
 import { paths } from '../../app/paths';
 
 const AVATAR_ACCEPT = 'image/png,image/jpeg,image/webp';
@@ -22,7 +21,7 @@ const FIELDS = [
 
 const toForm = (user) => Object.fromEntries(FIELDS.map(({ key }) => [key, user?.[key] || '']));
 
-export default function ProfilePage() {
+export default function PerfilSection() {
   const toast = useToast();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
@@ -69,8 +68,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Perfil" />
+    <div className={styles.section}>
 
       <Card className={styles.banner}>
         <Avatar

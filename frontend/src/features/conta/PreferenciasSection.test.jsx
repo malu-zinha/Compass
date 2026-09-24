@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { renderWithLayout } from '../../test/render';
-import SettingsPage from './SettingsPage';
+import SettingsPage from './PreferenciasSection';
 
 const settings = {
   suggest_questions: true,

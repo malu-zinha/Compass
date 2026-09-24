@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { TestProviders, fakeAuthValue, fakeUser, LayoutOutlet } from '../../test/render';
 import { apiUrl } from '../../api/client';
-import ProfilePage from './ProfilePage';
+import ProfilePage from './PerfilSection';
 
 vi.mock('../../api/users', () => ({
   updateMe: vi.fn(),

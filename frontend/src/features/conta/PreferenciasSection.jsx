@@ -1,9 +1,8 @@
 import { useEffect, useId, useState } from 'react';
-import { PageHeader } from '../../components/layout';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import { useUserSettings } from '../../auth/SettingsContext';
 import { Button, Card, Select, Switch, useToast } from '../../components/ui';
-import styles from './SettingsPage.module.css';
+import styles from './PreferenciasSection.module.css';
 
 const INTERVAL_OPTIONS = [20, 40, 60, 90, 120];
 const LANGUAGE_OPTIONS = [
@@ -17,10 +16,12 @@ const LANGUAGE_OPTIONS = [
  * role="group" nomeado pelo rótulo, então leitor de tela e testes acham o
  * controle pelo nome da configuração, sem depender de classe.
  */
-function SettingRow({ label, description, children }) {
+// `grouped={false}` quando o controle já é um grupo nomeado (ex.: o seletor de tema).
+function SettingRow({ label, description, children, grouped = true }) {
   const id = useId();
+  const group = grouped ? { role: 'group', 'aria-labelledby': `${id}-label`, 'aria-describedby': `${id}-desc` } : {};
   return (
-    <div role="group" aria-labelledby={`${id}-label`} aria-describedby={`${id}-desc`} className={styles.row}>
+    <div {...group} className={styles.row}>
       <div className={styles.info}>
         <span id={`${id}-label`} className={styles.label}>{label}</span>
         <span id={`${id}-desc`} className={styles.description}>{description}</span>
@@ -40,7 +41,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function SettingsPage() {
+export default function PreferenciasSection() {
   const toast = useToast();
   const { settings, saveSettings } = useUserSettings();
   const [form, setForm] = useState(settings);
@@ -65,11 +66,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Configurações" />
+    <div className={styles.section}>
 
       <Section title="Aparência">
         <SettingRow
+          grouped={false}
           label="Tema"
           description={'Vale na hora e fica salvo neste dispositivo. "Sistema" acompanha o claro ou escuro do seu computador.'}
         >

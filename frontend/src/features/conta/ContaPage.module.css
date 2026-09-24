@@ -1,0 +1,7 @@
+.page {
+  max-width: 920px;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-8); }
+}
