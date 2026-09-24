@@ -27,9 +27,9 @@ beforeEach(() => {
 test('(a) renderiza só os controles suportados', () => {
   renderWithLayout(<SettingsPage />, '/configuracoes');
 
-  expect(screen.getByText('Fuso Horário')).toBeInTheDocument();
-  expect(screen.getByText('Formato de Data')).toBeInTheDocument();
-  expect(screen.getByText('Sugerir Perguntas')).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Fuso horário' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Formato de data' })).toBeInTheDocument();
+  expect(screen.getByRole('switch', { name: 'Sugerir perguntas' })).toBeInTheDocument();
   expect(screen.getByText('Intervalo das sugestões')).toBeInTheDocument();
   expect(screen.getByText('Idioma da transcrição')).toBeInTheDocument();
   expect(screen.getByText('Salvar anotações automaticamente')).toBeInTheDocument();
@@ -43,9 +43,9 @@ test('(a) renderiza só os controles suportados', () => {
 test('(b) mudar intervalo para 60 e salvar chama saveSettings com suggestion_interval_seconds: 60', async () => {
   renderWithLayout(<SettingsPage />, '/configuracoes');
 
-  const intervalItem = screen.getByText('Intervalo das sugestões').closest('.setting-item');
+  const intervalItem = screen.getByRole('group', { name: 'Intervalo das sugestões' });
   await userEvent.selectOptions(within(intervalItem).getByRole('combobox'), '60');
-  await userEvent.click(screen.getByRole('button', { name: 'Salvar Configurações' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Salvar configurações' }));
 
   expect(saveSettings).toHaveBeenCalledWith(
     expect.objectContaining({ suggestion_interval_seconds: 60 }),
@@ -57,7 +57,7 @@ test('erro ao salvar mostra o detail em toast', async () => {
   saveSettings.mockRejectedValue({ detail: 'Fuso horário inválido.' });
   renderWithLayout(<SettingsPage />, '/configuracoes');
 
-  await userEvent.click(screen.getByRole('button', { name: 'Salvar Configurações' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Salvar configurações' }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Fuso horário inválido.');
 });
