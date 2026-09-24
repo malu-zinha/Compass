@@ -104,7 +104,7 @@ const { default: VagasPage } = await import('../features/vagas/lista/VagasPage')
 const { default: VagaEditorPage } = await import('../features/vagas/editor/VagaEditorPage');
 const { default: PerguntasPage } = await import('../features/perguntas/PerguntasPage');
 const { default: EntrevistasPage } = await import('../features/entrevistas/lista/EntrevistasPage');
-const { default: ComparePage } = await import('../features/interviews/results/ComparePage');
+const { default: ComparePage } = await import('../features/entrevistas/comparar/ComparePage');
 const { default: InterviewDetailPage } = await import('../features/entrevistas/detalhe/InterviewDetailPage');
 const { default: SettingsPage } = await import('../features/settings/SettingsPage');
 const { default: ProfilePage } = await import('../features/profile/ProfilePage');
@@ -155,7 +155,7 @@ describe('acessibilidade das telas (axe)', () => {
   });
 
   it('Comparar', async () => {
-    const { container } = renderAt(<ComparePage />, '/comparar', '/comparar?ids=1,2');
+    const { container } = renderAt(<ComparePage />, '/vagas/:id/comparar', '/vagas/3/comparar?ids=1,2');
     await screen.findAllByText('Candidata 2');
     await expectAccessible(container);
   });

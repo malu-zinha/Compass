@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -33,8 +33,8 @@ function renderCompare(path) {
     {
       element: <LayoutOutlet />,
       children: [
-        { path: '/comparar', element: <ComparePage /> },
-        { path: '/vagas', element: <p>Vagas</p> },
+        { path: '/vagas/:id/comparar', element: <ComparePage /> },
+        { path: '/vagas/:id', element: <p>Página da vaga</p> },
       ],
     },
   ], { initialEntries: [path] });
@@ -51,24 +51,29 @@ beforeEach(() => {
   getInterview.mockImplementation((id) => Promise.resolve(detail(id)));
 });
 
-test('renderiza uma coluna por id e gera o parecer da IA', async () => {
+test('matriz com uma coluna por candidata, maior valor marcado e parecer da IA', async () => {
   let resolveComparison;
   compareInterviews.mockReturnValue(new Promise((resolve) => { resolveComparison = resolve; }));
-  renderCompare('/comparar?ids=1,2,3');
+  renderCompare('/vagas/3/comparar?ids=1,2,3');
 
-  expect(await screen.findByRole('heading', { name: 'Comparar candidatos' })).toBeInTheDocument();
-  expect(await screen.findAllByRole('heading', { level: 3 })).toHaveLength(3);
+  const matrix = await screen.findByRole('table', { name: 'Pontuação geral e por competência de cada candidata' });
   expect(getInterview.mock.calls).toEqual([[1], [2], [3]]);
-  expect(screen.getByRole('heading', { name: 'Candidato 2' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'Comparar' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Dev Backend' })).toHaveAttribute('href', '/vagas/3');
+
+  // Colunas = candidatas (com link), linhas = critérios.
+  expect(within(matrix).getByRole('link', { name: 'Candidato 2' })).toHaveAttribute('href', '/entrevista/2');
+  const tecnico = within(matrix).getByRole('row', { name: /Técnico/ });
+  expect(within(tecnico).getAllByText('90%')).toHaveLength(3);
+  // Pontuação geral 810, 820, 830: a maior é da 3ª e vem marcada.
+  const geral = within(matrix).getByRole('row', { name: /Geral/ });
+  expect(within(geral).getByText(/83%/)).toHaveTextContent('maior');
+  expect(within(tecnico).queryByText('maior')).not.toBeInTheDocument();
+
   expect(screen.getByText('Positivo 1')).toBeInTheDocument();
   expect(screen.getByText('Negativo 3')).toBeInTheDocument();
   expect(screen.getByText('Skill 2')).toBeInTheDocument();
   expect(screen.getByText('Aderência 3')).toBeInTheDocument();
-  const tecnico = screen.getAllByRole('meter', { name: 'Técnico' });
-  expect(tecnico).toHaveLength(3);
-  tecnico.forEach((m) => expect(m).toHaveAttribute('aria-valuetext', '90% — Forte'));
-  expect(screen.getByRole('meter', { name: 'Pontuação geral de Candidato 3' })).toBeInTheDocument();
-  expect(screen.getByText('Maior pontuação')).toBeInTheDocument();
 
   await userEvent.click(screen.getByRole('button', { name: 'Gerar parecer da IA' }));
   expect(compareInterviews).toHaveBeenCalledWith([1, 2, 3]);
@@ -94,7 +99,7 @@ test('renderiza uma coluna por id e gera o parecer da IA', async () => {
 
 test('erro ao gerar o parecer mostra o detail em toast', async () => {
   compareInterviews.mockRejectedValue({ detail: 'Selecione entrevistas do mesmo cargo.' });
-  renderCompare('/comparar?ids=1,2');
+  renderCompare('/vagas/3/comparar?ids=1,2');
 
   await userEvent.click(await screen.findByRole('button', { name: 'Gerar parecer da IA' }));
 
@@ -102,8 +107,8 @@ test('erro ao gerar o parecer mostra o detail em toast', async () => {
   expect(screen.getByRole('button', { name: 'Gerar parecer da IA' })).toBeEnabled();
 });
 
-test.each(['/comparar?ids=1', '/comparar?ids=1,2,3,4', '/comparar'])('%s volta para /vagas', async (path) => {
-  const { router } = renderCompare(path);
-  await waitFor(() => expect(router.state.location.pathname).toBe('/vagas'));
+test.each(['?ids=1', '?ids=1,2,3,4', ''])('comparar%s volta para a vaga', async (query) => {
+  const { router } = renderCompare(`/vagas/3/comparar${query}`);
+  await waitFor(() => expect(router.state.location.pathname).toBe('/vagas/3'));
   expect(getInterview).not.toHaveBeenCalled();
 });
