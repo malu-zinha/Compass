@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Button, Input } from '../../components/ui';
-import styles from './QuestionsPage.module.css';
+import styles from './QuestionList.module.css';
 
 /*
  * Uma pergunta. Editar por duplo clique ou pelo botão; Enter salva, Esc

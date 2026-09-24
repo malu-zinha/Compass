@@ -14,3 +14,12 @@ if (!window.matchMedia) {
     removeListener: vi.fn(),
   }));
 }
+
+// jsdom não implementa IntersectionObserver (usado pelo SectionIndex).
+if (!window.IntersectionObserver) {
+  window.IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

@@ -2,7 +2,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { renderWithLayout } from '../../test/render';
-import QuestionsPage from './QuestionsPage';
+import QuestionList from './QuestionList';
+import PerguntasPage from './PerguntasPage';
 
 vi.mock('../../api/questions', () => ({
   listQuestions: vi.fn().mockResolvedValue([{ id: 7, text: 'Antiga', position_id: null }]),
@@ -21,7 +22,7 @@ test('edita uma pergunta com duplo clique + Enter', async () => {
   questions.listQuestions.mockResolvedValue([{ id: 7, text: 'Antiga', position_id: null }]);
   questions.updateQuestion.mockResolvedValue({ id: 7, text: 'Nova' });
 
-  renderWithLayout(<QuestionsPage />, '/perguntas');
+  renderWithLayout(<QuestionList />, '/perguntas');
 
   await userEvent.dblClick(await screen.findByText('Antiga'));
   const input = screen.getByDisplayValue('Antiga');
@@ -35,7 +36,7 @@ test('Esc cancela a edição sem chamar updateQuestion', async () => {
   const questions = await import('../../api/questions');
   questions.listQuestions.mockResolvedValue([{ id: 7, text: 'Antiga', position_id: null }]);
 
-  renderWithLayout(<QuestionsPage />, '/perguntas');
+  renderWithLayout(<QuestionList />, '/perguntas');
 
   await userEvent.dblClick(await screen.findByText('Antiga'));
   const input = screen.getByDisplayValue('Antiga');
@@ -45,27 +46,31 @@ test('Esc cancela a edição sem chamar updateQuestion', async () => {
   expect(questions.updateQuestion).not.toHaveBeenCalled();
 });
 
-test('abre nas perguntas gerais e troca de escopo pela URL', async () => {
+test('a página de perguntas gerais usa o escopo geral', async () => {
   const questions = await import('../../api/questions');
-  const positions = await import('../../api/positions');
-  positions.listPositions.mockResolvedValue({ items: [{ id: 3, name: 'Frontend' }] });
   questions.listQuestions.mockResolvedValue([]);
-
-  renderWithLayout(<QuestionsPage />, '/perguntas');
-  expect(await screen.findByRole('heading', { name: 'Perguntas gerais' })).toBeInTheDocument();
+  renderWithLayout(<PerguntasPage />, '/perguntas');
+  expect(screen.getByRole('heading', { level: 1, name: 'Perguntas gerais' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Nenhuma pergunta aqui ainda' })).toBeInTheDocument();
   expect(questions.listQuestions).toHaveBeenCalledWith(null);
-
-  await userEvent.click(await screen.findByRole('button', { name: 'Frontend' }));
-  expect(await screen.findByRole('heading', { name: 'Frontend' })).toBeInTheDocument();
-  expect(questions.listQuestions).toHaveBeenLastCalledWith(3);
 });
 
-test('adiciona pergunta no escopo atual e edita pelo botão', async () => {
+test('numa vaga, lista e cria no escopo da vaga', async () => {
+  const questions = await import('../../api/questions');
+  questions.listQuestions.mockResolvedValue([]);
+  questions.createQuestion.mockResolvedValue({ id: 9 });
+  renderWithLayout(<QuestionList positionId={3} />, '/vagas/3');
+  await userEvent.type(await screen.findByLabelText('Nova pergunta'), 'Conte um bug difícil{Enter}');
+  expect(questions.listQuestions).toHaveBeenCalledWith(3);
+  expect(questions.createQuestion).toHaveBeenCalledWith('Conte um bug difícil', 3);
+});
+
+test('adiciona pergunta no escopo geral e edita pelo botão', async () => {
   const questions = await import('../../api/questions');
   questions.listQuestions.mockResolvedValue([{ id: 7, text: 'Antiga', position_id: null }]);
   questions.createQuestion.mockResolvedValue({ id: 8 });
 
-  renderWithLayout(<QuestionsPage />, '/perguntas');
+  renderWithLayout(<QuestionList />, '/perguntas');
   await userEvent.type(await screen.findByLabelText('Nova pergunta'), 'Por que esta vaga?{Enter}');
   expect(questions.createQuestion).toHaveBeenCalledWith('Por que esta vaga?', null);
 

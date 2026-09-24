@@ -13,3 +13,7 @@ export { default as Tabs } from './Tabs';
 export { default as Accordion } from './Accordion';
 export { default as Avatar } from './Avatar';
 export { default as Breadcrumbs } from './Breadcrumbs';
+export { default as DataTable } from './DataTable';
+export { default as SegmentedControl } from './SegmentedControl';
+export { default as FilterBar } from './FilterBar';
+export { default as SectionIndex } from './SectionIndex';

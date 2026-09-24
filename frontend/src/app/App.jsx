@@ -11,7 +11,7 @@ import ComparePage from '../features/interviews/results/ComparePage';
 import InterviewDetailPage from '../features/interviews/detail/InterviewDetailPage';
 import JobsPage from '../features/positions/JobsPage';
 import JobEditorPage from '../features/positions/JobEditorPage';
-import QuestionsPage from '../features/questions/QuestionsPage';
+import PerguntasPage from '../features/perguntas/PerguntasPage';
 import ContaPage from '../features/conta/ContaPage';
 import NotFoundPage from '../features/not-found/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
@@ -37,7 +37,7 @@ export function AppRoutes() {
           <Route path={R.vaga} element={<ResultsPage />} />
           <Route path={R.editarVaga} element={<JobEditorPage />} />
           <Route path={R.comparar} element={<ComparePage />} />
-          <Route path={R.perguntas} element={<QuestionsPage />} />
+          <Route path={R.perguntas} element={<PerguntasPage />} />
           <Route path={R.conta} element={<ContaPage />} />
         </Route>
         <Route element={<FlowLayout />}>
