@@ -1,34 +1,83 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { paths } from '../../app/paths';
 import { Logo } from '../../components/brand';
-import { Button, Card, ScoreMeter, StatusBadge } from '../../components/ui';
-import {
-  BriefcaseIcon, ChartIcon, CompareIcon, FileTextIcon, MicrophoneIcon, QuestionsIcon,
-} from '../../components/icons';
+import { Button, Chip, ScoreMeter, StatusBadge } from '../../components/ui';
 import ThemeSwitcher from '../../theme/ThemeSwitcher';
 import styles from './LandingPage.module.css';
-import { paths } from '../../app/paths';
-
-const FEATURES = [
-  { Icon: MicrophoneIcon, title: 'Tempo real', text: 'Transcrição durante a entrevista, com perguntas sugeridas enquanto você conversa.' },
-  { Icon: ChartIcon, title: 'Análise por competência', text: 'Pontuação técnica, de comunicação, cultura e experiência, com justificativa.' },
-  { Icon: FileTextIcon, title: 'Resumo estruturado', text: 'Pontos fortes, pontos de atenção e as falas que sustentam cada um.' },
-  { Icon: CompareIcon, title: 'Ranking por cargo', text: 'Compare candidatos do mesmo cargo lado a lado, com parecer da IA.' },
-  { Icon: BriefcaseIcon, title: 'Gestão de cargos', text: 'Perfis de vaga com competências, que orientam a análise de cada entrevista.' },
-  { Icon: QuestionsIcon, title: 'Banco de perguntas', text: 'Perguntas organizadas por cargo, prontas para a próxima entrevista.' },
-];
 
 const STEPS = [
-  { title: 'Configure o cargo', text: 'Descreva a vaga e as competências que importam.' },
-  { title: 'Faça a entrevista', text: 'Grave ao vivo ou envie o áudio de uma conversa.' },
-  { title: 'Decida com dados', text: 'Veja pontuação, resumo e ranking dos candidatos.' },
+  { title: 'Descreva a vaga', text: 'As competências e o perfil ideal que importam para aquele cargo.' },
+  { title: 'Converse com a candidata', text: 'Ao vivo, com transcrição e perguntas sugeridas, ou enviando o áudio depois.' },
+  { title: 'Decida com o parecer', text: 'Pontuação por competência, pontos fortes e de atenção, e o ranking da vaga.' },
 ];
 
-/* Prévia ilustrativa do produto, feita com os mesmos componentes do app. */
-const PREVIEW = [
-  { name: 'Carla Mendes', score: 870, status: 'done' },
-  { name: 'Rafael Lima', score: 640, status: 'done' },
-  { name: 'Júlia Rocha', score: null, status: 'analyzing' },
+/* Ilustrações feitas com as mesmas peças do app — decorativas para leitor de tela. */
+function TranscriptIllustration() {
+  return (
+    <div className={styles.illo} aria-hidden="true">
+      <p className={`${styles.bubble} ${styles.bubbleRight}`}>Qual projeto recente você mais gostou de fazer?</p>
+      <p className={styles.bubble}>A migração do nosso design system para tokens, com modo escuro.</p>
+      <div className={styles.suggestion}>
+        <Chip tone="info">Sugestão</Chip>
+        <span>Como você mediu o impacto dessa migração?</span>
+      </div>
+    </div>
+  );
+}
+
+function AnalysisIllustration() {
+  return (
+    <div className={styles.illo} aria-hidden="true">
+      <p className={styles.illoLead}>“Base técnica sólida e comunicação clara; falta vivência com testes de ponta a ponta.”</p>
+      <ScoreMeter score={880} label="Técnico" variant="bar" />
+      <ScoreMeter score={760} label="Comunicação" variant="bar" />
+      <ScoreMeter score={520} label="Experiência" variant="bar" />
+    </div>
+  );
+}
+
+function RankingIllustration() {
+  const rows = [
+    { name: 'Carla Mendes', score: 870, status: 'done' },
+    { name: 'Rafael Lima', score: 640, status: 'done' },
+    { name: 'Júlia Rocha', score: null, status: 'analyzing' },
+  ];
+  return (
+    <div className={styles.illo} aria-hidden="true">
+      <p className={styles.illoTitle}>Desenvolvedora Frontend</p>
+      <ol className={styles.illoRanking}>
+        {rows.map((r, i) => (
+          <li key={r.name}>
+            <span className={styles.illoRank}>{i + 1}</span>
+            <span className={styles.illoName}>{r.name}</span>
+            {r.score ? <ScoreMeter score={r.score} label={r.name} variant="bar" showLabel={false} /> : <StatusBadge status={r.status} />}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+const FEATURES = [
+  {
+    kicker: 'Durante a conversa',
+    title: 'A entrevista é transcrita enquanto acontece.',
+    text: 'Você presta atenção na pessoa, não nas anotações. As perguntas da vaga e as sugeridas pela IA ficam ao lado, e você marca o que já perguntou.',
+    Illustration: TranscriptIllustration,
+  },
+  {
+    kicker: 'Depois da conversa',
+    title: 'Um parecer que dá para defender numa reunião.',
+    text: 'Pontuação por competência, pontos fortes e de atenção, perguntas e respostas e a aderência ao perfil ideal — cada afirmação ligada ao que foi dito.',
+    Illustration: AnalysisIllustration,
+  },
+  {
+    kicker: 'Na hora de decidir',
+    title: 'Cada vaga tem o seu ranking.',
+    text: 'Os candidatos de um cargo aparecem ordenados, e dá para colocar até três lado a lado, competência por competência.',
+    Illustration: RankingIllustration,
+  },
 ];
 
 export default function LandingPage() {
@@ -43,82 +92,70 @@ export default function LandingPage() {
         <Link to={paths.landing} className={styles.brand}>
           <Logo variant="full" />
         </Link>
-        <nav className={styles.nav} aria-label="Conta">
+        <nav className={styles.nav} aria-label="Página">
+          <a href="#como-funciona" className={styles.navLink}>Como funciona</a>
+          <a href="#recursos" className={styles.navLink}>Recursos</a>
+        </nav>
+        <div className={styles.account}>
           <ThemeSwitcher compact className={styles.theme} />
           <Button as={Link} to={paths.login} variant="ghost">Entrar</Button>
           <Button as={Link} to={paths.cadastro} variant="primary">Criar conta</Button>
-        </nav>
+        </div>
       </header>
 
       <main>
         <section className={styles.hero}>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Análise de entrevistas com IA</p>
-            <h1 className={styles.heroTitle}>
-              Entrevistas que viram <span className={styles.accent}>decisões</span>.
-            </h1>
-            <p className={styles.heroText}>
-              O Compass transcreve, resume e pontua cada entrevista, e aponta quem se encaixa melhor em cada cargo.
-            </p>
-            <div className={styles.heroActions}>
-              <Button as={Link} to={paths.cadastro} variant="primary" size="lg">Começar agora</Button>
-              <Button as="a" href="#recursos" variant="secondary" size="lg">Ver recursos</Button>
-            </div>
-          </div>
-
-          <Card variant="raised" padding="none" className={styles.preview} aria-hidden="true">
-            <div className={styles.previewHead}>
-              <span className={styles.previewTitle}>Desenvolvedora Frontend</span>
-              <span className={styles.previewMeta}>Ranking · 3 candidatos</span>
-            </div>
-            <ol className={styles.previewList}>
-              {PREVIEW.map((c, i) => (
-                <li key={c.name} className={styles.previewRow}>
-                  <span className={styles.previewRank}>{i + 1}</span>
-                  <span className={styles.previewName}>{c.name}</span>
-                  <StatusBadge status={c.status} />
-                  <ScoreMeter score={c.score} label={`Pontuação de ${c.name}`} size="sm" />
-                </li>
-              ))}
-            </ol>
-          </Card>
-        </section>
-
-        <section id="recursos" className={styles.section} aria-labelledby="recursos-titulo">
-          <h2 id="recursos-titulo" className={styles.sectionTitle}>Tudo o que a entrevista precisa</h2>
-          <div className={styles.features}>
-            {FEATURES.map(({ Icon, title, text }) => (
-              <Card key={title} className={styles.feature}>
-                <span className={styles.featureIcon}><Icon size={22} /></span>
-                <h3 className={styles.featureTitle}>{title}</h3>
-                <p className={styles.featureText}>{text}</p>
-              </Card>
-            ))}
+          <p className={styles.eyebrow}>Análise de entrevistas</p>
+          <h1 className={styles.heroTitle}>
+            Entrevistas que viram <span className={styles.accent}>decisões</span>.
+          </h1>
+          <p className={styles.heroText}>
+            O Compass transcreve, resume e pontua cada entrevista, e mostra quem se encaixa melhor em cada vaga.
+          </p>
+          <div className={styles.heroActions}>
+            <Button as={Link} to={paths.cadastro} variant="primary" size="lg">Começar agora</Button>
+            <Button as="a" href="#como-funciona" variant="secondary" size="lg">Como funciona</Button>
           </div>
         </section>
 
-        <section className={styles.section} aria-labelledby="como-titulo">
+        <section id="como-funciona" className={styles.section} aria-labelledby="como-titulo">
           <h2 id="como-titulo" className={styles.sectionTitle}>Como funciona</h2>
           <ol className={styles.steps}>
             {STEPS.map((step, i) => (
               <li key={step.title} className={styles.step}>
-                <span className={styles.stepNumber}>{String(i + 1).padStart(2, '0')}</span>
-                <h3 className={styles.featureTitle}>{step.title}</h3>
-                <p className={styles.featureText}>{step.text}</p>
+                <span className={styles.stepNumber} aria-hidden="true">{i + 1}</span>
+                <h3 className={styles.stepTitle}>{step.title}</h3>
+                <p className={styles.stepText}>{step.text}</p>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className={styles.cta}>
-          <h2 className={styles.ctaTitle}>Sua próxima contratação começa numa boa conversa.</h2>
-          <Button as={Link} to={paths.cadastro} variant="primary" size="lg">Criar conta gratuita</Button>
+        <section id="recursos" className={styles.section} aria-labelledby="recursos-titulo">
+          <h2 id="recursos-titulo" className="sr-only">Recursos</h2>
+          {FEATURES.map(({ kicker, title, text, Illustration }, i) => (
+            <article key={title} className={`${styles.feature} ${i % 2 ? styles.flip : ''}`}>
+              <div className={styles.featureText}>
+                <p className={styles.kicker}>{kicker}</p>
+                <h3 className={styles.featureTitle}>{title}</h3>
+                <p className={styles.featureBody}>{text}</p>
+              </div>
+              <Illustration />
+            </article>
+          ))}
+        </section>
+
+        <section className={styles.cta} aria-labelledby="cta-titulo">
+          <h2 id="cta-titulo" className={styles.ctaTitle}>A próxima contratação começa numa boa conversa.</h2>
+          <Button as={Link} to={paths.cadastro} variant="secondary" size="lg" className={styles.ctaButton}>
+            Criar conta gratuita
+          </Button>
         </section>
       </main>
 
       <footer className={styles.footer}>
-        <Logo variant="mark" size={20} decorative />
-        <span>Compass</span>
+        <Logo variant="full" size={20} decorative />
+        <span>Entrevistas que viram decisões.</span>
       </footer>
     </div>
   );

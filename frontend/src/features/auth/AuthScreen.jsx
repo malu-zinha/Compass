@@ -78,10 +78,10 @@ export default function AuthScreen() {
     <div className={styles.page}>
       <aside className={styles.brandPanel}>
         <Link to={paths.landing} className={styles.brandLink} aria-label="Compass — página inicial">
-          <Logo variant="full" decorative />
+          <Logo variant="full" decorative className={styles.panelLogo} />
         </Link>
         <div className={styles.pitch}>
-          <h2 className={styles.pitchTitle}>Entrevistas que viram decisões.</h2>
+          <h2 className={styles.pitchTitle}>Entrevistas que viram <span className={styles.accent}>decisões</span>.</h2>
           <ul className={styles.highlights}>
             {HIGHLIGHTS.map(({ Icon, text }) => (
               <li key={text}>
