@@ -1,8 +1,4 @@
 [
-  "src/components/common/InfoModal.css",
-  "src/features/interviews/detail/InterviewDetailPage.css",
-  "src/features/interviews/detail/InterviewDetailPage.jsx",
-  "src/features/interviews/detail/TranscriptView.jsx",
   "src/features/interviews/live/QuestionsPanel.jsx",
   "src/features/interviews/live/RecordPage.css",
   "src/features/interviews/live/RecordPage.jsx",

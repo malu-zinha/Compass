@@ -1,0 +1,113 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: var(--content-max);
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+@media (min-width: 1024px) {
+  .page { padding: var(--space-8); }
+}
+
+.loading { display: grid; gap: var(--space-6); }
+.headSkeleton { height: 120px; }
+.bodySkeleton { height: 480px; }
+
+.danger { color: var(--color-danger-fg); }
+.danger:hover:not(:disabled) { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+
+@media (max-width: 720px) {
+  .hideSmall { display: none; }
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 220px;
+}
+
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--text-2xl);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.meta span + span::before {
+  content: '·';
+  margin-right: var(--space-4);
+  color: var(--text-subtle);
+}
+
+.contact {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+}
+
+.score { margin-left: auto; }
+
+.grid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+}
+
+.analysis { min-height: 320px; }
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+}
+.state p { margin: 0; }
+.stateHint { color: var(--text-muted); font-size: var(--text-sm); }
+
+/* Transcrição acompanha a rolagem e rola por dentro, com o player sempre à mão. */
+.transcript {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+@media (min-width: 1100px) {
+  .transcript {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
+    max-height: calc(100vh - var(--header-height) - var(--space-12));
+  }
+}
+
+.transcriptTitle {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-base);
+}

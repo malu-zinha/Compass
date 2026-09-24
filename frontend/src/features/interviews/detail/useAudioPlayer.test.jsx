@@ -63,7 +63,7 @@ test('AudioPlayer usa a url assinada no <audio> e o botão chama play', async ()
   expect(getAudioUrl).toHaveBeenCalledWith(7);
   expect(screen.getByText('00:00 / 01:30')).toBeInTheDocument();
 
-  await userEvent.click(container.querySelector('.play-btn'));
+  await userEvent.click(screen.getByRole('button', { name: 'Reproduzir' }));
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
 });
 
@@ -80,6 +80,6 @@ test('falha ao reproduzir avisa por onError', async () => {
   const { container } = render(<Harness />);
   await waitFor(() => expect(container.querySelector('audio')).toHaveAttribute('src', 'http://api/audio'));
 
-  await userEvent.click(container.querySelector('.play-btn'));
+  await userEvent.click(screen.getByRole('button', { name: 'Reproduzir' }));
   await waitFor(() => expect(onError).toHaveBeenCalledWith('Não foi possível reproduzir o áudio.'));
 });

@@ -64,7 +64,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('(a) done com analysis.qa_pairs mostra o acordeão e, ao expandir, a pergunta', async () => {
+test('(a) done com analysis.qa_pairs mostra as perguntas na aba Perguntas', async () => {
   const { useInterview } = await import('./useInterview');
   useInterview.mockReturnValue({
     interview: {
@@ -82,9 +82,10 @@ test('(a) done com analysis.qa_pairs mostra o acordeão e, ao expandir, a pergun
 
   renderDetail();
 
-  const header = screen.getByRole('button', { name: /Perguntas e respostas/ });
+  expect(screen.getByRole('tab', { name: 'Resumo' })).toHaveAttribute('aria-selected', 'true');
   expect(screen.queryByText('Qual sua experiência com Python?')).not.toBeInTheDocument();
-  await userEvent.click(header);
+  await userEvent.click(screen.getByRole('tab', { name: 'Perguntas' }));
+  expect(screen.getByRole('heading', { name: 'Perguntas e respostas' })).toBeInTheDocument();
   expect(screen.getByText('Qual sua experiência com Python?')).toBeInTheDocument();
   expect(screen.getByText(/Cinco anos\./)).toBeInTheDocument();
 });
@@ -151,7 +152,6 @@ test('(c) Excluir entrevista com confirm true chama deleteInterview e navega par
 
   const { router } = renderDetail();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Informações' }));
   await userEvent.click(screen.getByRole('button', { name: 'Excluir entrevista' }));
 
   const dialog = screen.getByRole('alertdialog', { name: 'Excluir entrevista' });

@@ -1,52 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { InfoModal } from '../../../components/common';
 import { deleteInterview, reprocessInterview, updateInterview } from '../../../api/interviews';
 import { useUserSettings } from '../../../auth/SettingsContext';
-import { formatDate } from '../../../lib/format';
+import { PageHeader } from '../../../components/layout';
+import {
+  Avatar, Button, Card, ErrorPanel, ScoreMeter, Skeleton, Spinner, StatusBadge, useConfirm, useToast,
+} from '../../../components/ui';
+import { formatDate, formatDuration } from '../../../lib/format';
 import { PROCESSING_STATUSES, STATUS_MESSAGES } from '../../../lib/transcript';
 import { useInterview } from './useInterview';
 import { useAudioPlayer } from './useAudioPlayer';
-import AnalysisSections from './AnalysisSections';
-import TranscriptView from './TranscriptView';
+import AnalysisPanel from './AnalysisPanel';
 import AudioPlayer from './AudioPlayer';
-import './InterviewDetailPage.css';
-import { Button, useToast, useConfirm } from '../../../components/ui';
-import { InfoIcon } from '../../../components/icons';
-
-const INITIAL_SECTIONS = {
-  habilidades: true,
-  historico: false,
-  positivos: false,
-  negativos: false,
-  especificas: false,
-  pontuacao: false,
-  anotacoes: false,
-  qa: false,
-  idealFit: false,
-  askedQuestions: false,
-};
-
-const STATUS_TEXT_STYLE = {
-  marginTop: '1rem',
-  color: '#666',
-  fontSize: '0.9rem',
-  textAlign: 'center',
-};
+import CandidateModal from './CandidateModal';
+import TranscriptView from './TranscriptView';
+import styles from './InterviewDetailPage.module.css';
 
 const DELETE_CONFIRMATION = 'Excluir esta entrevista e a gravação? Esta ação não pode ser desfeita.';
 
-function InterviewDetailPage() {
+export default function InterviewDetailPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const { id } = useParams();
   const navigate = useNavigate();
   const { settings } = useUserSettings();
   const { interview, questions, error, reload } = useInterview(id);
-  const [showModal, setShowModal] = useState(false);
-  const [expandedSections, setExpandedSections] = useState(INITIAL_SECTIONS);
-  const [isRetrying, setIsRetrying] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
   const player = useAudioPlayer(
     id,
     Boolean(interview?.has_audio),
@@ -57,30 +37,17 @@ function InterviewDetailPage() {
 
   const hasTranscript = interview?.transcript?.length > 0;
 
-  const toggleSection = (section) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
-
   // Dispara o reprocessamento e volta a acompanhar o status via polling.
   const reprocess = async (step) => {
+    setBusy(true);
     try {
       await reprocessInterview(id, step);
       reload();
-      return true;
     } catch (err) {
       toast.error(err?.detail || 'Não foi possível reprocessar a entrevista.');
-      return false;
+    } finally {
+      setBusy(false);
     }
-  };
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    await reprocess(hasTranscript ? 'analysis' : 'full');
-    setIsRetrying(false);
-  };
-
-  const handleReanalyze = async () => {
-    if (await reprocess('analysis')) setShowModal(false);
   };
 
   const handleDelete = async () => {
@@ -93,17 +60,19 @@ function InterviewDetailPage() {
     if (!confirmed) return;
     try {
       await deleteInterview(id);
+      toast.success('Entrevista excluída.');
       navigate('/entrevistas');
     } catch (err) {
       toast.error(err?.detail || 'Não foi possível excluir a entrevista.');
     }
   };
 
-  // Rejeita em caso de erro para o InfoModal continuar em modo edição.
+  // Rejeita em caso de erro para o diálogo continuar aberto.
   const handleSave = async (data) => {
     try {
       await updateInterview(id, data);
       reload();
+      toast.success('Dados do candidato atualizados.');
     } catch (err) {
       toast.error(err?.detail || 'Não foi possível salvar os dados do candidato.');
       throw err;
@@ -112,17 +81,21 @@ function InterviewDetailPage() {
 
   if (!interview) {
     return (
-      <div className="interview-detail-page">
-        <PageHeader
-          title={error ? 'Entrevista não encontrada' : 'Carregando entrevista...'} />
-        <div style={{padding: '2rem', textAlign: 'center'}}>
-          {!error && <div className="spinner" style={{margin: '0 auto'}}></div>}
-          <p style={{marginTop: '1rem', color: '#666'}}>
-            {error
-              ? (error.detail || 'Não foi possível carregar a entrevista.')
-              : 'Carregando dados da entrevista...'}
-          </p>
-        </div>
+      <div className={styles.page}>
+        <PageHeader title={error ? 'Entrevista não encontrada' : 'Carregando entrevista...'} />
+        {error ? (
+          <ErrorPanel
+            title="Entrevista não encontrada"
+            message={error.detail || 'Não foi possível carregar a entrevista.'}
+            onRetry={() => navigate('/entrevistas')}
+            retryLabel="Voltar para entrevistas"
+          />
+        ) : (
+          <div className={styles.loading} aria-busy="true">
+            <Skeleton variant="block" className={styles.headSkeleton} />
+            <Skeleton variant="block" className={styles.bodySkeleton} />
+          </div>
+        )}
       </div>
     );
   }
@@ -130,94 +103,89 @@ function InterviewDetailPage() {
   const { status } = interview;
   const isProcessing = PROCESSING_STATUSES.includes(status);
   const statusMessage = isProcessing ? STATUS_MESSAGES[status] : null;
-  const date = formatDate(interview.created_at, settings);
-  const candidateData = {
-    candidateName: interview.candidate_name,
-    candidateEmail: interview.candidate_email,
-    candidatePhone: interview.candidate_phone,
-  };
-  const modalActions = [
-    { label: 'Reanalisar', onClick: handleReanalyze, disabled: isProcessing || !hasTranscript },
-    { label: 'Excluir entrevista', onClick: handleDelete, disabled: false },
-  ];
+  const name = interview.candidate_name || 'Candidato sem nome';
+  const contact = [interview.candidate_email, interview.candidate_phone].filter(Boolean).join(' · ');
 
-  const renderResume = () => {
+  const renderAnalysis = () => {
     if (isProcessing) {
       return (
-        <div className="loading-overlay">
-          <div className="spinner"></div>
-          <p style={STATUS_TEXT_STYLE}>{statusMessage}</p>
+        <div className={styles.state}>
+          <Spinner size="lg" label={statusMessage} />
+          <p>{statusMessage}</p>
+          <p className={styles.stateHint}>Esta página atualiza sozinha quando terminar.</p>
         </div>
       );
     }
     if (status === 'error') {
       return (
-        <div className="loading-overlay">
-          <p style={STATUS_TEXT_STYLE}>
-            {interview.error_message || 'Não foi possível processar a entrevista.'}
-          </p>
-          <button className="modal-btn-voltar" onClick={handleRetry} disabled={isRetrying}>
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorPanel
+          title="O processamento falhou"
+          message={interview.error_message || 'Não foi possível processar a entrevista.'}
+          onRetry={() => reprocess(hasTranscript ? 'analysis' : 'full')}
+        />
       );
     }
-    return (
-      <AnalysisSections
-        analysis={interview.analysis}
-        notes={interview.notes}
-        questions={questions}
-        expandedSections={expandedSections}
-        onToggleSection={toggleSection}
-      />
-    );
+    return <AnalysisPanel analysis={interview.analysis} notes={interview.notes} questions={questions} />;
   };
 
   return (
-    <div className="interview-detail-page">
+    <div className={styles.page}>
       <PageHeader
-        title={`${interview.candidate_name || 'Candidato sem nome'} - ${date}`}
+        title={name}
         actions={
-          <Button variant="secondary" icon={<InfoIcon size={16} />} onClick={() => setShowModal(true)}>
-            Informações
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => setEditing(true)}>Editar dados</Button>
+            <Button
+              variant="secondary"
+              onClick={() => reprocess('analysis')}
+              disabled={isProcessing || !hasTranscript}
+              loading={busy}
+              className={styles.hideSmall}
+            >
+              Reanalisar
+            </Button>
+            <Button variant="ghost" onClick={handleDelete} className={styles.danger}>Excluir entrevista</Button>
+          </>
         }
       />
-      
-      <div className="detail-container">
-        {/* Coluna Esquerda - Resumo */}
-        <div className="resume-column">
-          <h2 className="section-main-title">Resumo</h2>
-          
-          <div className="resume-content">
-            {renderResume()}
+
+      <Card className={styles.summary}>
+        <Avatar name={name} size="lg" />
+        <div className={styles.who}>
+          <div className={styles.nameRow}>
+            <h2 className={styles.name}>{name}</h2>
+            <StatusBadge status={status} />
           </div>
+          <p className={styles.meta}>
+            <span>{interview.position_name}</span>
+            <span>{formatDate(interview.created_at, settings)}</span>
+            {interview.audio_duration_seconds ? <span>{formatDuration(interview.audio_duration_seconds)}</span> : null}
+            <span>{interview.mode === 'live' ? 'Ao vivo' : 'Áudio enviado'}</span>
+          </p>
+          {contact && <p className={styles.contact}>{contact}</p>}
         </div>
+        <ScoreMeter score={interview.score} label="Pontuação geral" size="lg" className={styles.score} />
+      </Card>
 
-        {/* Coluna Direita - Transcrição */}
-        <div className="transcription-column">
-          <h2 className="section-main-title">Transcrição</h2>
+      <div className={styles.grid}>
+        <Card as="section" aria-label="Análise" className={styles.analysis}>
+          {renderAnalysis()}
+        </Card>
 
+        <Card as="section" padding="none" aria-labelledby="transcricao" className={styles.transcript}>
+          <h2 id="transcricao" className={styles.transcriptTitle}>Transcrição</h2>
           <TranscriptView
             transcript={interview.transcript}
             speakerRoles={interview.analysis?.speaker_roles}
             activeMessageIndex={player.activeMessageIndex}
             statusMessage={statusMessage}
+            onSeek={interview.has_audio ? player.seek : undefined}
           />
-
           {interview.has_audio && <AudioPlayer player={player} />}
-        </div>
+        </Card>
       </div>
 
-      <InfoModal 
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        candidateData={candidateData}
-        onSave={handleSave}
-        actions={modalActions}
-      />
+      <CandidateModal open={editing} onClose={() => setEditing(false)} interview={interview} onSave={handleSave} />
     </div>
   );
 }
-
-export default InterviewDetailPage;
